@@ -1,0 +1,6 @@
+Django==2.2.13
+django-bootstrap-modal-forms==2.0.0
+django-widget-tweaks==1.4.2
+selenium==3.14.0
+pytz==2018.5
+django-wkhtmltopdf
