@@ -5,4 +5,4 @@ from member.models import Member
 class BSMemberForm(BSModalModelForm):
     class Meta:
         model = Member
-        fields = ['firstname', 'lastname']
+        fields = ['firstname', 'lastname', 'phonenumber', 'email']
