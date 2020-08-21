@@ -1,0 +1,71 @@
+{% load static i18n common_tags %}
+
+
+<!-- Header -->
+<header style="border-bottom: 1px solid #eee;">
+  <!-- End Messages -->
+  <div class="px-2 bg-dark">
+    <!-- Navbar -->
+    <!-- Important: columns can be used directly in navbar since it is d-flex -->
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark p-0 py-2">
+            <a class="navbar-brand" href="/">Demo</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="%">link 1</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav navbar-right">
+                    <li>
+                        {% get_current_language as LANGUAGE_CODE %}
+                            {% get_available_languages as LANGUAGES %}
+                            {% get_language_info_list for LANGUAGES as languages %}
+                        <div class="btn-toolbar" role="toolbar">
+
+                            <div class="btn-group mr-2" role="group">
+                            {% for language in languages %}
+                                <a class="btn btn-secondary {% if language.code == LANGUAGE_CODE %}active{% endif %}" href="/lang/?lang={{language.code}}&next={{ request.get_full_path }}">{{ language.code| upper }}</a>
+                            {% endfor %}
+                            </div>
+                        </div>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="fa fa-user"></span> {{user.first_name}} {{user.last_name}}
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                <a class="dropdown-item" href="{% url 'update_user' %}"><span class="fa fa-id-card"></span> {% trans 'Change Profile' %}</a>
+                                <a class="dropdown-item" href="{% url 'password_change' %}?next=/"><span class="fa fa-cog"></span> {% trans 'Password change' %}</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{% url 'logout' %}?next=/"><span class="fa fa-sign-out"></span> {% trans 'Log out' %}</a>
+                            </div>
+                        </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link"  href="{% url 'login' %}?next=/"><span class="fa fa-sign-out"></span>Login</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+    <!-- End Navbar -->
+  </div>
+    <!-- Messages -->
+  <div>
+    {% if messages %}
+      {% for message in messages %}
+        <div style="border-radius:0;" {% if message.tags %} class="alert alert-icon alert-{{ message.tags }} alert-dismissible fade show mb-0" role="alert" {% endif %}>
+          {{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</header>
+<!-- End Header -->

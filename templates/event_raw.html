@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load static %}
+{% block header %}{% endblock header %}
+{% block content %}
+<div class="container mt-3 mb-5">
+    {{object.get_title_raw |safe}}
+</div>
+<div class="container mt-3">
+    {{object.get_table_raw |safe}}
+</div>
+{% endblock content %}

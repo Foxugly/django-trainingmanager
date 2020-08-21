@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static i18n common_tags %}
+{% block content %}
+
+{% include "_modal.html" %}
+<p>coucou</p>
+<div class="container mt-3">
+    <div class="row">
+        <div class="col-12 mb-3">
+            <button class="btn btn-primary" id="create-event" name="button" type="button">
+                <span class="fa fa-plus mr-2"></span>Create event
+            </button>
+            <button class="bs-modal btn btn-primary" data-form-url="{% url 'event:event_add' %}" id="create-event-2"
+                    name="button"
+                    type="button">
+                <span class="fa fa-filter mr-2"></span>create event2
+            </button>
+        </div>
+    </div>
+    <div class="card">
+        {% for key, list in apps.items %}
+        <div class="card-header">
+            <h5>{{key}}</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <tbody>
+                {% for model in list %}
+                <tr>
+                    <td><a href='{{model.get_list_url}}' }>{{model|verbose_name}}</a></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}
+
+{% block extrascripts %}
+<script type="text/javascript">
+      $(function () {
+	   $("#create-event").modalForm({
+            formURL: "{% url 'event:event_add' %}",
+          });
+
+
+          // Read and Delete book buttons open modal with id="modal"
+          // The formURL is retrieved from the data of the element
+          $(".bs-modal").each(function () {
+              $(this).modalForm({formURL: $(this).data("form-url")});
+          });
+
+          // Hide message
+          $(".alert").fadeTo(2000, 500).slideUp(500, function () {
+              $(".alert").slideUp(500);
+          });
+      });
+
+
+
+
+
+
+</script>
+{% endblock extrascripts %}

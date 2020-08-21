@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load i18n common_tags static %}
+
+{% block extrastylesheets %}
+<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+{% endblock extrastylesheets %}
+
+{% block content %}
+{% include "_modal.html" %}
+{% include "_modal_large.html" %}
+<div class="container mt-3">
+    <div class="row">
+        <div class="col-sm-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="float-left mb-0">Event : {{ object }}</h3>
+                    <button class="bs-modal btn btn-primary float-right"
+                            data-form-url="{% url 'event:event_change' object.id  %}"
+                            data-next="{% url 'event:event_detail' object.id %}" id="btn_edit_event"
+                            name="btn_edit_event" name="button" type="button"><span
+                            class="fa fa-edit"></span> Edit Event
+                    </button>
+                </div>
+                <div class="card-block">
+                    <div class="row justify-content-md-center">
+                        <div class="col-md-4 mb-1 text-center">Agenda : <a href="{% url 'agenda:agenda_detail' object.refer_agenda.id %}">{{object.refer_agenda}}</a></div>
+                        <div class="col-md-4 text-center">Date : {{object.date}}</div>
+                        <div class="col-md-4 text-center">Hour: {{object.hour_start}}</div>
+
+                    </div>
+                    <div class="row justify-content-md-center">
+                        <div class="col-md-4 text-center">Distance : {{object.get_total }}</div>
+                        <div class="col-md-8 text-center">Goal : {{object.goal }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="float-left mb-0">Program</h3>
+
+                    <button class="bs-modal-lg btn btn-primary float-right ml-1" data-form-url="{% url 'round:round_add' %}"
+                            data-next="{% url 'event:event_detail' object.id %}" id="btn_add_round"
+                            name="btn_add_round" name="button" type="button"><span
+                            class="fa fa-plus"></span> Add Exercise
+                    </button>
+                    <a class="btn btn-secondary float-right" href="{% url 'event:event_raw' object.id %}"  name="btn_event_raw">
+                        Raw
+                    </a>
+                </div>
+                {{object.get_table|safe}}
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="float-left mb-0">Attendance</h3>
+                    <button class="bs-modal btn btn-primary float-right" data-form-url="{% url 'member:member_add' %}"
+                            data-next="{% url 'event:event_detail' object.id %}" id="btn_add_member"
+                            name="btn_add_round" name="button" type="button"><span
+                            class="fa fa-plus"></span> Add Member
+                    </button>
+                </div>
+                <table class="card-table table table-striped mb-0">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Attendance</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for m in object.get_attendance_members %}
+                    <tr>
+                        <td class="control-label" for="checkbox_{{m.member.id}}">{{m.member}}</td>
+                        <td class="">
+                            <input %} %} checked
+                                   class="checkox_attendance" data-id="{{m.member.id}}" data-off="Missing"
+                                   data-offstyle="danger" data-on="Present" data-onstyle="success" data-size="small"
+                                   data-toggle="toggle" data-width="150" endif
+                                   id="checkbox_{{m.member.id}}" if m.attendance type="checkbox"
+                                   {% {%>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+
+{% block extrascripts %}
+<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+<script type="text/javascript">
+      $(function () {
+          // Read and Delete book buttons open modal with id="modal"
+          // The formURL is retrieved from the data of the element
+          $(".bs-modal").each(function () {
+              $(this).modalForm({
+                  formURL: $(this).data("form-url") + "?next=" + $(this).data('next')+ "&event_id={{object.id}}",
+                  modalID:"#modal"
+              });
+          });
+          $(".bs-modal-lg").each(function () {
+              $(this).modalForm({
+                  formURL: $(this).data("form-url") + "?next=" + $(this).data('next')+ "&event_id={{object.id}}",
+                  modalID:"#modal-lg"
+              });
+          });
+
+
+          // Hide message
+          $(".alert").fadeTo(2000, 500).slideUp(500, function () {
+              $(".alert").slideUp(500);
+          });
+          $('.checkox_attendance').on('change', function () {
+              var url = '/event/{{ object.id }}/member/' + $(this).data('id') + '/attendance/';    
+              $.ajax({
+                  url: url,
+                  type: 'GET',
+                  data: {'attendance':this.checked},
+                  traditional: true,
+                  dataType: 'json',
+                  success: function(result){
+                      if (!result['return']){
+                          var out = '';
+                          for (var key in result['errors']){
+                              out += result['errors'][key][0];
+                          }
+                          $('#alert_save_error').html(out);
+                          $('#alert_save_error').show();
+                      }
+                  }
+              });
+          });
+      });
+
+</script>
+{% endblock extrascripts %}
