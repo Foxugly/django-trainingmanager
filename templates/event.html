@@ -60,7 +60,7 @@
                     <h3 class="float-left mb-0">Attendance</h3>
                     <button class="bs-modal btn btn-primary float-right" data-form-url="{% url 'member:member_add' %}"
                             data-next="{% url 'event:event_detail' object.id %}" id="btn_add_member"
-                            name="btn_add_round" name="button" type="button"><span
+                            name="btn_add_member" name="button" type="button"><span
                             class="fa fa-plus"></span> Add Member
                     </button>
                 </div>
@@ -77,8 +77,8 @@
                         <td class="control-label" for="checkbox_{{m.member.id}}">{{m.member}}</td>
                         <td class="">
                             <input {% if m.attendance %}checked {% endif %}
-                                   class="checkox_attendance" data-id="{{m.member.id}}" data-off="Missing"
-                                   data-offstyle="danger" data-on="Present" data-onstyle="success" data-size="small"
+                                   class="checkox_attendance" data-id="{{m.member.id}}" data-off="Missing  "
+                                   data-offstyle="danger" data-on="Present  " data-onstyle="success" data-size="small"
                                    data-toggle="toggle"
                                    id="checkbox_{{m.member.id}}"  type="checkbox"
                                    >
