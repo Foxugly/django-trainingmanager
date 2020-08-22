@@ -31,7 +31,7 @@ class Round(GenericClass):
                        '<td class="align-middle text-center" rowspan="%d">%d X</td>' \
                        '<td>%s</td>' % (nb, self.order, nb, self.get_total(), nb, self.count, e.get_row())
                 if buttons:
-                    out += '<td class="align-middle text-center" rowspan="%d">' \
+                    out += '<td style="width:95px" class="align-middle text-center" rowspan="%d">' \
                            '<button class="bs-modal btn btn-sm btn-info" type="button" data-form-url="%s" data-next="%s">' \
                            '<span class="fa fa-edit"></span>' \
                            '</button> ' \
