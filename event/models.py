@@ -39,7 +39,7 @@ class Event(GenericClass):
 
     def get_table(self):
         out = "<table class='card-table table mb-0 table-bordered'>"
-        out += "<thead><tr><th>Order</th><th>Distance</th><th>Round</th><th>Exercices</th><th>Actions</th></tr></head><tbody>"
+        out += "<thead><tr><th>#</th><th>Dist.</th><th>Round</th><th>Ex.</th><th></th></tr></head><tbody>"
         for r in self.rounds.all().order_by('order'):
             out += r.get_row(True)
         out += "</tbody></table>"
@@ -47,7 +47,7 @@ class Event(GenericClass):
 
     def get_table_raw(self):
         out = "<table class='card-table table mb-0 table-bordered'>"
-        out += "<thead><tr><th>Order</th><th>Distance</th><th>Round</th><th>Exercices</th></tr></thead><tbody>"
+        out += "<thead><tr><th>r</th><th>Dist.</th><th>Round</th><th>Exercices</th></tr></thead><tbody>"
         for r in self.rounds.all().order_by('order'):
             out += r.get_row(False)
         out += "</tbody></table>"
