@@ -119,7 +119,7 @@
               $(".alert").slideUp(500);
           });
           $('.checkox_attendance').on('change', function () {
-              var url = '/event/{{ object.id }}/member/' + $(this).data('id') + '/attendance/';    
+              var url = '/event/event/{{ object.id }}/member/' + $(this).data('id') + '/attendance/'; 
               $.ajax({
                   url: url,
                   type: 'GET',
