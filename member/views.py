@@ -3,6 +3,7 @@ from member.models import Member
 from member.forms import BSMemberForm
 from django.utils.translation import gettext as _
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
+from event.models import Event
 
 
 class MemberCreateView(BSModalCreateView):
@@ -18,6 +19,15 @@ class MemberCreateView(BSModalCreateView):
             return self.request.GET["next"]
         else:
             return self.success_url
+
+    def form_valid(self, form):
+        if not self.request.is_ajax():
+            if "event_id" in self.request.GET:
+                f = form.save(commit=False)
+                f.save()
+                e = Event.objects.get(id=self.request.GET['event_id'])
+                e.refer_agenda.members.add(f)
+        return super(MemberCreateView, self).form_valid(form)
 
 
 class MemberListView(GenericListView):

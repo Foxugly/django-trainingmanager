@@ -23,6 +23,18 @@ class Event(GenericClass):
     def __str__(self):
         return "%s %d" % (_('Event'), self.pk)
 
+    def get_members_present(self):
+        return self.members.all()
+
+    def get_nb_members_present(self):
+        return len(self.get_members_present())
+
+    def get_all_members(self):
+        return self.refer_agenda.members.all()
+
+    def get_nb_all_members(self):
+        return len(self.get_all_members())
+
     @staticmethod
     def hour_t(t):
         return t.strftime('%H:%M:%S')

@@ -37,7 +37,7 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-sm-8">
+        <div class="col-sm-8 mb-4">
             <div class="card">
                 <div class="card-header">
                     <h3 class="float-left mb-0">Program</h3>
@@ -54,14 +54,15 @@
                 {{object.get_table|safe}}
             </div>
         </div>
-        <div class="col-sm-4 table-responsive">
+        <div class="col-sm-4 mb-4 table-responsive">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="float-left mb-0">Attendance</h3>
+                    <h3 class="float-left mb-0">Attendance :<span id="nb_members">{{object.get_nb_members_present}}/{{object.get_nb_all_members}}</span></h3>
+
                     <button class="bs-modal btn btn-primary float-right" data-form-url="{% url 'member:member_add' %}"
                             data-next="{% url 'event:event_detail' object.id %}" id="btn_add_member"
                             name="btn_add_member" name="button" type="button"><span
-                            class="fa fa-plus"></span> Add Member
+                            class="fa fa-user-plus"></span>
                     </button>
                 </div>
                 <table class="card-table table table-striped mb-0">
