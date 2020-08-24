@@ -7,8 +7,8 @@ from tools.generic_class import GenericClass
 
 # Create your models here.
 class Round(GenericClass):
-    order = models.PositiveIntegerField(default=0)
-    count = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(default=1)
+    count = models.PositiveIntegerField(default=1)
     t_start = models.CharField(max_length=10, null=True, blank=True, verbose_name=_("start"), )
     t_break = models.CharField(max_length=10, null=True, blank=True, verbose_name=_("break"), )
     exercises = models.ManyToManyField(Exercise, blank=True, )

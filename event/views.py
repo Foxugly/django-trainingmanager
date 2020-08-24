@@ -2,7 +2,6 @@ import json
 
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
 from django.http import HttpResponse
-from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 from wkhtmltopdf.views import PDFTemplateResponse
 
@@ -76,8 +75,7 @@ def attendance_member(request, event_id, member_id):
     else:
         if m in e.members.all():
             e.members.remove(m)
-    results = {}
-    results['return'] = True
+    results = {'nb_present': e.get_nb_members_present(), 'nb_members': e.get_nb_all_members(), 'return': True}
     return HttpResponse(json.dumps(results))
 
 
