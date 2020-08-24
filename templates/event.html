@@ -57,7 +57,7 @@
         <div class="col-sm-4 mb-4 table-responsive">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="float-left mb-0">Attendance :<span id="nb_members">{{object.get_nb_members_present}}/{{object.get_nb_all_members}}</span></h3>
+                    <h3 class="float-left mb-0">Attendance : <span id="nb_members">{{object.get_nb_members_present}}/{{object.get_nb_all_members}}</span></h3>
 
                     <button class="bs-modal btn btn-primary float-right" data-form-url="{% url 'member:member_add' %}"
                             data-next="{% url 'event:event_detail' object.id %}" id="btn_add_member"
