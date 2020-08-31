@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% load static qr_code %}
 {% block header %}{% endblock header %}
@@ -10,7 +11,7 @@
         <div class="col-8">
             {{object.get_title_raw |safe}}
         </div>
-        <div class="col-2 p-0 text-center">{% qr_from_text object.get_absolute_url size="S" %}</div>
+        <div class="col-2 p-0 text-center">{% qr_from_text object.get_full_url size="S" %}</div>
     </div>
     <div class="row mt-3">
         {{object.get_table_raw |safe}}
