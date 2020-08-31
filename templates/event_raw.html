@@ -1,11 +1,19 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static qr_code %}
 {% block header %}{% endblock header %}
 {% block content %}
 <div class="container mt-3 mb-5">
-    {{object.get_title_raw |safe}}
-</div>
-<div class="container mt-3">
-    {{object.get_table_raw |safe}}
+    <div class="row">
+        <div class="col-2">
+            <img src="{% static 'img/rbp.jpeg' %}" alt="RBP" />
+        </div>
+        <div class="col-8">
+            {{object.get_title_raw |safe}}
+        </div>
+        <div class="col-2 p-0 text-center">{% qr_from_text object.get_absolute_url size="S" %}</div>
+    </div>
+    <div class="row mt-3">
+        {{object.get_table_raw |safe}}
+    </div>
 </div>
 {% endblock content %}

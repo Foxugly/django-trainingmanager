@@ -6,3 +6,4 @@ pytz==2018.5
 django-wkhtmltopdf
 django-hijack
 django-hijack-admin
+django-qr-code
