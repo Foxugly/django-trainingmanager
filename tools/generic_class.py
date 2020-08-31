@@ -1,5 +1,7 @@
 from django.db import models
 from django.urls import reverse
+from django.conf import settings
+from urllib.parse import urljoin
 
 
 class GenericClass(models.Model):
@@ -35,6 +37,9 @@ class GenericClass(models.Model):
 
     def get_absolute_url(self):
         return reverse(self.detail_url, kwargs={'pk': self.pk})
+
+    def get_full_url(self):
+        return urljoin(settings.WEBSITE, self.get_absolute_url())
 
     def get_detail_url(self):
         return reverse(self.detail_url, kwargs={'pk': self.pk})

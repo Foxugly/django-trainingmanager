@@ -6,6 +6,7 @@ SECRET_KEY = 'ke2rim3a=ukld9cjh6$d$fb%ztgobvrs807i^d!_whg%@n^%v#'
 
 DEBUG = True
 STATE = 'INT' # or ACC or PROD
+WEBSITE = "www.example.com"
 
 ALLOWED_HOSTS = ['*']
 
@@ -18,6 +19,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'bootstrap_modal_forms',
     'widget_tweaks',
+    'qr_code',
     #'debug_toolbar',
     #'hijack',
     #'compat',
