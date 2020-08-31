@@ -116,7 +116,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # COMMENT TO PROD / ACTIVE TO TEST
 #STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
-WKHTMLTOPDF_CMD = '/usr/bin/wkhtmltopdf'
+WKHTMLTOPDF_CMD = 'xvfb-run /usr/bin/wkhtmltopdf'
 
 HIJACK_LOGIN_REDIRECT_URL = '/'
 HIJACK_LOGOUT_REDIRECT_URL = '/'
