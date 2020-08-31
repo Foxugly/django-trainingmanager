@@ -2,13 +2,12 @@
 {% load static i18n common_tags %}
 
 
-
 {% block extrastylesheets %}
-    <link rel="stylesheet" type="text/css"  href='https://cdn.jsdelivr.net/npm/fullcalendar@5.3.0/main.min.css'>
+<link rel="stylesheet" type="text/css" href='https://cdn.jsdelivr.net/npm/fullcalendar@5.3.0/main.min.css'>
 {% endblock extrastylesheets %}
 
 {% block extrascripts %}
-<script  type="text/javascript" src='https://cdn.jsdelivr.net/npm/fullcalendar@5.3.0/main.min.js'></script>
+<script type="text/javascript" src='https://cdn.jsdelivr.net/npm/fullcalendar@5.3.0/main.min.js'></script>
 <script>
             document.addEventListener('DOMContentLoaded', function() {
                 var calendarEl = document.getElementById('calendar');
@@ -69,97 +68,104 @@
                     });
                 });
             });
-    </script>
+
+</script>
 {% endblock extrascripts %}
 
 {% block content %}
 <div class="container mt-3">
     <div id='calendar'></div>
 </div>
-<div class="modal fade" id="create_events" tabindex="-1" role="dialog" aria-labelledby="create_events" aria-hidden="true">
+<div class="modal fade" id="create_events" tabindex="-1" role="dialog" aria-labelledby="create_events"
+     aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="create_events">Create trainings</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
+                    <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <form id="trainingsForm">
                 <div class="modal-body">
                     <div class="form-group row">
-                        <label for="text" class="col-4 col-form-label">Name</label> 
+                        <label for="text" class="col-4 col-form-label">Name</label>
                         <div class="col-8">
-                            <input id="name" name="name" type="text" class="form-control" required="required" value="training">
+                            <input id="name" name="name" type="text" class="form-control" required="required"
+                                   value="training">
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label for="text" class="col-4 col-form-label">Color</label> 
+                        <label for="text" class="col-4 col-form-label">Color</label>
                         <div class="col-8">
-                            <input id="color" name="color" type="color" class="form-control" required="required" value="#72E9C1" style="height: 38px;">
+                            <input id="color" name="color" type="color" class="form-control" required="required"
+                                   value="#72E9C1" style="height: 38px;">
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label for="text" class="col-4 col-form-label">Date Start</label> 
+                        <label for="text" class="col-4 col-form-label">Date Start</label>
                         <div class="col-8">
-                            <input id="date_start" name="date_start" type="date" class="form-control" required="required">
+                            <input id="date_start" name="date_start" type="date" class="form-control"
+                                   required="required">
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label for="text" class="col-4 col-form-label">Date End</label> 
+                        <label for="text" class="col-4 col-form-label">Date End</label>
                         <div class="col-8">
                             <input id="date_end" name="date_end" type="date" class="form-control" required="required">
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label for="text" class="col-4 col-form-label">Hour Start</label> 
+                        <label for="text" class="col-4 col-form-label">Hour Start</label>
                         <div class="col-8">
-                            <input id="hour_start" name="hour_start" type="time" class="form-control" required="required">
+                            <input id="hour_start" name="hour_start" type="time" class="form-control"
+                                   required="required">
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label for="text" class="col-4 col-form-label">Hour End</label> 
+                        <label for="text" class="col-4 col-form-label">Hour End</label>
                         <div class="col-8">
                             <input id="hour_end" name="hour_end" type="time" class="form-control" required="required">
                         </div>
                     </div>
                     <div class="form-group row">
-                        <label class="col-4">Days</label> 
+                        <label class="col-4">Days</label>
                         <div class="col-8">
                             <div class="custom-control custom-checkbox custom-control-inline">
-                                <input name="days" id="days_0" type="checkbox" class="custom-control-input" value="0"> 
+                                <input name="days" id="days_0" type="checkbox" class="custom-control-input" value="0">
                                 <label for="days_0" class="custom-control-label">Monday</label>
                             </div>
                             <div class="custom-control custom-checkbox custom-control-inline">
-                                <input name="days" id="days_1" type="checkbox" class="custom-control-input" value="1"> 
+                                <input name="days" id="days_1" type="checkbox" class="custom-control-input" value="1">
                                 <label for="days_1" class="custom-control-label">Thursday</label>
                             </div>
                             <div class="custom-control custom-checkbox custom-control-inline">
-                                <input name="days" id="days_2" type="checkbox" class="custom-control-input" value="2"> 
+                                <input name="days" id="days_2" type="checkbox" class="custom-control-input" value="2">
                                 <label for="days_2" class="custom-control-label">Wednesday</label>
                             </div>
                             <div class="custom-control custom-checkbox custom-control-inline">
-                                <input name="days" id="days_3" type="checkbox" class="custom-control-input" value="3"> 
+                                <input name="days" id="days_3" type="checkbox" class="custom-control-input" value="3">
                                 <label for="days_3" class="custom-control-label">Tuesday</label>
                             </div>
                             <div class="custom-control custom-checkbox custom-control-inline">
-                                <input name="days" id="days_4" type="checkbox" class="custom-control-input" value="4"> 
+                                <input name="days" id="days_4" type="checkbox" class="custom-control-input" value="4">
                                 <label for="days_4" class="custom-control-label">Friday</label>
                             </div>
                             <div class="custom-control custom-checkbox custom-control-inline">
-                                <input name="days" id="days_5" type="checkbox" class="custom-control-input" value="5"> 
+                                <input name="days" id="days_5" type="checkbox" class="custom-control-input" value="5">
                                 <label for="days_5" class="custom-control-label">Saturday</label>
                             </div>
                             <div class="custom-control custom-checkbox custom-control-inline">
-                                <input name="days" id="days_6" type="checkbox" class="custom-control-input" value="6"> 
+                                <input name="days" id="days_6" type="checkbox" class="custom-control-input" value="6">
                                 <label for="days_6" class="custom-control-label">Sunday</label>
                             </div>
                         </div>
                     </div>
-                
+
                 </div>
                 <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal" aria-label="Close">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" aria-label="Close">Close
+                    </button>
                     <button id="btn_save" name="btn_save" type="button" class="btn btn-primary">Save changes</button>
                 </div>
             </form>

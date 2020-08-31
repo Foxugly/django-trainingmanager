@@ -1,7 +1,7 @@
-from tools.generic_urls import add_url_from_generic_views
-from agenda.views import create_events, get_events_json
 from django.urls import path
 
+from agenda.views import create_events, get_events_json
+from tools.generic_urls import add_url_from_generic_views
 
 app_name = 'agenda'
 urlpatterns = add_url_from_generic_views('agenda.views')

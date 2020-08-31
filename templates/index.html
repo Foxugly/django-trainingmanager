@@ -4,18 +4,6 @@
 
 {% include "_modal.html" %}
 <div class="container mt-3">
-    <div class="row">
-        <div class="col-12 mb-3">
-            <button class="btn btn-primary" id="create-event" name="button" type="button">
-                <span class="fa fa-plus mr-2"></span>Create event
-            </button>
-            <button class="bs-modal btn btn-primary" data-form-url="{% url 'event:event_add' %}" id="create-event-2"
-                    name="button"
-                    type="button">
-                <span class="fa fa-filter mr-2"></span>create event2
-            </button>
-        </div>
-    </div>
     <div class="card">
         {% for key, list in apps.items %}
         <div class="card-header">
@@ -26,7 +14,7 @@
                 <tbody>
                 {% for model in list %}
                 <tr>
-                    <td><a href='{{model.get_list_url}}' }>{{model|verbose_name}}</a></td>
+                    <td><a href='{{model.get_list_url}}'>{{model|verbose_name}}</a></td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -56,6 +44,7 @@
               $(".alert").slideUp(500);
           });
       });
+
 
 
 

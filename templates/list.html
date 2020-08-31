@@ -27,7 +27,9 @@
             <tr>
                 <td><a href="{{obj.get_absolute_url}}">{{ obj }}</a></td>
                 <td><a class="btn" href="{{obj.get_detail_url}}"><span class="fa fa-eye"></span></a>
-                    <button class="bs-modal btn btn-info" data-form-url="{{ obj.get_change_url}}" type="button"><span class="fa fa-edit"></span></button></td>
+                    <button class="bs-modal btn btn-info" data-form-url="{{ obj.get_change_url}}" type="button"><span
+                            class="fa fa-edit"></span></button>
+                </td>
                 <td><a class="btn confirmation" href="{{obj.get_delete_url}}"><span class="fa fa-trash"></span></a></td>
             </tr>
             {% empty %}
@@ -122,6 +124,7 @@
               $(".alert").slideUp(500);
           });
       });
+
 
 </script>
 {% endblock extrascripts %}

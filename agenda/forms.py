@@ -1,7 +1,7 @@
- 
-from django.forms import ModelForm, DateInput
-from agenda.models import Agenda
 from bootstrap_modal_forms.forms import BSModalModelForm
+from django.forms import ModelForm, DateInput
+
+from agenda.models import Agenda
 
 
 class AgendaForm(ModelForm):
@@ -11,16 +11,16 @@ class AgendaForm(ModelForm):
         widgets = {
             'date_start': DateInput(
                 format=('%d/%m/%Y'),
-                attrs={'class': 'form-control', 
+                attrs={'class': 'form-control',
                        'placeholder': 'Select a date',
                        'type': 'date'
-                      }),
+                       }),
             'date_end': DateInput(
                 format=('%d/%m/%Y'),
-                attrs={'class': 'form-control', 
+                attrs={'class': 'form-control',
                        'placeholder': 'Select a date',
                        'type': 'date'
-                      }),
+                       }),
         }
 
 
@@ -31,14 +31,14 @@ class BSAgendaCreateForm(BSModalModelForm):
         widgets = {
             'date_start': DateInput(
                 format=('%d/%m/%Y'),
-                attrs={'class': 'form-control', 
+                attrs={'class': 'form-control',
                        'placeholder': 'Select a date',
                        'type': 'date'
-                      }),
+                       }),
             'date_end': DateInput(
                 format=('%d/%m/%Y'),
-                attrs={'class': 'form-control', 
+                attrs={'class': 'form-control',
                        'placeholder': 'Select a date',
                        'type': 'date'
-                      }),
+                       }),
         }

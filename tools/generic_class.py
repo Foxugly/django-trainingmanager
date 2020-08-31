@@ -1,7 +1,8 @@
+from urllib.parse import urljoin
+
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
-from django.conf import settings
-from urllib.parse import urljoin
 
 
 class GenericClass(models.Model):

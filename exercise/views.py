@@ -1,7 +1,7 @@
-from tools.generic_views import *
-from exercise.models import Stroke, EnergySystem, EnergySegment, Exercise
-from django.utils.translation import gettext as _
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
+
+from exercise.models import Stroke, EnergySystem, EnergySegment, Exercise
+from tools.generic_views import *
 
 
 class StrokeCreateView(GenericCreateView):

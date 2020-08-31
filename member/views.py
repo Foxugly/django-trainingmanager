@@ -1,9 +1,10 @@
-from tools.generic_views import *
-from member.models import Member
-from member.forms import BSMemberForm
-from django.utils.translation import gettext as _
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
+from django.utils.translation import gettext as _
+
 from event.models import Event
+from member.forms import BSMemberForm
+from member.models import Member
+from tools.generic_views import *
 
 
 class MemberCreateView(BSModalCreateView):

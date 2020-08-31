@@ -4,10 +4,9 @@ from datetime import datetime, timedelta
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
-from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 
-from agenda.forms import AgendaForm, BSAgendaCreateForm
+from agenda.forms import BSAgendaCreateForm
 from agenda.models import Agenda
 from event.models import Event
 from tools.generic_views import *

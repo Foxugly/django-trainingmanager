@@ -1,12 +1,12 @@
-from django.forms import ModelForm, inlineformset_factory, HiddenInput
-from exercise.models import Exercise
-from exercise.forms import BSExerciseForm
-from round.models import Round
 from bootstrap_modal_forms.forms import BSModalModelForm
+from django.forms import ModelForm, inlineformset_factory, HiddenInput
+
+from exercise.forms import BSExerciseForm
+from exercise.models import Exercise
+from round.models import Round
 
 
 class RoundForm(ModelForm):
-
     class Meta:
         model = Round
         fields = ['order', 'count', 't_start', 't_break', ]

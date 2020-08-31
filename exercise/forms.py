@@ -1,5 +1,6 @@
-from exercise.models import Exercise
 from django.forms import ModelForm
+
+from exercise.models import Exercise
 
 
 class BSExerciseForm(ModelForm):
@@ -19,7 +20,6 @@ class BSExerciseForm(ModelForm):
 
 
 class ExerciseForm(ModelForm):
-
     class Meta:
         model = Exercise
         fields = ['order', 'repetition', 'distance', 'stroke', 'energysegment', 'notes', 't_start', 't_break', ]
