@@ -1,5 +1,6 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.forms import ModelForm
+
 from customuser.models import CustomUser
 
 
@@ -29,4 +30,5 @@ class CustomUserForm(ModelForm):
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'first_name', 'last_name', 'email', 'language', 'is_staff', 'is_foo_admin', 'is_superuser', ]
+        fields = ['username', 'first_name', 'last_name', 'email', 'language', 'is_staff', 'is_foo_admin',
+                  'is_superuser', ]

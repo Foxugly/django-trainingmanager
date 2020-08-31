@@ -39,8 +39,8 @@ class Round(GenericClass):
                            '<span class="fa fa-trash"></span>' \
                            '</button>' \
                            '</td>' % (
-                           nb, self.get_change_url(), self.refer_event.get_absolute_url(), self.get_delete_url(),
-                           self.refer_event.get_absolute_url())
+                               nb, self.get_change_url(), self.refer_event.get_absolute_url(), self.get_delete_url(),
+                               self.refer_event.get_absolute_url())
                 out += '</tr>'
             else:
                 out += "<tr><td>%s</td></tr>" % (e.get_row())

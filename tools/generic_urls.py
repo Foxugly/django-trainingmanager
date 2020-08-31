@@ -1,6 +1,7 @@
-from django.urls import path
-import sys
 import inspect
+import sys
+
+from django.urls import path
 
 
 def add_url_from_generic_views(app_name):

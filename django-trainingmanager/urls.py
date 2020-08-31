@@ -1,14 +1,14 @@
-from django.conf.urls import handler400, handler403, handler404, handler500
-from django.contrib import admin
-from django.urls import path, include, reverse
-from django.conf.urls.static import static
-from django.conf import settings
 from django.apps import apps
-from django.shortcuts import render
+from django.conf import settings
+from django.conf.urls.static import static
+from django.contrib import admin
 from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.urls import path, include, reverse
 from django.utils import translation
-from customuser.views import CustomUserUpdateView
+
 from customuser.decorators import check_lang
+from customuser.views import CustomUserUpdateView
 
 
 @check_lang
@@ -24,6 +24,7 @@ def home(request):
                 available_apps[a] = [app]
     c['apps'] = available_apps
     return render(request, "index.html", c)
+
 
 def set_language(request):
     if 'lang' in request.GET and 'next' in request.GET:

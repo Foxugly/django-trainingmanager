@@ -1,11 +1,12 @@
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
 from django.db import transaction
-from django.utils.translation import gettext as _
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
+
+from event.models import Event
 from round.forms import BSRoundForm, RoundExerciseFormSet
 from round.models import Round
 from tools.generic_views import *
-from event.models import Event
 
 
 class RoundCreateView(BSModalCreateView):

@@ -1,10 +1,10 @@
-from django.shortcuts import render
-from django.views.generic import UpdateView
-from customuser.models import CustomUser
+from django.contrib.messages.views import SuccessMessageMixin
+from django.forms import ModelForm
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from django.forms import ModelForm
-from django.contrib.messages.views import SuccessMessageMixin
+from django.views.generic import UpdateView
+
+from customuser.models import CustomUser
 
 
 class CustomUserForm(ModelForm):

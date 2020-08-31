@@ -1,11 +1,12 @@
 import os
+
 from django.utils.translation import ugettext_lazy as _
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'ke2rim3a=ukld9cjh6$d$fb%ztgobvrs807i^d!_whg%@n^%v#'
 
 DEBUG = True
-STATE = 'INT' # or ACC or PROD
+STATE = 'INT'  # or ACC or PROD
 WEBSITE = "www.example.com"
 
 ALLOWED_HOSTS = ['*']
@@ -20,11 +21,11 @@ INSTALLED_APPS = [
     'bootstrap_modal_forms',
     'widget_tweaks',
     'qr_code',
-    #'debug_toolbar',
-    #'hijack',
-    #'compat',
-    #'hijack_admin',
-    #'bootstrap4',
+    # 'debug_toolbar',
+    # 'hijack',
+    # 'compat',
+    # 'hijack_admin',
+    # 'bootstrap4',
     'wkhtmltopdf',
     'agenda',
     'event',
@@ -112,10 +113,10 @@ STATICFILES_FINDERS = [
 ]
 
 STATIC_URL = '/static/'
-#ACTIVE TO PROD / COMMENT TO TEST
+# ACTIVE TO PROD / COMMENT TO TEST
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # COMMENT TO PROD / ACTIVE TO TEST
-#STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
 WKHTMLTOPDF_CMD = 'xvfb-run /usr/bin/wkhtmltopdf'
 
 HIJACK_LOGIN_REDIRECT_URL = '/'
@@ -132,7 +133,7 @@ if DEBUG:
     def show_toolbar(request):
         return True
 
+
     DEBUG_TOOLBAR_CONFIG = {
         'SHOW_TOOLBAR_CALLBACK': 'sportplan.settings.show_toolbar',
     }
-

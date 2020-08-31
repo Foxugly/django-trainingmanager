@@ -1,12 +1,11 @@
-from django.db import models
-
 # Create your models here.
-from tools.generic_class import GenericClass
 from django.db import models
+from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
+
 from event.models import Event
 from member.models import Member
-from django.urls import reverse_lazy
+from tools.generic_class import GenericClass
 
 
 # Create your models here.
@@ -23,10 +22,10 @@ class Agenda(GenericClass):
     def __str__(self):
         return self.name
 
-    #def get_add_class(self):
+    # def get_add_class(self):
     #    return "agenda_add"
 
-    #def get_add_url(self):
+    # def get_add_url(self):
     #    return '#'
 
     def get_json_url(self):
