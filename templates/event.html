@@ -43,17 +43,16 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="float-left mb-0">Program</h3>
-
+		    <a class="btn btn-secondary float-right ml-1" href="{% url 'event:event_raw' object.id %}"
+                       name="btn_event_raw"><i class="far fa-file-alt"></i> </a>
+		    <a class="btn btn-secondary float-right ml-1" href="{% url 'event:event_pdf' object.id %}"
+                       name="btn_event_pdf"><i class="far fa-file-pdf"></i></a>
                     <button class="bs-modal-lg btn btn-primary float-right ml-1"
                             data-form-url="{% url 'round:round_add' %}"
                             data-next="{% url 'event:event_detail' object.id %}" id="btn_add_round"
                             name="btn_add_round" name="button" type="button"><span
                             class="fa fa-plus"></span> Add Exercise
                     </button>
-                    <a class="btn btn-secondary float-right" href="{% url 'event:event_raw' object.id %}"
-                       name="btn_event_raw">
-                        Raw
-                    </a>
                 </div>
                 {{object.get_table|safe}}
             </div>

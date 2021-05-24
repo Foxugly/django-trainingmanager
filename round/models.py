@@ -28,8 +28,8 @@ class Round(GenericClass):
                 out += '<tr>' \
                        '<th class="text-center align-middle" rowspan="%d">#%d</th>' \
                        '<td class="align-middle text-center" rowspan="%d">%d</td>' \
-                       '<td class="align-middle text-center" rowspan="%d">%d X</td>' \
-                       '<td>%s</td>' % (nb, self.order, nb, self.get_total(), nb, self.count, e.get_row())
+                       '<td class="align-middle text-center" rowspan="%d">%d X %s %s</td>' \
+                       '<td>%s</td>' % (nb, self.order, nb, self.get_total(), nb, self.count, "<BR>break : %s" % self.t_break if self.t_break else " ", "<BR>start : %s" % self.t_start if self.t_start else " ", e.get_row())
                 if buttons:
                     out += '<td style="width:95px" class="align-middle text-center" rowspan="%d">' \
                            '<button class="bs-modal btn btn-sm btn-info" type="button" data-form-url="%s" data-next="%s">' \
