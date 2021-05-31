@@ -58,7 +58,7 @@ class Event(GenericClass):
         return out
 
     def get_table_raw(self):
-        out = "<table class='card-table table mb-0 table-bordered'>"
+        out = "<table class='table mb-0'>"
         out += "<thead><tr><th>#</th><th>Dist.</th><th>Round</th><th>Exercices</th></tr></thead><tbody>"
         for r in self.rounds.all().order_by('order'):
             out += r.get_row(False)
