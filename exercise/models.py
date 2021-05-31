@@ -44,10 +44,12 @@ class Exercise(GenericClass):
         return self.repetition * self.distance
 
     def get_row(self):
-        out = "[%s]" % self.energysegment
+        
+        out = "[%s]" % self.energysegment if self.energysegment else ""
         if self.repetition > 1:
-            out += " %d x" % self.repetition
-        out += " %d m : %s %s" % (self.distance, self.stroke, self.notes)
+            out += " %d x" % self.repetition if self.repetition > 0 else ""
+        out += " %d m :" % self.distance if self.distance > 0 else ""
+        out += " %s %s" % (self.stroke, self.notes)
         if self.t_break:
             out += " break : %s" % self.t_break
         if self.t_start:
