@@ -7,11 +7,9 @@ from django.shortcuts import render
 from django.urls import path, include, reverse
 from django.utils import translation
 
-from customuser.decorators import check_lang
 from customuser.views import CustomUserUpdateView
 
 
-@check_lang
 def home(request):
     c = {}
     available_apps = {}
@@ -26,15 +24,26 @@ def home(request):
     return render(request, "index.html", c)
 
 
-def set_language(request):
-    if 'lang' in request.GET and 'next' in request.GET:
-        if translation.LANGUAGE_SESSION_KEY in request.session:
-            del request.session[translation.LANGUAGE_SESSION_KEY]
-        translation.activate(request.GET.get('lang'))
-        request.session[translation.LANGUAGE_SESSION_KEY] = request.GET.get('lang')
-        return HttpResponseRedirect(request.GET.get('next'))
-    else:
-        return reverse('home')
+def set_lang(request):
+    response = None
+    if 'lang' in request.GET and check_for_language(request.GET.get('lang')):
+        user_language = request.GET.get('lang')
+        translation.activate(user_language)
+        if 'next' in request.GET:
+            response = HttpResponseRedirect(request.GET.get('next'))
+        else:
+            response = HttpResponseRedirect(reverse('home'))
+        response.set_cookie(
+            settings.LANGUAGE_COOKIE_NAME,
+            user_language,
+            max_age=settings.LANGUAGE_COOKIE_AGE,
+            path=settings.LANGUAGE_COOKIE_PATH,
+            domain=settings.LANGUAGE_COOKIE_DOMAIN,
+            secure=settings.LANGUAGE_COOKIE_SECURE,
+            httponly=settings.LANGUAGE_COOKIE_HTTPONLY,
+            samesite=settings.LANGUAGE_COOKIE_SAMESITE,
+        )
+    return response
 
 
 urlpatterns = [
@@ -44,9 +53,9 @@ urlpatterns = [
     path('member/', include('member.urls', namespace='member')),
     path('round/', include('round.urls', namespace='round')),
     path('exercise/', include('exercise.urls', namespace='exercise')),
-    path('lang/', set_language, name='lang'),
+    path('lang/', set_lang, name='lang'),
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('accounts/update/', check_lang(CustomUserUpdateView.as_view()), name='update_user'),
+    path('accounts/update/', CustomUserUpdateView.as_view(), name='update_user'),
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
