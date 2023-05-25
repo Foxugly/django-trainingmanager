@@ -28,8 +28,27 @@
           margin: auto 0 0;
           height: 56px;
         }
+        .table-border-black{
+           width: 100%;
+           margin-bottom: 1rem;
+           color: #000000;
+        }
 
+        .table-border-black th,
+        .table-border-black td {
+           padding: 0.75rem;
+           vertical-align: top;
+           border: 1px solid #000000 !important;
+        }
 
+        .table-border-black thead th {
+           vertical-align: bottom;
+           border: 2px solid #000000 !important;
+        }
+
+        .table tbody + tbody {
+           border: 2px solid #000000 !important;
+        }
     </style>
     {% endblock stylesheets %}
     {% block extrastylesheets %}{% endblock extrastylesheets %}
