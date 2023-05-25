@@ -2,17 +2,16 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
-from hijack_admin.admin import HijackUserAdminMixin
 
 from customuser.forms import CustomUserChangeForm, CustomUserCreationForm
 from customuser.models import CustomUser
 
 
-class CustomUserAdmin(UserAdmin, HijackUserAdminMixin):
+class CustomUserAdmin(UserAdmin):
     form = CustomUserChangeForm
     add_form = CustomUserCreationForm
     list_display = (
-    'username', 'email', 'first_name', 'last_name', 'is_active', 'is_superuser', 'is_foo_admin', 'hijack_field',)
+    'username', 'email', 'first_name', 'last_name', 'is_active', 'is_superuser', 'is_foo_admin',)
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'is_foo_admin')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
