@@ -6,5 +6,9 @@ from .serializers import MemberSerializer
 
 class MemberViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Member."""
-    queryset = Member.objects.all().order_by('lastname', 'firstname')
+    queryset = Member.objects.all()
     serializer_class = MemberSerializer
+    filterset_fields = ['lastname', 'firstname']
+    search_fields = ['firstname', 'lastname', 'email']
+    ordering_fields = ['lastname', 'firstname', 'id']
+    ordering = ['lastname', 'firstname']
