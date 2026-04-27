@@ -14,6 +14,7 @@ urlpatterns = [
 
     # Endpoints métier
     path('api/v1/', include('agenda.urls')),
+    path('api/v1/', include('event.urls')),
     path('api/v1/', include('member.urls')),
 
     # OpenAPI schema + Swagger UI
