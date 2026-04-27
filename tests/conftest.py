@@ -6,6 +6,12 @@ from django.contrib.auth import get_user_model
 from tests.factories import TeamFactory
 
 
+@pytest.fixture(autouse=True)
+def use_locmem_email_backend(settings):
+    """Block real Graph email sends across the test suite."""
+    settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+
+
 @pytest.fixture
 def api_client():
     return APIClient()

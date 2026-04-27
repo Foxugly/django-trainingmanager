@@ -39,3 +39,17 @@ class IsTrainer(BasePermission):
             Q(owner=request.user) | Q(managers=request.user),
             is_active=True,
         ).exists()
+
+
+class IsJoinRequestParticipant(BasePermission):
+    """
+    Object-level permission for TeamJoinRequest:
+    - the requester (obj.user)
+    - the team owner or any team manager
+    """
+    def has_object_permission(self, request, view, obj):
+        if not request.user.is_authenticated:
+            return False
+        if obj.user_id == request.user.pk:
+            return True
+        return obj.team.is_managed_by(request.user)
