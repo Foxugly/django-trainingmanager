@@ -1,11 +1,11 @@
 import pytest
 
 from tests.factories import (
-    AgendaFactory,
     EnergySegmentFactory,
     EnergySystemFactory,
     EventFactory,
     MemberFactory,
+    ProgramFactory,
     RoundFactory,
     StrokeFactory,
 )
@@ -57,32 +57,32 @@ def test_GET_team_detail_returns_200(auth_client, user_team):
     assert response.json()['id'] == user_team.pk
 
 
-# ----------------------------- /agendas/ -----------------------------
+# ----------------------------- /programs/ -----------------------------
 
-def test_GET_agendas_returns_200(auth_client):
-    response = auth_client.get('/api/v1/agendas/')
+def test_GET_programs_returns_200(auth_client):
+    response = auth_client.get('/api/v1/programs/')
     assert response.status_code == 200
 
 
-def test_POST_agendas_with_owned_team_returns_201(auth_client, user_team):
+def test_POST_programs_with_owned_team_returns_201(auth_client, user_team):
     response = auth_client.post(
-        '/api/v1/agendas/',
-        {'name': 'Smoke Agenda', 'team': user_team.pk},
+        '/api/v1/programs/',
+        {'name': 'Smoke Program', 'team': user_team.pk},
         format='json',
     )
     assert response.status_code == 201
     assert response.json()['team'] == user_team.pk
 
 
-def test_GET_agenda_detail_returns_200(auth_client, user_team):
-    agenda = AgendaFactory(team=user_team)
-    response = auth_client.get(f'/api/v1/agendas/{agenda.pk}/')
+def test_GET_program_detail_returns_200(auth_client, user_team):
+    program = ProgramFactory(team=user_team)
+    response = auth_client.get(f'/api/v1/programs/{program.pk}/')
     assert response.status_code == 200
 
 
-def test_DELETE_agenda_returns_204(auth_client, user_team):
-    agenda = AgendaFactory(team=user_team)
-    response = auth_client.delete(f'/api/v1/agendas/{agenda.pk}/')
+def test_DELETE_program_returns_204(auth_client, user_team):
+    program = ProgramFactory(team=user_team)
+    response = auth_client.delete(f'/api/v1/programs/{program.pk}/')
     assert response.status_code == 204
 
 
@@ -93,11 +93,11 @@ def test_GET_events_returns_200(auth_client):
     assert response.status_code == 200
 
 
-def test_POST_events_with_valid_agenda_returns_201(auth_client, user_team):
-    agenda = AgendaFactory(team=user_team)
+def test_POST_events_with_valid_program_returns_201(auth_client, user_team):
+    program = ProgramFactory(team=user_team)
     response = auth_client.post(
         '/api/v1/events/',
-        {'name': 'Smoke Event', 'refer_agenda': agenda.pk},
+        {'name': 'Smoke Event', 'refer_program': program.pk},
         format='json',
     )
     assert response.status_code == 201
@@ -111,8 +111,8 @@ def test_GET_rounds_returns_200(auth_client):
 
 
 def test_POST_rounds_returns_201(auth_client, user_team):
-    agenda = AgendaFactory(team=user_team)
-    event = EventFactory(refer_agenda=agenda)
+    program = ProgramFactory(team=user_team)
+    event = EventFactory(refer_program=program)
     response = auth_client.post(
         '/api/v1/rounds/',
         {'order': 1, 'count': 1, 'refer_event': event.pk},
@@ -197,9 +197,9 @@ def test_GET_docs_unauthenticated_returns_200(api_client):
 
 # ------------------ filtering / search / ordering -------------------
 
-def test_GET_agendas_with_ordering_returns_200(auth_client, user_team):
-    AgendaFactory.create_batch(3, team=user_team)
-    response = auth_client.get('/api/v1/agendas/?ordering=name')
+def test_GET_programs_with_ordering_returns_200(auth_client, user_team):
+    ProgramFactory.create_batch(3, team=user_team)
+    response = auth_client.get('/api/v1/programs/?ordering=name')
     assert response.status_code == 200
 
 
@@ -209,8 +209,8 @@ def test_GET_members_with_search_returns_200(auth_client, user_team):
     assert response.status_code == 200
 
 
-def test_GET_events_filtered_by_refer_agenda_returns_200(auth_client, user_team):
-    agenda = AgendaFactory(team=user_team)
-    EventFactory(refer_agenda=agenda)
-    response = auth_client.get(f'/api/v1/events/?refer_agenda={agenda.pk}')
+def test_GET_events_filtered_by_refer_program_returns_200(auth_client, user_team):
+    program = ProgramFactory(team=user_team)
+    EventFactory(refer_program=program)
+    response = auth_client.get(f'/api/v1/events/?refer_program={program.pk}')
     assert response.status_code == 200

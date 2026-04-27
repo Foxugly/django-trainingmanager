@@ -17,8 +17,8 @@ class Event(GenericClass):
     total = models.PositiveIntegerField(default=0)
     rounds = models.ManyToManyField(Round, blank=True, )
     members = models.ManyToManyField(Member, blank=True, )
-    refer_agenda = models.ForeignKey('agenda.Agenda', verbose_name=_('refer_agenda'), related_name='back_agenda',
-                                     null=True, on_delete=models.CASCADE)
+    refer_program = models.ForeignKey('program.Program', verbose_name=_('refer_program'), related_name='back_program',
+                                      null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return "%s %d" % (_('Event'), self.pk)
@@ -30,7 +30,7 @@ class Event(GenericClass):
         return len(self.get_members_present())
 
     def get_all_members(self):
-        return self.refer_agenda.members.all()
+        return self.refer_program.members.all()
 
     def get_nb_all_members(self):
         return len(self.get_all_members())
@@ -50,7 +50,7 @@ class Event(GenericClass):
 
     def get_attendance_members(self):
         l = []
-        for m in self.refer_agenda.members.all():
+        for m in self.refer_program.members.all():
             l.append(dict(member=m, attendance=True if m in self.members.all() else False))
         return l
 

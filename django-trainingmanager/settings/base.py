@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.headless',
-    'agenda',
+    'program',
     'event',
     'round',
     'exercise',

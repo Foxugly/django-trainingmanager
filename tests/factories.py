@@ -3,10 +3,10 @@ from factory.django import DjangoModelFactory
 
 from django.contrib.auth import get_user_model
 
-from agenda.models import Agenda
 from event.models import Event
 from exercise.models import EnergySegment, EnergySystem, Exercise, Stroke
 from member.models import Member
+from program.models import Program
 from round.models import Round
 from team.models import Team
 
@@ -73,11 +73,11 @@ class MemberFactory(DjangoModelFactory):
             self.teams.add(team)
 
 
-class AgendaFactory(DjangoModelFactory):
+class ProgramFactory(DjangoModelFactory):
     class Meta:
-        model = Agenda
+        model = Program
 
-    name = factory.Sequence(lambda n: f"Agenda {n}")
+    name = factory.Sequence(lambda n: f"Program {n}")
     team = factory.SubFactory(TeamFactory)
 
 
@@ -86,7 +86,7 @@ class EventFactory(DjangoModelFactory):
         model = Event
 
     name = factory.Sequence(lambda n: f"Event {n}")
-    refer_agenda = factory.SubFactory(AgendaFactory)
+    refer_program = factory.SubFactory(ProgramFactory)
 
 
 class RoundFactory(DjangoModelFactory):

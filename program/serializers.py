@@ -3,10 +3,10 @@ from rest_framework import serializers
 from event.models import Event
 from member.models import Member
 
-from .models import Agenda
+from .models import Program
 
 
-class AgendaSerializer(serializers.ModelSerializer):
+class ProgramSerializer(serializers.ModelSerializer):
     events = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Event.objects.all(), required=False
     )
@@ -15,6 +15,6 @@ class AgendaSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Agenda
+        model = Program
         fields = ['id', 'name', 'date_start', 'date_end', 'team', 'events', 'members']
         read_only_fields = ['id']

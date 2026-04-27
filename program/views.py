@@ -3,20 +3,20 @@ from rest_framework.exceptions import PermissionDenied
 
 from team.queries import accessible_teams, managed_teams
 
-from .models import Agenda
-from .serializers import AgendaSerializer
+from .models import Program
+from .serializers import ProgramSerializer
 
 
-class AgendaViewSet(viewsets.ModelViewSet):
-    """CRUD complet pour Agenda, scopé par team."""
-    serializer_class = AgendaSerializer
+class ProgramViewSet(viewsets.ModelViewSet):
+    """CRUD complet pour Program, scopé par team."""
+    serializer_class = ProgramSerializer
     filterset_fields = ['name', 'date_start', 'date_end', 'team']
     search_fields = ['name']
     ordering_fields = ['name', 'date_start', 'date_end']
     ordering = ['name']
 
     def get_queryset(self):
-        return Agenda.objects.filter(
+        return Program.objects.filter(
             team__in=accessible_teams(self.request.user)
         )
 

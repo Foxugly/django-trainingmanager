@@ -1,15 +1,15 @@
 from rest_framework import serializers
 
-from agenda.models import Agenda
 from member.models import Member
+from program.models import Program
 from round.models import Round
 
 from .models import Event
 
 
 class EventSerializer(serializers.ModelSerializer):
-    refer_agenda = serializers.PrimaryKeyRelatedField(
-        queryset=Agenda.objects.all(), required=False, allow_null=True
+    refer_program = serializers.PrimaryKeyRelatedField(
+        queryset=Program.objects.all(), required=False, allow_null=True
     )
     rounds = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Round.objects.all(), required=False
@@ -23,6 +23,6 @@ class EventSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'goal', 'color',
             'date', 'hour_start', 'hour_end', 'total',
-            'refer_agenda', 'rounds', 'members',
+            'refer_program', 'rounds', 'members',
         ]
         read_only_fields = ['id']

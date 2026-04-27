@@ -6,7 +6,7 @@ from member.models import Member
 from tools.generic_class import GenericClass
 
 
-class Agenda(GenericClass):
+class Program(GenericClass):
     name = models.CharField(max_length=100, verbose_name=_("name"))
     date_start = models.DateField(blank=True, null=True, )
     date_end = models.DateField(blank=True, null=True, )
@@ -15,7 +15,7 @@ class Agenda(GenericClass):
     team = models.ForeignKey(
         'team.Team',
         on_delete=models.PROTECT,
-        related_name='agendas',
+        related_name='programs',
     )
 
     def get_members(self):
@@ -28,4 +28,4 @@ class Agenda(GenericClass):
         return self.events.all()
 
     class Meta:
-        verbose_name = _('Agenda    ')
+        verbose_name = _('Program')
