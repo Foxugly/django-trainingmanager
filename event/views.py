@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.utils import timezone
-from rest_framework import status, viewsets
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -42,6 +43,36 @@ class EventViewSet(viewsets.ModelViewSet):
         )
         serializer.save()
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: OpenApiResponse(
+                response=inline_serializer(
+                    name='GenerateTrainingResponse',
+                    fields={
+                        'rounds_created': serializers.IntegerField(),
+                        'exercises_created': serializers.IntegerField(),
+                        'exercises_reused': serializers.IntegerField(),
+                        'rationale': serializers.CharField(),
+                        'model': serializers.CharField(),
+                        'tokens_used': inline_serializer(
+                            name='GenerateTrainingTokensUsed',
+                            fields={
+                                'input': serializers.IntegerField(),
+                                'output': serializers.IntegerField(),
+                            },
+                        ),
+                    },
+                ),
+                description='Training session generated successfully',
+            ),
+            403: OpenApiResponse(description='Not a manager of this event team'),
+            409: OpenApiResponse(description='Event already has rounds'),
+            500: OpenApiResponse(description='AI configuration error'),
+            502: OpenApiResponse(description='AI service error'),
+        },
+        description='Generate detailed Rounds and Exercises with AI for an Event.',
+    )
     @action(
         detail=True,
         methods=['post'],

@@ -1,7 +1,8 @@
 from datetime import date as _date
 
 from django.utils import timezone
-from rest_framework import status, viewsets
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -40,6 +41,35 @@ class ProgramViewSet(viewsets.ModelViewSet):
         self._check_team_write(serializer.validated_data.get('team', serializer.instance.team))
         serializer.save()
 
+    @extend_schema(
+        request=GeneratePlanRequestSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=inline_serializer(
+                    name='GeneratePlanResponse',
+                    fields={
+                        'created_count': serializers.IntegerField(),
+                        'deleted_count': serializers.IntegerField(),
+                        'rationale': serializers.CharField(),
+                        'model': serializers.CharField(),
+                        'tokens_used': inline_serializer(
+                            name='GeneratePlanTokensUsed',
+                            fields={
+                                'input': serializers.IntegerField(),
+                                'output': serializers.IntegerField(),
+                            },
+                        ),
+                    },
+                ),
+                description='Plan generated successfully',
+            ),
+            400: OpenApiResponse(description='Invalid request data'),
+            403: OpenApiResponse(description='Not a manager of this program team'),
+            500: OpenApiResponse(description='AI configuration error'),
+            502: OpenApiResponse(description='AI service error'),
+        },
+        description='Generate a training plan with AI for the given Program.',
+    )
     @action(
         detail=True,
         methods=['post'],

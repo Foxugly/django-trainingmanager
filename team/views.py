@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers as drf_serializers
 from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -178,6 +179,17 @@ class TeamInvitationViewSet(viewsets.ModelViewSet):
         managed = Team.objects.filter(Q(owner=user) | Q(managers=user))
         return TeamInvitation.objects.filter(team__in=managed).distinct()
 
+    @extend_schema(
+        request=CreateInvitationSerializer,
+        responses={
+            201: TeamInvitationSerializer,
+        },
+        description=(
+            'Trainer pre-registers an athlete on a managed team. '
+            'If the email matches an existing user, the response payload '
+            'is {detail, member_id} instead of a TeamInvitation.'
+        ),
+    )
     def create(self, request, *args, **kwargs):
         from member.models import Member
 
@@ -274,6 +286,15 @@ class InvitationLookupView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
+    @extend_schema(
+        responses={
+            200: ValidateInvitationSerializer,
+            400: OpenApiResponse(description='Invitation not pending (already handled)'),
+            404: OpenApiResponse(description='Token not found'),
+            410: OpenApiResponse(description='Invitation expired'),
+        },
+        description='Lookup an invitation by token. No authentication required.',
+    )
     def get(self, request, token):
         invitation = get_object_or_404(TeamInvitation, token=token)
         if not invitation.is_valid():
@@ -290,6 +311,26 @@ class InvitationLookupView(APIView):
             )
         return Response(ValidateInvitationSerializer(invitation).data)
 
+    @extend_schema(
+        request=CompleteInvitationSerializer,
+        responses={
+            201: OpenApiResponse(
+                response=inline_serializer(
+                    name='CompleteInvitationResponse',
+                    fields={
+                        'detail': drf_serializers.CharField(),
+                        'username': drf_serializers.CharField(),
+                        'access': drf_serializers.CharField(),
+                        'refresh': drf_serializers.CharField(),
+                    },
+                ),
+                description='User created and JWT issued',
+            ),
+            400: OpenApiResponse(description='Invalid token state, username taken, or weak password'),
+            404: OpenApiResponse(description='Token not found'),
+        },
+        description='Finalize invitation: create the user, link Member, return JWT.',
+    )
     def post(self, request, token):
         from allauth.account.models import EmailAddress
         from rest_framework_simplejwt.tokens import RefreshToken

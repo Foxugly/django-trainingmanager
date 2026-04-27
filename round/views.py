@@ -1,4 +1,5 @@
-from rest_framework import status, viewsets
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -21,6 +22,11 @@ class RoundViewSet(viewsets.ModelViewSet):
     ordering_fields = ['order', 'id']
     ordering = ['order']
 
+    @extend_schema(
+        request=None,
+        responses={201: RoundSerializer},
+        description='Clone this Round (scalar fields + M2M exercises). Returns the new Round.',
+    )
     @action(detail=True, methods=['post'])
     def clone(self, request, pk=None):
         """Standalone clone : new Round with the same scalar fields and the
@@ -36,6 +42,18 @@ class RoundViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(clone)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @extend_schema(
+        request=inline_serializer(
+            name='CloneExerciseRequest',
+            fields={'exercise_id': serializers.IntegerField()},
+        ),
+        responses={
+            201: ExerciseSerializer,
+            400: None,
+            404: None,
+        },
+        description='Clone an Exercise and attach the copy to this Round.',
+    )
     @action(detail=True, methods=['post'], url_path='clone-exercise')
     def clone_exercise(self, request, pk=None):
         """Clone an Exercise and attach it to this Round.

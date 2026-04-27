@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -61,6 +62,11 @@ class ExerciseViewSet(viewsets.ModelViewSet):
     ordering_fields = ['order', 'id', 'distance']
     ordering = ['order']
 
+    @extend_schema(
+        request=None,
+        responses={201: ExerciseSerializer},
+        description='Clone this Exercise. Returns the new Exercise.',
+    )
     @action(detail=True, methods=['post'])
     def clone(self, request, pk=None):
         """Standalone clone : new Exercise with the same scalar fields."""

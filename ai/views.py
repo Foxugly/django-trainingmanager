@@ -1,4 +1,5 @@
-from rest_framework import status
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +14,36 @@ class AIPingView(APIView):
     permission_classes = [IsAuthenticated, IsTrainer]
     throttle_classes = [AIPingThrottle]
 
+    @extend_schema(
+        request=inline_serializer(
+            name='AIPingRequest',
+            fields={
+                'prompt': serializers.CharField(
+                    required=False,
+                    help_text="Prompt to send to Claude. Defaults to a hello-world prompt.",
+                ),
+            },
+        ),
+        responses={
+            200: OpenApiResponse(
+                response=inline_serializer(
+                    name='AIPingResponse',
+                    fields={
+                        'text': serializers.CharField(),
+                        'model': serializers.CharField(),
+                        'input_tokens': serializers.IntegerField(),
+                        'output_tokens': serializers.IntegerField(),
+                        'stop_reason': serializers.CharField(),
+                    },
+                ),
+                description='Claude responded successfully',
+            ),
+            400: OpenApiResponse(description='Invalid prompt'),
+            500: OpenApiResponse(description='AI configuration error'),
+            502: OpenApiResponse(description='AI service error'),
+        },
+        description='Diagnostic ping to the Anthropic API.',
+    )
     def post(self, request):
         prompt = request.data.get("prompt", "Say hello in one word.")
         if not isinstance(prompt, str) or not prompt.strip():
