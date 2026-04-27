@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.headless',
     'sport',
+    'ai',
     'program',
     'event',
     'round',
@@ -181,3 +182,10 @@ GRAPH_SENDER = env('GRAPH_SENDER')
 
 EMAIL_BACKEND = 'tools.email.GraphEmailBackend'
 DEFAULT_FROM_EMAIL = env('GRAPH_SENDER')
+
+ANTHROPIC_API_KEY = env('ANTHROPIC_API_KEY', default='')
+ANTHROPIC_MODEL_DEFAULT = env(
+    'ANTHROPIC_MODEL_DEFAULT', default='claude-haiku-4-5-20251001'
+)
+ANTHROPIC_MAX_TOKENS_DEFAULT = env.int('ANTHROPIC_MAX_TOKENS_DEFAULT', default=2048)
+ANTHROPIC_TIMEOUT_SECONDS = env.int('ANTHROPIC_TIMEOUT_SECONDS', default=60)

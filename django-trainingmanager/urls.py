@@ -21,6 +21,9 @@ urlpatterns = [
     # Teams
     path('api/v1/', include('team.urls')),
 
+    # AI endpoints
+    path('api/v1/', include('ai.urls')),
+
     # Endpoints métier
     path('api/v1/', include('sport.urls')),
     path('api/v1/', include('program.urls')),
