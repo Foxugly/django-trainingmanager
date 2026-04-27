@@ -13,8 +13,18 @@ class RoundSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Round
-        fields = ["id", "order", "count", "t_start", "t_break", "exercises", "usage_count"]
-        read_only_fields = ["id", "usage_count"]
+        fields = [
+            "id",
+            "order",
+            "count",
+            "t_start",
+            "t_break",
+            "exercises",
+            "usage_count",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "usage_count", "created_at", "updated_at"]
 
     def update(self, instance, validated_data):
         if instance.usage_count > 1:

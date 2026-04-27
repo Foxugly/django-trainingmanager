@@ -51,8 +51,10 @@ class ExerciseSerializer(serializers.ModelSerializer):
             "modality",
             "energysegment",
             "usage_count",
+            "created_at",
+            "updated_at",
         ]
-        read_only_fields = ["id", "usage_count"]
+        read_only_fields = ["id", "usage_count", "created_at", "updated_at"]
 
     def update(self, instance, validated_data):
         if instance.usage_count > 1:

@@ -38,6 +38,8 @@ class Member(GenericClass):
         null=True,
         blank=True,
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def get_fullname(self):
         return "%s %s" % (self.firstname, self.lastname)

@@ -31,6 +31,8 @@ class ProgramSerializer(serializers.ModelSerializer):
             "ai_prompt",
             "ai_response",
             "ai_generated_at",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = [
             "id",
@@ -38,6 +40,8 @@ class ProgramSerializer(serializers.ModelSerializer):
             "ai_prompt",
             "ai_response",
             "ai_generated_at",
+            "created_at",
+            "updated_at",
         ]
 
 

@@ -69,6 +69,8 @@ class Exercise(GenericClass):
         blank=True,
         verbose_name=_("notes"),
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def get_total(self):
         return self.repetition * self.distance
