@@ -1,7 +1,5 @@
 from rest_framework import serializers
 
-from round.models import Round
-
 from .models import EnergySegment, EnergySystem, Exercise, Stroke
 
 
@@ -31,9 +29,6 @@ class EnergySegmentSerializer(serializers.ModelSerializer):
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
-    refer_round = serializers.PrimaryKeyRelatedField(
-        queryset=Round.objects.all(), required=False, allow_null=True
-    )
     stroke = serializers.PrimaryKeyRelatedField(
         queryset=Stroke.objects.all(), required=False, allow_null=True
     )
@@ -46,6 +41,6 @@ class ExerciseSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'order', 'repetition', 'distance', 'notes',
             't_start', 't_break',
-            'stroke', 'energysegment', 'refer_round',
+            'stroke', 'energysegment',
         ]
         read_only_fields = ['id']

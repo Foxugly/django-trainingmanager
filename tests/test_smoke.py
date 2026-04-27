@@ -110,12 +110,10 @@ def test_GET_rounds_returns_200(auth_client):
     assert response.status_code == 200
 
 
-def test_POST_rounds_returns_201(auth_client, user_team):
-    program = ProgramFactory(team=user_team)
-    event = EventFactory(refer_program=program)
+def test_POST_rounds_returns_201(auth_client):
     response = auth_client.post(
         '/api/v1/rounds/',
-        {'order': 1, 'count': 1, 'refer_event': event.pk},
+        {'order': 1, 'count': 1},
         format='json',
     )
     assert response.status_code == 201

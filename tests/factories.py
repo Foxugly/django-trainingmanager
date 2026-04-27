@@ -95,7 +95,13 @@ class RoundFactory(DjangoModelFactory):
 
     order = 1
     count = 1
-    refer_event = factory.SubFactory(EventFactory)
+
+    @factory.post_generation
+    def event(obj, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted is not None:
+            extracted.rounds.add(obj)
 
 
 class ExerciseFactory(DjangoModelFactory):
@@ -105,4 +111,10 @@ class ExerciseFactory(DjangoModelFactory):
     order = 1
     repetition = 1
     distance = 100
-    refer_round = factory.SubFactory(RoundFactory)
+
+    @factory.post_generation
+    def round(obj, create, extracted, **kwargs):
+        if not create:
+            return
+        if extracted is not None:
+            extracted.exercises.add(obj)

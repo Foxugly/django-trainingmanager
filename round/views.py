@@ -8,7 +8,7 @@ class RoundViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Round."""
     queryset = Round.objects.all()
     serializer_class = RoundSerializer
-    filterset_fields = ['refer_event']
+    filterset_fields = []
     search_fields = []
     ordering_fields = ['order', 'id']
-    ordering = ['refer_event', 'order']
+    ordering = ['order']

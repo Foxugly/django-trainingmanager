@@ -43,7 +43,7 @@ class ExerciseViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Exercise."""
     queryset = Exercise.objects.all()
     serializer_class = ExerciseSerializer
-    filterset_fields = ['refer_round', 'stroke', 'energysegment']
+    filterset_fields = ['stroke', 'energysegment']
     search_fields = ['notes']
     ordering_fields = ['order', 'id', 'distance']
-    ordering = ['refer_round', 'order']
+    ordering = ['order']

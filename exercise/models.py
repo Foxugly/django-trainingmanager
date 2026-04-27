@@ -37,8 +37,6 @@ class Exercise(GenericClass):
     energysegment = models.ForeignKey(EnergySegment, null=True, blank=True, verbose_name=_("Energy Segment"),
                                       on_delete=models.CASCADE)
     notes = models.CharField(max_length=200, blank=True, verbose_name=_("notes"), )
-    refer_round = models.ForeignKey('round.Round', verbose_name=_('refer_round'), related_name='back_round', blank=True,
-                                    null=True, on_delete=models.CASCADE)
 
     def get_total(self):
         return self.repetition * self.distance
