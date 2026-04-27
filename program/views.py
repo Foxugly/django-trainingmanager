@@ -1,6 +1,7 @@
 from datetime import date as _date
 
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
@@ -29,7 +30,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
 
     def _check_team_write(self, team):
         if team is None or not managed_teams(self.request.user).filter(pk=team.pk).exists():
-            raise PermissionDenied("You do not manage this team.")
+            raise PermissionDenied(_("You do not manage this team."))
 
     def perform_create(self, serializer):
         self._check_team_write(serializer.validated_data.get("team"))
@@ -80,7 +81,10 @@ class ProgramViewSet(viewsets.ModelViewSet):
 
         if not program.team.is_managed_by(request.user):
             return Response(
-                {"detail": "You must be owner or manager of this program's team."},
+                {
+                    "code": "not_a_manager",
+                    "detail": _("You must be owner or manager of this program's team."),
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
 

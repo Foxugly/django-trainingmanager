@@ -1,192 +1,209 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# French translations for trainingmanager.
+# Copyright (C) 2026
+# This file is distributed under the same license as the trainingmanager package.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
+"Project-Id-Version: trainingmanager 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-02-17 21:08+0100\n"
-"PO-Revision-Date: 2019-02-17 21:28+0100\n"
+"POT-Creation-Date: 2026-04-28 00:30+0000\n"
+"PO-Revision-Date: 2026-04-28 00:30+0000\n"
+"Last-Translator: \n"
+"Language-Team: French\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"Last-Translator: \n"
-"Language-Team: \n"
-"X-Generator: Poedit 2.0.6\n"
 
-#: foo/models.py:7 foo/models.py:26 foo/models.py:45
-msgid "name"
-msgstr "nom"
+#: customuser/models.py
+msgid "language"
+msgstr "langue"
 
-#: foo/models.py:22
-msgid "Bar"
-msgstr "Bar"
-
-#: foo/models.py:41
-msgid "Multibar"
-msgstr "Multibar"
-
-#: foo/models.py:46
-msgid "bar"
-msgstr "bar"
-
-#: foo/models.py:47
-msgid "multibars"
-msgstr "multibars"
-
-#: templates/base.html:38
-msgid "Change Profile"
-msgstr "Changer votre profil"
-
-#: templates/base.html:39 templates/registration/password_change_done.html:8
-msgid "Password change"
-msgstr "Changement de mot de passe"
-
-#: templates/base.html:41
-msgid "Log out"
-msgstr "Deconnexion"
-
-#: templates/foo/multibar_detail.html:4
-msgid "Detail"
-msgstr "Detail"
-
-#: templates/list.html:5
-msgid "Add"
-msgstr "Ajouter"
-
-#: templates/registration/login.html:6
-msgid "Your username and password didn't match. Please try again"
-msgstr ""
-"Votre nom d'utilisateur et votre mot de passe ne correpondent pas. Réessayer "
-"SVP."
-
-#: templates/registration/login.html:19
-msgid "Sign in"
-msgstr "Connexion"
-
-#: templates/registration/login.html:45
-msgid "Forgot password"
-msgstr "Mot de passe oublié"
-
-#: templates/registration/password_change_done.html:11
-msgid "Your password was changed."
-msgstr "Votre mot de passe a été changé."
-
-#: templates/registration/password_change_done.html:12
-msgid "Login"
-msgstr "Connexion"
-
-#: templates/registration/password_change_form.html:14
-#: templates/registration/profile.html:21
-msgid "Error(s)"
-msgstr "Erreur(s)"
-
-#: templates/registration/password_change_form.html:15
-msgid "Please correct the error below."
-msgstr "Veuillez corriger l'erreur indiqué."
-
-#: templates/registration/password_change_form.html:15
-msgid "Please correct the errors below."
-msgstr "Veuillez corriger les erreurs indiqués."
-
-#: templates/registration/password_change_form.html:20
+#: tools/exceptions.py
 msgid ""
-"Please enter your old password, for security's sake, and then enter your new "
-"password twice so we can verify you typed it in correctly."
+"This resource is locked because it is used in multiple places. Clone it to "
+"modify."
 msgstr ""
-"Veuillez introduire votre mot de passe précédent, pour des raisons de "
-"sécurité, puis entrez votre nouveau mot de passe deux fois afin que nous "
-"puissions vérifier que vous l'avez correctement saisi."
+"Cette ressource est verrouillée car elle est utilisée à plusieurs endroits. "
+"Clonez-la pour la modifier."
 
-#: templates/registration/password_change_form.html:65
-msgid "Change my password"
-msgstr "Changer mon mot de passe"
+#: tools/ai.py
+msgid "AI service unavailable. Please retry later."
+msgstr "Service IA indisponible. Veuillez réessayer plus tard."
 
-#: templates/registration/password_reset_complete.html:4
-#: templates/registration/password_reset_complete.html:11
-msgid "Your password has been set.  You may go ahead and log in now."
-msgstr ""
-"Votre mot de passe a été défini. Vous pouvez vous connecter et vous "
-"connecter maintenant."
+#: tools/ai.py
+msgid "AI service is not configured."
+msgstr "Le service IA n'est pas configuré."
 
-#: templates/registration/password_reset_complete.html:9
-#: templates/registration/password_reset_done.html:7
-#: templates/registration/password_reset_form.html:7
-msgid "Password reset"
-msgstr "Réinitialiser le mot de passe"
+#: tools/ai.py
+msgid "ANTHROPIC_API_KEY is not set. Configure it in .env."
+msgstr "ANTHROPIC_API_KEY n'est pas défini. Configurez-le dans .env."
 
-#: templates/registration/password_reset_complete.html:13
-#: templates/registration/password_reset_done.html:11
-msgid "Log in"
-msgstr "Connexion"
+#: tools/ai.py
+msgid "AI authentication failed. Check API key."
+msgstr "Échec de l'authentification IA. Vérifiez la clé d'API."
 
-#: templates/registration/password_reset_done.html:9
+#: tools/ai.py
+msgid "AI request timed out."
+msgstr "La requête IA a expiré."
+
+#: tools/ai.py
+msgid "AI request failed."
+msgstr "La requête IA a échoué."
+
+#: tools/ai.py
+msgid "Unexpected AI error."
+msgstr "Erreur IA inattendue."
+
+#: tools/ai.py
+msgid "AI did not call the expected tool."
+msgstr "L'IA n'a pas appelé l'outil attendu."
+
+#: event/ai.py
+msgid "No modalities defined for this sport. Cannot generate."
+msgstr "Aucune modalité définie pour ce sport. Génération impossible."
+
+#: event/ai.py
+msgid "No energy segments defined. Cannot generate."
+msgstr "Aucun segment énergétique défini. Génération impossible."
+
+#: event/ai.py
+msgid "AI returned empty or invalid rounds."
+msgstr "L'IA a renvoyé des séries vides ou invalides."
+
+#: event/ai.py
+msgid "AI used an invalid modality id."
+msgstr "L'IA a utilisé un identifiant de modalité invalide."
+
+#: event/ai.py
+msgid "AI used an invalid energysegment id."
+msgstr "L'IA a utilisé un identifiant de segment énergétique invalide."
+
+#: program/ai.py
+msgid "AI returned an invalid date format."
+msgstr "L'IA a renvoyé un format de date invalide."
+
+#: program/ai.py
+msgid "AI returned an empty or invalid event list."
+msgstr "L'IA a renvoyé une liste d'évènements vide ou invalide."
+
+#: program/ai.py
+msgid "AI generated an event with an out-of-range date."
+msgstr "L'IA a généré un évènement avec une date hors plage."
+
+#: team/permissions.py
 msgid ""
-"We've emailed you instructions for setting your password, if an account "
-"exists with the email you entered. You should receive them shortly."
+"Only trainers (owners or managers of an active team) can modify the catalog."
 msgstr ""
-"Nous vous avons envoyé des instructions pour définir votre mot de passe, si "
-"un compte existe avec le courrier que vous avez saisi Vous devriez les "
-"recevoir sous peu."
+"Seuls les entraîneurs (propriétaires ou managers d'une team active) peuvent "
+"modifier le catalogue."
 
-#: templates/registration/password_reset_done.html:10
-msgid ""
-"If you don't receive an email, please make sure you've entered the address "
-"you registered with, and check your spam folder."
+#: team/serializers.py
+msgid "You are already a member of this team."
+msgstr "Vous êtes déjà membre de cette team."
+
+#: team/serializers.py
+msgid "You already have a pending request for this team."
+msgstr "Vous avez déjà une demande en attente pour cette team."
+
+#: team/serializers.py
+msgid "This team is inactive."
+msgstr "Cette team est inactive."
+
+#: team/serializers.py
+msgid "This team is not public."
+msgstr "Cette team n'est pas publique."
+
+#: team/serializers.py
+msgid "You do not manage this team."
+msgstr "Vous ne gérez pas cette team."
+
+#: team/serializers.py
+msgid "An invitation is already pending for this email on this team."
+msgstr "Une invitation est déjà en attente pour cet email sur cette team."
+
+#: team/serializers.py
+msgid "This username is already taken."
+msgstr "Ce nom d'utilisateur est déjà pris."
+
+#: team/views.py
+msgid "This request has already been handled."
+msgstr "Cette demande a déjà été traitée."
+
+#: team/views.py
+msgid "Only the requester can cancel this request."
+msgstr "Seul l'auteur de la demande peut l'annuler."
+
+#: team/views.py
+msgid "Only a manager can accept or reject this request."
+msgstr "Seul un manager peut accepter ou refuser cette demande."
+
+#: team/views.py
+msgid "Unauthorized status transition."
+msgstr "Transition de statut non autorisée."
+
+#: team/views.py
+msgid "User already exists; Member created and linked."
+msgstr "L'utilisateur existe déjà ; un Member a été créé et associé."
+
+#: team/views.py
+msgid "Invitation expired."
+msgstr "Invitation expirée."
+
+#: team/views.py
+msgid "Invitation is not pending."
+msgstr "L'invitation n'est pas en attente."
+
+#: team/views.py
+msgid "Account created and invitation finalized."
+msgstr "Compte créé et invitation finalisée."
+
+#: team/views.py
+msgid "Only pending invitations can be cancelled."
+msgstr "Seules les invitations en attente peuvent être annulées."
+
+#: program/views.py
+msgid "You must be owner or manager of this program's team."
+msgstr "Vous devez être propriétaire ou manager de la team de ce programme."
+
+#: program/serializers.py
+msgid "date_end must be after date_start."
+msgstr "date_end doit être postérieure à date_start."
+
+#: program/serializers.py
+msgid "Range cannot exceed 365 days."
+msgstr "La plage ne peut pas dépasser 365 jours."
+
+#: event/views.py
+msgid "refer_program is required."
+msgstr "refer_program est requis."
+
+#: event/views.py
+msgid "You do not manage the team of this program."
+msgstr "Vous ne gérez pas la team de ce programme."
+
+#: event/views.py
+msgid "You must be owner or manager of this event's team."
+msgstr "Vous devez être propriétaire ou manager de la team de cet évènement."
+
+#: event/views.py
+msgid "Event already has rounds. Remove them before regenerating."
 msgstr ""
-"Si vous ne recevez pas d'e-mail, assurez-vous d'avoir entré votre adresse et "
-"vérifiez votre dossier de courrier indésirable."
+"L'évènement contient déjà des séries. Supprimez-les avant de régénérer."
 
-#: templates/registration/password_reset_email.html:2
-#, python-format
-msgid ""
-"You're receiving this email because you requested a password reset for your "
-"user account at %(site_name)s."
-msgstr ""
-"Vous recevez cet e-mail car vous avez demandé la réinitialisation du mot de "
-"passe de votre compte d'utilisateur à du site %(site_name)s ."
+#: ai/views.py
+msgid "prompt must be a non-empty string."
+msgstr "prompt doit être une chaîne non vide."
 
-#: templates/registration/password_reset_email.html:4
-msgid "Please go to the following page and choose a new password:"
-msgstr "Veuillez aller à la page suivante et choisir un nouveau mot de passe:"
+#: ai/views.py
+msgid "prompt too long (max 5000 chars for ping)."
+msgstr "prompt trop long (max 5000 caractères pour le ping)."
 
-#: templates/registration/password_reset_email.html:8
-msgid "Your username, in case you've forgotten:"
-msgstr "Votre nom d'utilisateur, au cas où vous auriez oublié:"
+#: round/views.py
+msgid "exercise_id is required."
+msgstr "exercise_id est requis."
 
-#: templates/registration/password_reset_email.html:10
-msgid "Thanks for using our site!"
-msgstr "Merci d'utiliser notre site!"
-
-#: templates/registration/password_reset_email.html:12
-#, python-format
-msgid "The %(site_name)s team"
-msgstr "L'équipe %(site_name)s"
-
-#: templates/registration/password_reset_form.html:9
-msgid ""
-"Forgotten your password? Enter your email address below, and we'll email "
-"instructions for setting a new one."
-msgstr ""
-"Mot de passe oublié? Entrez votre adresse e-mail ci-dessous et nous vous "
-"enverrons les instructions pour en créer une nouvelle."
-
-#: templates/registration/password_reset_form.html:16
-msgid "Reset my password"
-msgstr "Réinitialiser mon mot de passe"
-
-#: templates/registration/profile.html:39
-#: templates/registration/profile.html:49
-#: templates/registration/profile.html:56
-msgid "Yes"
-msgstr "Oui"
-
-#: templates/registration/profile.html:41
-#: templates/registration/profile.html:52
-#: templates/registration/profile.html:59
-msgid "No"
-msgstr "Non"
+#: round/views.py
+msgid "Exercise not found."
+msgstr "Exercice introuvable."

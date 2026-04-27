@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from .models import Team, TeamInvitation, TeamJoinRequest
@@ -59,15 +60,25 @@ class CreateJoinRequestSerializer(serializers.ModelSerializer):
         team = data["team"]
         member_profile = getattr(user, "member_profile", None)
         if member_profile is not None and member_profile.teams.filter(pk=team.pk).exists():
-            raise serializers.ValidationError({"team": "Vous etes deja membre de cette team."})
+            raise serializers.ValidationError(
+                {"team": _("You are already a member of this team.")},
+                code="already_member",
+            )
         if TeamJoinRequest.objects.filter(user=user, team=team, status="pending").exists():
             raise serializers.ValidationError(
-                {"team": "Vous avez deja une demande en attente pour cette team."}
+                {"team": _("You already have a pending request for this team.")},
+                code="pending_request_exists",
             )
         if not team.is_active:
-            raise serializers.ValidationError({"team": "Cette team est inactive."})
+            raise serializers.ValidationError(
+                {"team": _("This team is inactive.")},
+                code="team_not_active",
+            )
         if not team.is_public:
-            raise serializers.ValidationError({"team": "Cette team n'est pas publique."})
+            raise serializers.ValidationError(
+                {"team": _("This team is not public.")},
+                code="team_not_public",
+            )
         return data
 
 
@@ -108,9 +119,15 @@ class CreateInvitationSerializer(serializers.Serializer):
     def validate_team(self, team):
         user = self.context["request"].user
         if not team.is_managed_by(user):
-            raise serializers.ValidationError("Vous ne gerez pas cette team.")
+            raise serializers.ValidationError(
+                _("You do not manage this team."),
+                code="not_a_manager",
+            )
         if not team.is_active:
-            raise serializers.ValidationError("Cette team est inactive.")
+            raise serializers.ValidationError(
+                _("This team is inactive."),
+                code="team_not_active",
+            )
         return team
 
     def validate(self, data):
@@ -120,7 +137,8 @@ class CreateInvitationSerializer(serializers.Serializer):
             status="pending",
         ).exists():
             raise serializers.ValidationError(
-                {"email": "Une invitation est deja en cours pour cet email sur cette team."}
+                {"email": _("An invitation is already pending for this email on this team.")},
+                code="email_already_invited",
             )
         return data
 
@@ -141,7 +159,10 @@ class CompleteInvitationSerializer(serializers.Serializer):
     def validate_username(self, username):
         User = get_user_model()
         if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError("Ce nom d'utilisateur est deja pris.")
+            raise serializers.ValidationError(
+                _("This username is already taken."),
+                code="username_taken",
+            )
         return username
 
     def validate_password(self, password):

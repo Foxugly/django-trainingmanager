@@ -3,6 +3,8 @@
 import logging
 from datetime import date as _date
 
+from django.utils.translation import gettext_lazy as _
+
 from tools.ai import AIServiceError, call_claude_with_tool
 from tools.i18n import resolve_language_label
 
@@ -122,7 +124,7 @@ def _parse_date_strict(s):
     try:
         return _date.fromisoformat(s)
     except (TypeError, ValueError):
-        raise AIServiceError(f"AI returned invalid date format: {s}")
+        raise AIServiceError(_("AI returned an invalid date format."))
 
 
 def generate_plan(*, program, date_start, date_end, frequency_per_week, description):
@@ -150,12 +152,12 @@ def generate_plan(*, program, date_start, date_end, frequency_per_week, descript
     rationale = tool_input.get("rationale", "")
 
     if not isinstance(events, list) or not events:
-        raise AIServiceError("AI returned an empty or invalid event list.")
+        raise AIServiceError(_("AI returned an empty or invalid event list."))
 
     for ev in events:
         ev_date = _parse_date_strict(ev.get("date"))
         if ev_date < date_start or ev_date > date_end:
-            raise AIServiceError(f"AI generated event with out-of-range date: {ev.get('date')}")
+            raise AIServiceError(_("AI generated an event with an out-of-range date."))
 
     return {
         "events": events,

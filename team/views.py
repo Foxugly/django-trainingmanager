@@ -6,6 +6,7 @@ from django.core.mail import send_mail
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers as drf_serializers
 from rest_framework import status, viewsets
@@ -109,12 +110,16 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
             return
 
         if instance.status != "pending":
-            raise drf_serializers.ValidationError({"status": "Cette demande a deja ete traitee."})
+            raise drf_serializers.ValidationError(
+                {"status": _("This request has already been handled.")},
+                code="request_already_handled",
+            )
 
         if new_status == "cancelled":
             if instance.user_id != self.request.user.pk:
                 raise drf_serializers.ValidationError(
-                    {"status": "Seul l'auteur de la demande peut l'annuler."}
+                    {"status": _("Only the requester can cancel this request.")},
+                    code="only_owner_can_cancel",
                 )
             serializer.save(responded_at=timezone.now())
             return
@@ -122,7 +127,8 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
         if new_status in ("accepted", "rejected"):
             if not instance.team.is_managed_by(self.request.user):
                 raise drf_serializers.ValidationError(
-                    {"status": "Seul un manager peut accepter ou refuser."}
+                    {"status": _("Only a manager can accept or reject this request.")},
+                    code="only_manager_can_respond",
                 )
             saved = serializer.save(
                 responded_at=timezone.now(),
@@ -133,7 +139,8 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
             return
 
         raise drf_serializers.ValidationError(
-            {"status": f"Transition non autorisee vers {new_status}."}
+            {"status": _("Unauthorized status transition.")},
+            code="invalid_status_transition",
         )
 
     def _handle_acceptance(self, join_request):
@@ -210,7 +217,8 @@ class TeamInvitationViewSet(viewsets.ModelViewSet):
             self._send_existing_user_notification(existing_user, data["team"])
             return Response(
                 {
-                    "detail": "User already exists; Member created and linked.",
+                    "code": "user_already_exists",
+                    "detail": _("User already exists; Member created and linked."),
                     "member_id": member.id,
                 },
                 status=status.HTTP_201_CREATED,
@@ -272,7 +280,8 @@ class TeamInvitationViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         if instance.status != "pending":
             raise drf_serializers.ValidationError(
-                {"detail": "Seules les invitations pending peuvent etre annulees."}
+                {"detail": _("Only pending invitations can be cancelled.")},
+                code="invitation_pending_required",
             )
         instance.status = "cancelled"
         instance.save()
@@ -300,11 +309,14 @@ class InvitationLookupView(APIView):
                 invitation.status = "expired"
                 invitation.save()
                 return Response(
-                    {"detail": "Invitation expired."},
+                    {"code": "invitation_expired", "detail": _("Invitation expired.")},
                     status=status.HTTP_410_GONE,
                 )
             return Response(
-                {"detail": f"Invitation {invitation.status}."},
+                {
+                    "code": f"invitation_{invitation.status}",
+                    "detail": _("Invitation is not pending."),
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(ValidateInvitationSerializer(invitation).data)
@@ -338,7 +350,10 @@ class InvitationLookupView(APIView):
         invitation = get_object_or_404(TeamInvitation, token=token)
         if not invitation.is_valid():
             return Response(
-                {"detail": f"Invitation {invitation.status}."},
+                {
+                    "code": f"invitation_{invitation.status}",
+                    "detail": _("Invitation is not pending."),
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -371,7 +386,7 @@ class InvitationLookupView(APIView):
         refresh = RefreshToken.for_user(user)
         return Response(
             {
-                "detail": "Compte cree et invitation finalisee.",
+                "detail": _("Account created and invitation finalized."),
                 "username": user.username,
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),

@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
@@ -49,12 +50,15 @@ class AIPingView(APIView):
         prompt = request.data.get("prompt", "Say hello in one word.")
         if not isinstance(prompt, str) or not prompt.strip():
             return Response(
-                {"detail": "prompt must be a non-empty string"},
+                {"code": "prompt_empty", "detail": _("prompt must be a non-empty string.")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if len(prompt) > 5000:
             return Response(
-                {"detail": "prompt too long (max 5000 chars for ping)"},
+                {
+                    "code": "prompt_too_long",
+                    "detail": _("prompt too long (max 5000 chars for ping)."),
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
         result = call_claude(prompt)

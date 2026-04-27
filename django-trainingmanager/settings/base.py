@@ -56,6 +56,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "tools.middleware.UserLanguageMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
@@ -100,7 +101,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = "fr"
+LANGUAGE_CODE = "en"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
@@ -111,6 +112,10 @@ LANGUAGES = [
     ("en", "English"),
     ("it", "Italiano"),
     ("es", "Español"),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / "locale",
 ]
 
 STATIC_URL = "/static/"
@@ -143,6 +148,7 @@ REST_FRAMEWORK = {
         "ai_plan_generation": "10/hour",
         "ai_training_generation": "10/hour",
     },
+    "EXCEPTION_HANDLER": "tools.exceptions.custom_exception_handler",
 }
 
 SIMPLE_JWT = {

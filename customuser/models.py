@@ -26,7 +26,7 @@ class CustomUser(AbstractUser):
         _("language"),
         max_length=2,
         choices=settings.LANGUAGES,
-        default=settings.LANGUAGE_CODE,
+        default="fr",
     )
     objects = CustomUserManager()
 

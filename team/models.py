@@ -36,7 +36,7 @@ class Team(models.Model):
     language = models.CharField(
         max_length=2,
         choices=settings.LANGUAGES,
-        default=settings.LANGUAGE_CODE,
+        default="fr",
     )
     is_active = models.BooleanField(default=True)
     is_public = models.BooleanField(default=False)

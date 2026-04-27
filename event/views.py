@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
@@ -28,9 +29,9 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def _check_program_write(self, program):
         if program is None:
-            raise PermissionDenied("refer_program is required.")
+            raise PermissionDenied(_("refer_program is required."))
         if not managed_teams(self.request.user).filter(pk=program.team_id).exists():
-            raise PermissionDenied("You do not manage the team of this program.")
+            raise PermissionDenied(_("You do not manage the team of this program."))
 
     def perform_create(self, serializer):
         self._check_program_write(serializer.validated_data.get("refer_program"))
@@ -87,13 +88,19 @@ class EventViewSet(viewsets.ModelViewSet):
 
         if not event.refer_program or not event.refer_program.team.is_managed_by(request.user):
             return Response(
-                {"detail": "You must be owner or manager of this event's team."},
+                {
+                    "code": "not_a_manager",
+                    "detail": _("You must be owner or manager of this event's team."),
+                },
                 status=status.HTTP_403_FORBIDDEN,
             )
 
         if event.rounds.exists():
             return Response(
-                {"detail": "Event already has rounds. Remove them before regenerating."},
+                {
+                    "code": "event_has_rounds",
+                    "detail": _("Event already has rounds. Remove them before regenerating."),
+                },
                 status=status.HTTP_409_CONFLICT,
             )
 

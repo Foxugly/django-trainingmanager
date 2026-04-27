@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from event.models import Event
@@ -52,7 +53,13 @@ class GeneratePlanRequestSerializer(serializers.Serializer):
 
     def validate(self, data):
         if data["date_end"] < data["date_start"]:
-            raise serializers.ValidationError({"date_end": "date_end must be after date_start"})
+            raise serializers.ValidationError(
+                {"date_end": _("date_end must be after date_start.")},
+                code="date_range_invalid",
+            )
         if (data["date_end"] - data["date_start"]).days > 365:
-            raise serializers.ValidationError({"date_end": "range cannot exceed 365 days"})
+            raise serializers.ValidationError(
+                {"date_end": _("Range cannot exceed 365 days.")},
+                code="date_range_too_long",
+            )
         return data

@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
@@ -30,7 +31,7 @@ class IsTrainer(BasePermission):
     Write access requires owning or managing at least one active team.
     """
 
-    message = "Only trainers (owners or managers of an active team) can modify the catalog."
+    message = _("Only trainers (owners or managers of an active team) can modify the catalog.")
 
     def has_permission(self, request, view):
         if not request.user.is_authenticated:

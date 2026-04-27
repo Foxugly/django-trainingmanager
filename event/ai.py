@@ -2,6 +2,8 @@
 
 import logging
 
+from django.utils.translation import gettext_lazy as _
+
 from tools.ai import AIServiceError, call_claude_with_tool
 from tools.i18n import resolve_language_label
 
@@ -157,9 +159,9 @@ def generate_training(*, event):
     energysegments = list(EnergySegment.objects.values("id", "abv"))
 
     if not modalities:
-        raise AIServiceError(f"No modalities defined for sport {sport_name}. Cannot generate.")
+        raise AIServiceError(_("No modalities defined for this sport. Cannot generate."))
     if not energysegments:
-        raise AIServiceError("No energy segments defined. Cannot generate.")
+        raise AIServiceError(_("No energy segments defined. Cannot generate."))
 
     modality_ids = [m["id"] for m in modalities]
     energysegment_ids = [s["id"] for s in energysegments]
@@ -186,18 +188,16 @@ def generate_training(*, event):
     rationale = tool_input.get("rationale", "")
 
     if not isinstance(rounds_data, list) or not rounds_data:
-        raise AIServiceError("AI returned empty or invalid rounds.")
+        raise AIServiceError(_("AI returned empty or invalid rounds."))
 
     valid_modality_ids = set(modality_ids)
     valid_segment_ids = set(energysegment_ids)
     for r in rounds_data:
         for ex in r.get("exercises", []):
             if ex.get("modality_id") not in valid_modality_ids:
-                raise AIServiceError(f"AI used invalid modality_id: {ex.get('modality_id')}")
+                raise AIServiceError(_("AI used an invalid modality id."))
             if ex.get("energysegment_id") not in valid_segment_ids:
-                raise AIServiceError(
-                    f"AI used invalid energysegment_id: {ex.get('energysegment_id')}"
-                )
+                raise AIServiceError(_("AI used an invalid energysegment id."))
 
     return {
         "rounds": rounds_data,

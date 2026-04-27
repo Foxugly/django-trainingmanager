@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
@@ -63,14 +64,14 @@ class RoundViewSet(viewsets.ModelViewSet):
         exercise_id = request.data.get("exercise_id")
         if not exercise_id:
             return Response(
-                {"detail": "exercise_id is required"},
+                {"code": "exercise_id_required", "detail": _("exercise_id is required.")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
             original = Exercise.objects.get(pk=exercise_id)
         except Exercise.DoesNotExist:
             return Response(
-                {"detail": "Exercise not found"},
+                {"code": "exercise_not_found", "detail": _("Exercise not found.")},
                 status=status.HTTP_404_NOT_FOUND,
             )
         cloned_exercise = Exercise.objects.create(
