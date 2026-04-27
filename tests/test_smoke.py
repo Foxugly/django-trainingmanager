@@ -1,0 +1,216 @@
+import pytest
+
+from tests.factories import (
+    AgendaFactory,
+    EnergySegmentFactory,
+    EnergySystemFactory,
+    EventFactory,
+    MemberFactory,
+    RoundFactory,
+    StrokeFactory,
+)
+
+pytestmark = pytest.mark.django_db
+
+
+# ------------------------------- /me/ --------------------------------
+
+def test_GET_me_authenticated_returns_200(auth_client, authenticated_user):
+    response = auth_client.get('/api/v1/me/')
+    assert response.status_code == 200
+    assert response.json()['username'] == authenticated_user.username
+
+
+def test_PATCH_me_updates_first_name(auth_client):
+    response = auth_client.patch(
+        '/api/v1/me/', {'first_name': 'Updated'}, format='json'
+    )
+    assert response.status_code == 200
+    assert response.json()['first_name'] == 'Updated'
+
+
+def test_GET_me_unauthenticated_returns_401(api_client):
+    response = api_client.get('/api/v1/me/')
+    assert response.status_code == 401
+
+
+# ------------------------------ /teams/ ------------------------------
+
+def test_GET_teams_authenticated_returns_200(auth_client):
+    response = auth_client.get('/api/v1/teams/')
+    assert response.status_code == 200
+
+
+def test_POST_teams_creates_with_caller_as_owner(auth_client, authenticated_user):
+    response = auth_client.post(
+        '/api/v1/teams/',
+        {'name': 'New Team Smoke', 'is_active': True, 'is_public': False, 'managers': []},
+        format='json',
+    )
+    assert response.status_code == 201
+    assert response.json()['owner'] == authenticated_user.pk
+
+
+def test_GET_team_detail_returns_200(auth_client, user_team):
+    response = auth_client.get(f'/api/v1/teams/{user_team.pk}/')
+    assert response.status_code == 200
+    assert response.json()['id'] == user_team.pk
+
+
+# ----------------------------- /agendas/ -----------------------------
+
+def test_GET_agendas_returns_200(auth_client):
+    response = auth_client.get('/api/v1/agendas/')
+    assert response.status_code == 200
+
+
+def test_POST_agendas_with_owned_team_returns_201(auth_client, user_team):
+    response = auth_client.post(
+        '/api/v1/agendas/',
+        {'name': 'Smoke Agenda', 'team': user_team.pk},
+        format='json',
+    )
+    assert response.status_code == 201
+    assert response.json()['team'] == user_team.pk
+
+
+def test_GET_agenda_detail_returns_200(auth_client, user_team):
+    agenda = AgendaFactory(team=user_team)
+    response = auth_client.get(f'/api/v1/agendas/{agenda.pk}/')
+    assert response.status_code == 200
+
+
+def test_DELETE_agenda_returns_204(auth_client, user_team):
+    agenda = AgendaFactory(team=user_team)
+    response = auth_client.delete(f'/api/v1/agendas/{agenda.pk}/')
+    assert response.status_code == 204
+
+
+# ------------------------------ /events/ -----------------------------
+
+def test_GET_events_returns_200(auth_client):
+    response = auth_client.get('/api/v1/events/')
+    assert response.status_code == 200
+
+
+def test_POST_events_with_valid_agenda_returns_201(auth_client, user_team):
+    agenda = AgendaFactory(team=user_team)
+    response = auth_client.post(
+        '/api/v1/events/',
+        {'name': 'Smoke Event', 'refer_agenda': agenda.pk},
+        format='json',
+    )
+    assert response.status_code == 201
+
+
+# ------------------------------ /rounds/ -----------------------------
+
+def test_GET_rounds_returns_200(auth_client):
+    response = auth_client.get('/api/v1/rounds/')
+    assert response.status_code == 200
+
+
+def test_POST_rounds_returns_201(auth_client, user_team):
+    agenda = AgendaFactory(team=user_team)
+    event = EventFactory(refer_agenda=agenda)
+    response = auth_client.post(
+        '/api/v1/rounds/',
+        {'order': 1, 'count': 1, 'refer_event': event.pk},
+        format='json',
+    )
+    assert response.status_code == 201
+
+
+# --------------------------- /exercises/ -----------------------------
+
+def test_GET_exercises_returns_200(auth_client):
+    response = auth_client.get('/api/v1/exercises/')
+    assert response.status_code == 200
+
+
+def test_POST_exercises_returns_201(auth_client):
+    response = auth_client.post(
+        '/api/v1/exercises/',
+        {'order': 1, 'repetition': 1, 'distance': 100},
+        format='json',
+    )
+    assert response.status_code == 201
+
+
+# --------- /strokes/ /energy-systems/ /energy-segments/ (RO) ---------
+
+def test_GET_strokes_returns_200(auth_client):
+    StrokeFactory()
+    response = auth_client.get('/api/v1/strokes/')
+    assert response.status_code == 200
+
+
+def test_POST_strokes_returns_405(auth_client):
+    response = auth_client.post('/api/v1/strokes/', {'name': 'Free'}, format='json')
+    assert response.status_code == 405
+
+
+def test_GET_energy_systems_returns_200(auth_client):
+    EnergySystemFactory()
+    response = auth_client.get('/api/v1/energy-systems/')
+    assert response.status_code == 200
+
+
+def test_GET_energy_segments_returns_200(auth_client):
+    EnergySegmentFactory()
+    response = auth_client.get('/api/v1/energy-segments/')
+    assert response.status_code == 200
+
+
+# ----------------------------- /members/ -----------------------------
+
+def test_GET_members_returns_200(auth_client):
+    response = auth_client.get('/api/v1/members/')
+    assert response.status_code == 200
+
+
+def test_POST_members_with_owned_team_returns_201(auth_client, user_team):
+    response = auth_client.post(
+        '/api/v1/members/',
+        {
+            'firstname': 'Smoke',
+            'lastname': 'Tester',
+            'email': 'smoke.tester@local.test',
+            'teams': [user_team.pk],
+        },
+        format='json',
+    )
+    assert response.status_code == 201
+
+
+# ----------------------- schema and docs ----------------------------
+
+def test_GET_schema_unauthenticated_returns_200(api_client):
+    response = api_client.get('/api/v1/schema/')
+    assert response.status_code == 200
+
+
+def test_GET_docs_unauthenticated_returns_200(api_client):
+    response = api_client.get('/api/v1/docs/')
+    assert response.status_code == 200
+
+
+# ------------------ filtering / search / ordering -------------------
+
+def test_GET_agendas_with_ordering_returns_200(auth_client, user_team):
+    AgendaFactory.create_batch(3, team=user_team)
+    response = auth_client.get('/api/v1/agendas/?ordering=name')
+    assert response.status_code == 200
+
+
+def test_GET_members_with_search_returns_200(auth_client, user_team):
+    MemberFactory(firstname='Searchable', teams=[user_team])
+    response = auth_client.get('/api/v1/members/?search=Searchable')
+    assert response.status_code == 200
+
+
+def test_GET_events_filtered_by_refer_agenda_returns_200(auth_client, user_team):
+    agenda = AgendaFactory(team=user_team)
+    EventFactory(refer_agenda=agenda)
+    response = auth_client.get(f'/api/v1/events/?refer_agenda={agenda.pk}')
+    assert response.status_code == 200
