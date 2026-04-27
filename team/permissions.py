@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
@@ -19,3 +20,22 @@ class IsTeamManagerOrReadOnly(BasePermission):
         if request.method in SAFE_METHODS:
             return True
         return obj.is_managed_by(request.user)
+
+
+class IsTrainer(BasePermission):
+    """
+    Read access for any authenticated user.
+    Write access requires owning or managing at least one active team.
+    """
+    message = "Only trainers (owners or managers of an active team) can modify the catalog."
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        if request.method in SAFE_METHODS:
+            return True
+        from team.models import Team
+        return Team.objects.filter(
+            Q(owner=request.user) | Q(managers=request.user),
+            is_active=True,
+        ).exists()
