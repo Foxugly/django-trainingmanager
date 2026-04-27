@@ -88,6 +88,13 @@ class EventFactory(DjangoModelFactory):
     name = factory.Sequence(lambda n: f"Event {n}")
     refer_program = factory.SubFactory(ProgramFactory)
 
+    @factory.post_generation
+    def rounds(obj, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+        for r in extracted:
+            obj.rounds.add(r)
+
 
 class RoundFactory(DjangoModelFactory):
     class Meta:
@@ -102,6 +109,13 @@ class RoundFactory(DjangoModelFactory):
             return
         if extracted is not None:
             extracted.rounds.add(obj)
+
+    @factory.post_generation
+    def exercises(obj, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+        for ex in extracted:
+            obj.exercises.add(ex)
 
 
 class ExerciseFactory(DjangoModelFactory):
