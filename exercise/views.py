@@ -58,7 +58,10 @@ class EnergySegmentViewSet(viewsets.ReadOnlyModelViewSet):
 class ExerciseViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Exercise."""
 
-    queryset = Exercise.objects.all()
+    queryset = Exercise.objects.select_related(
+        "modality__sport",
+        "energysegment__energysystem",
+    )
     serializer_class = ExerciseSerializer
     permission_classes = [IsAuthenticated, IsTrainer]
     filterset_fields = ["modality", "energysegment"]

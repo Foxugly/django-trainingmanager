@@ -1,11 +1,14 @@
 from rest_framework import serializers
 
+from sport.serializers import SportSerializer
 from tools.exceptions import ResourceLocked
 
 from .models import EnergySegment, EnergySystem, Exercise, Modality
 
 
 class ModalitySerializer(serializers.ModelSerializer):
+    sport = SportSerializer(read_only=True)
+
     class Meta:
         model = Modality
         fields = ["id", "name", "sport"]
@@ -20,22 +23,37 @@ class EnergySystemSerializer(serializers.ModelSerializer):
 
 
 class EnergySegmentSerializer(serializers.ModelSerializer):
-    energysystem = serializers.PrimaryKeyRelatedField(
-        queryset=EnergySystem.objects.all(), required=False, allow_null=True
+    energysystem = EnergySystemSerializer(read_only=True)
+    energysystem_id = serializers.PrimaryKeyRelatedField(
+        source="energysystem",
+        queryset=EnergySystem.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
     )
 
     class Meta:
         model = EnergySegment
-        fields = ["id", "abv", "description", "energysystem"]
+        fields = ["id", "abv", "description", "energysystem", "energysystem_id"]
         read_only_fields = ["id"]
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
-    modality = serializers.PrimaryKeyRelatedField(
-        queryset=Modality.objects.all(), required=False, allow_null=True
+    modality = ModalitySerializer(read_only=True)
+    modality_id = serializers.PrimaryKeyRelatedField(
+        source="modality",
+        queryset=Modality.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
     )
-    energysegment = serializers.PrimaryKeyRelatedField(
-        queryset=EnergySegment.objects.all(), required=False, allow_null=True
+    energysegment = EnergySegmentSerializer(read_only=True)
+    energysegment_id = serializers.PrimaryKeyRelatedField(
+        source="energysegment",
+        queryset=EnergySegment.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
     )
 
     class Meta:
@@ -49,7 +67,9 @@ class ExerciseSerializer(serializers.ModelSerializer):
             "t_start",
             "t_break",
             "modality",
+            "modality_id",
             "energysegment",
+            "energysegment_id",
             "usage_count",
             "created_at",
             "updated_at",

@@ -45,9 +45,14 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return Team.objects.filter(
-            Q(owner=user) | Q(managers=user) | Q(is_public=True, is_active=True)
-        ).distinct()
+        return (
+            Team.objects.filter(
+                Q(owner=user) | Q(managers=user) | Q(is_public=True, is_active=True)
+            )
+            .select_related("sport", "owner")
+            .prefetch_related("managers")
+            .distinct()
+        )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

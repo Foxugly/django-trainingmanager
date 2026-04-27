@@ -16,10 +16,13 @@ from .serializers import RoundSerializer
 class RoundViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Round."""
 
-    queryset = Round.objects.all()
+    queryset = Round.objects.select_related("sport").prefetch_related(
+        "exercises__modality__sport",
+        "exercises__energysegment__energysystem",
+    )
     serializer_class = RoundSerializer
     permission_classes = [IsAuthenticated, IsTrainer]
-    filterset_fields = []
+    filterset_fields = ["sport"]
     search_fields = []
     ordering_fields = ["order", "id"]
     ordering = ["order"]

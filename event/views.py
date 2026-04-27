@@ -25,7 +25,11 @@ class EventViewSet(viewsets.ModelViewSet):
     ordering = ["-date", "hour_start"]
 
     def get_queryset(self):
-        return Event.objects.filter(refer_program__team__in=accessible_teams(self.request.user))
+        return (
+            Event.objects.filter(refer_program__team__in=accessible_teams(self.request.user))
+            .select_related("refer_program", "refer_program__team", "refer_program__team__sport")
+            .prefetch_related("rounds", "members")
+        )
 
     def _check_program_write(self, program):
         if program is None:

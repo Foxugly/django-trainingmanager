@@ -47,7 +47,7 @@ def test_POST_teams_creates_with_caller_as_owner(auth_client, authenticated_user
         "/api/v1/teams/",
         {
             "name": "New Team Smoke",
-            "sport": sport.pk,
+            "sport_id": sport.pk,
             "is_active": True,
             "is_public": False,
             "managers": [],
@@ -55,7 +55,7 @@ def test_POST_teams_creates_with_caller_as_owner(auth_client, authenticated_user
         format="json",
     )
     assert response.status_code == 201
-    assert response.json()["owner"] == authenticated_user.pk
+    assert response.json()["owner"]["id"] == authenticated_user.pk
 
 
 def test_POST_teams_without_sport_returns_400(auth_client):
@@ -65,6 +65,16 @@ def test_POST_teams_without_sport_returns_400(auth_client):
         format="json",
     )
     assert response.status_code == 400
+
+
+def test_GET_team_owner_is_nested_in_response(auth_client, user_team, authenticated_user):
+    response = auth_client.get(f"/api/v1/teams/{user_team.pk}/")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["owner"]["id"] == authenticated_user.pk
+    assert body["owner"]["username"] == authenticated_user.username
+    assert isinstance(body["sport"], dict)
+    assert body["sport"]["id"] == user_team.sport.pk
 
 
 def test_GET_team_detail_returns_200(auth_client, user_team):
@@ -84,11 +94,11 @@ def test_GET_programs_returns_200(auth_client):
 def test_POST_programs_with_owned_team_returns_201(auth_client, user_team):
     response = auth_client.post(
         "/api/v1/programs/",
-        {"name": "Smoke Program", "team": user_team.pk},
+        {"name": "Smoke Program", "team_id": user_team.pk},
         format="json",
     )
     assert response.status_code == 201
-    assert response.json()["team"] == user_team.pk
+    assert response.json()["team"]["id"] == user_team.pk
 
 
 def test_GET_program_detail_returns_200(auth_client, user_team):
@@ -115,7 +125,7 @@ def test_POST_events_with_valid_program_returns_201(auth_client, user_team):
     program = ProgramFactory(team=user_team)
     response = auth_client.post(
         "/api/v1/events/",
-        {"name": "Smoke Event", "refer_program": program.pk},
+        {"name": "Smoke Event", "refer_program_id": program.pk},
         format="json",
     )
     assert response.status_code == 201
@@ -133,7 +143,7 @@ def test_POST_rounds_returns_201(auth_client_trainer):
     sport = SportFactory()
     response = auth_client_trainer.post(
         "/api/v1/rounds/",
-        {"order": 1, "count": 1, "sport": sport.pk},
+        {"order": 1, "count": 1, "sport_id": sport.pk},
         format="json",
     )
     assert response.status_code == 201

@@ -3,11 +3,28 @@ from rest_framework import serializers
 
 from event.models import Event
 from member.models import Member
+from team.models import Team
+from team.serializers import TeamMinimalSerializer
 
 from .models import Program
 
 
+class ProgramMinimalSerializer(serializers.ModelSerializer):
+    """Compact program payload for nested read contexts."""
+
+    class Meta:
+        model = Program
+        fields = ["id", "name"]
+        read_only_fields = fields
+
+
 class ProgramSerializer(serializers.ModelSerializer):
+    team = TeamMinimalSerializer(read_only=True)
+    team_id = serializers.PrimaryKeyRelatedField(
+        source="team",
+        queryset=Team.objects.all(),
+        write_only=True,
+    )
     events = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Event.objects.all(), required=False
     )
@@ -23,6 +40,7 @@ class ProgramSerializer(serializers.ModelSerializer):
             "date_start",
             "date_end",
             "team",
+            "team_id",
             "events",
             "members",
             "frequency_per_week",

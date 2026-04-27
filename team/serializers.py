@@ -2,16 +2,38 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from customuser.serializers import CustomUserMinimalSerializer
+from sport.models import Sport
+from sport.serializers import SportSerializer
+
 from .models import Team, TeamInvitation, TeamJoinRequest
 
 
+class TeamMinimalSerializer(serializers.ModelSerializer):
+    """Compact team payload for nested read contexts."""
+
+    class Meta:
+        model = Team
+        fields = ["id", "name", "language"]
+        read_only_fields = fields
+
+
 class TeamSerializer(serializers.ModelSerializer):
+    sport = SportSerializer(read_only=True)
+    sport_id = serializers.PrimaryKeyRelatedField(
+        source="sport",
+        queryset=Sport.objects.all(),
+        write_only=True,
+    )
+    owner = CustomUserMinimalSerializer(read_only=True)
+
     class Meta:
         model = Team
         fields = [
             "id",
             "name",
             "sport",
+            "sport_id",
             "owner",
             "managers",
             "language",
@@ -21,9 +43,6 @@ class TeamSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "owner", "created_at", "updated_at"]
-        extra_kwargs = {
-            "sport": {"required": True, "allow_null": False},
-        }
 
 
 class TeamJoinRequestSerializer(serializers.ModelSerializer):

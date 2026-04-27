@@ -18,7 +18,12 @@ class MemberViewSet(viewsets.ModelViewSet):
     ordering = ["lastname", "firstname"]
 
     def get_queryset(self):
-        return Member.objects.filter(teams__in=accessible_teams(self.request.user)).distinct()
+        return (
+            Member.objects.filter(teams__in=accessible_teams(self.request.user))
+            .select_related("user")
+            .prefetch_related("teams__sport")
+            .distinct()
+        )
 
     def _check_teams_write(self, teams):
         if not teams:

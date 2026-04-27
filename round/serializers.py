@@ -2,12 +2,20 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from exercise.models import Exercise
+from sport.models import Sport
+from sport.serializers import SportSerializer
 from tools.exceptions import ResourceLocked
 
 from .models import Round
 
 
 class RoundSerializer(serializers.ModelSerializer):
+    sport = SportSerializer(read_only=True)
+    sport_id = serializers.PrimaryKeyRelatedField(
+        source="sport",
+        queryset=Sport.objects.all(),
+        write_only=True,
+    )
     exercises = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Exercise.objects.all(), required=False
     )
@@ -17,6 +25,7 @@ class RoundSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "sport",
+            "sport_id",
             "order",
             "count",
             "t_start",

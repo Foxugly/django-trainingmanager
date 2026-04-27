@@ -26,7 +26,11 @@ class ProgramViewSet(viewsets.ModelViewSet):
     ordering = ["name"]
 
     def get_queryset(self):
-        return Program.objects.filter(team__in=accessible_teams(self.request.user))
+        return (
+            Program.objects.filter(team__in=accessible_teams(self.request.user))
+            .select_related("team", "team__sport", "team__owner")
+            .prefetch_related("events", "members")
+        )
 
     def _check_team_write(self, team):
         if team is None or not managed_teams(self.request.user).filter(pk=team.pk).exists():
