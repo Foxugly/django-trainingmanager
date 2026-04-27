@@ -16,5 +16,5 @@ class AgendaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Agenda
-        fields = ['id', 'name', 'date_start', 'date_end', 'events', 'members']
+        fields = ['id', 'name', 'date_start', 'date_end', 'team', 'events', 'members']
         read_only_fields = ['id']
