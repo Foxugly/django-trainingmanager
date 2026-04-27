@@ -42,13 +42,13 @@ def test_resource_locked_body_has_code(auth_client_trainer, trainer_user, settin
     from round.models import Round
     from sport.models import Sport
 
-    sport = Sport.objects.create(name="Test sport")
+    sport = Sport.objects.create(name="Test sport", slug="test-sport")
     modality = Modality.objects.create(name="Crawl", sport=sport)
     system = EnergySystem.objects.create(name="Aerobic")
     segment = EnergySegment.objects.create(abv="A1", description="A1", energysystem=system)
     exercise = Exercise.objects.create(modality=modality, energysegment=segment, distance=100)
-    Round.objects.create(order=1).exercises.add(exercise)
-    Round.objects.create(order=2).exercises.add(exercise)
+    Round.objects.create(sport=sport, order=1).exercises.add(exercise)
+    Round.objects.create(sport=sport, order=2).exercises.add(exercise)
     # Now exercise.usage_count >= 2 → mutation triggers ResourceLocked
 
     response = auth_client_trainer.patch(

@@ -113,6 +113,7 @@ class RoundFactory(DjangoModelFactory):
 
     order = 1
     count = 1
+    sport = factory.SubFactory(SportFactory)
 
     @factory.post_generation
     def event(obj, create, extracted, **kwargs):

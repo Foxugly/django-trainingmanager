@@ -121,7 +121,7 @@ def test_POST_generate_training_with_existing_rounds_returns_409(
     auth_client_trainer, trainer_event, settings
 ):
     settings.ANTHROPIC_API_KEY = "sk-ant-fake-test-key"
-    existing = Round.objects.create(count=1, order=1)
+    existing = Round.objects.create(sport=trainer_event.refer_program.team.sport, count=1, order=1)
     trainer_event.rounds.add(existing)
 
     response = auth_client_trainer.post(

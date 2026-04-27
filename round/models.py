@@ -24,6 +24,11 @@ class Round(GenericClass):
         Exercise,
         blank=True,
     )
+    sport = models.ForeignKey(
+        "sport.Sport",
+        on_delete=models.PROTECT,
+        related_name="rounds",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

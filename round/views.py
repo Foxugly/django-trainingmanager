@@ -35,6 +35,7 @@ class RoundViewSet(viewsets.ModelViewSet):
         same exercise list (M2M copied)."""
         original = self.get_object()
         clone = Round.objects.create(
+            sport=original.sport,
             count=original.count,
             t_start=original.t_start,
             t_break=original.t_break,
@@ -73,6 +74,14 @@ class RoundViewSet(viewsets.ModelViewSet):
             return Response(
                 {"code": "exercise_not_found", "detail": _("Exercise not found.")},
                 status=status.HTTP_404_NOT_FOUND,
+            )
+        if original.modality and original.modality.sport_id != round_obj.sport_id:
+            return Response(
+                {
+                    "code": "exercise_sport_mismatch",
+                    "detail": _("Exercise sport does not match round sport."),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
         cloned_exercise = Exercise.objects.create(
             t_start=original.t_start,

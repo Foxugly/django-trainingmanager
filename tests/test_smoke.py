@@ -130,9 +130,10 @@ def test_GET_rounds_returns_200(auth_client):
 
 
 def test_POST_rounds_returns_201(auth_client_trainer):
+    sport = SportFactory()
     response = auth_client_trainer.post(
         "/api/v1/rounds/",
-        {"order": 1, "count": 1},
+        {"order": 1, "count": 1, "sport": sport.pk},
         format="json",
     )
     assert response.status_code == 201
