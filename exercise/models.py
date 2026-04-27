@@ -41,6 +41,10 @@ class Exercise(GenericClass):
     def get_total(self):
         return self.repetition * self.distance
 
+    @property
+    def usage_count(self):
+        return self.round_set.count()
+
     def __str__(self):
         return "%s %d" % (_('Exercise'), self.id)
 

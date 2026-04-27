@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from tools.exceptions import ResourceLocked
+
 from .models import EnergySegment, EnergySystem, Exercise, Stroke
 
 
@@ -42,5 +44,11 @@ class ExerciseSerializer(serializers.ModelSerializer):
             'id', 'order', 'repetition', 'distance', 'notes',
             't_start', 't_break',
             'stroke', 'energysegment',
+            'usage_count',
         ]
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'usage_count']
+
+    def update(self, instance, validated_data):
+        if instance.usage_count > 1:
+            raise ResourceLocked()
+        return super().update(instance, validated_data)

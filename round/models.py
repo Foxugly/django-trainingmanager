@@ -18,6 +18,10 @@ class Round(GenericClass):
             distance += e.get_total()
         return self.count * distance
 
+    @property
+    def usage_count(self):
+        return self.event_set.count()
+
     def __str__(self):
         return "%s %d" % (_('Round'), self.id)
 

@@ -110,8 +110,8 @@ def test_GET_rounds_returns_200(auth_client):
     assert response.status_code == 200
 
 
-def test_POST_rounds_returns_201(auth_client):
-    response = auth_client.post(
+def test_POST_rounds_returns_201(auth_client_trainer):
+    response = auth_client_trainer.post(
         '/api/v1/rounds/',
         {'order': 1, 'count': 1},
         format='json',
@@ -126,8 +126,8 @@ def test_GET_exercises_returns_200(auth_client):
     assert response.status_code == 200
 
 
-def test_POST_exercises_returns_201(auth_client):
-    response = auth_client.post(
+def test_POST_exercises_returns_201(auth_client_trainer):
+    response = auth_client_trainer.post(
         '/api/v1/exercises/',
         {'order': 1, 'repetition': 1, 'distance': 100},
         format='json',

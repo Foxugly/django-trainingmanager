@@ -1,4 +1,7 @@
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+
+from team.permissions import IsTrainer
 
 from .models import EnergySegment, EnergySystem, Exercise, Stroke
 from .serializers import (
@@ -43,6 +46,7 @@ class ExerciseViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Exercise."""
     queryset = Exercise.objects.all()
     serializer_class = ExerciseSerializer
+    permission_classes = [IsAuthenticated, IsTrainer]
     filterset_fields = ['stroke', 'energysegment']
     search_fields = ['notes']
     ordering_fields = ['order', 'id', 'distance']
