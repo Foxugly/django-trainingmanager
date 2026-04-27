@@ -9,3 +9,8 @@ SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 X_FRAME_OPTIONS = 'DENY'
+
+# TODO: configure CORS_ALLOWED_ORIGINS at deploy time with the real domains.
+# CORS_ALLOWED_ORIGINS = [
+#     'https://app.example.com',
+# ]
