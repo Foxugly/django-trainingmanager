@@ -167,9 +167,10 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
 ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
 
 HEADLESS_ONLY = True
+FRONTEND_URL = env('FRONTEND_URL')
 HEADLESS_FRONTEND_URLS = {
-    'account_confirm_email': env('FRONTEND_URL') + '/auth/confirm-email/{key}',
-    'account_reset_password_from_key': env('FRONTEND_URL') + '/auth/reset-password/{key}',
+    'account_confirm_email': FRONTEND_URL + '/auth/confirm-email/{key}',
+    'account_reset_password_from_key': FRONTEND_URL + '/auth/reset-password/{key}',
 }
 
 GRAPH_TENANT_ID = env('GRAPH_TENANT_ID')

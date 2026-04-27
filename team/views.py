@@ -1,17 +1,31 @@
 import logging
 
+from django.conf import settings as dj_settings
+from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import serializers as drf_serializers
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import status, viewsets
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from .models import Team, TeamJoinRequest
-from .permissions import IsJoinRequestParticipant, IsTeamOwnerOrReadOnly
+from .models import Team, TeamInvitation, TeamJoinRequest
+from .permissions import (
+    IsJoinRequestParticipant,
+    IsTeamOwnerOrReadOnly,
+    IsTrainer,
+)
 from .serializers import (
+    CompleteInvitationSerializer,
+    CreateInvitationSerializer,
     CreateJoinRequestSerializer,
+    TeamInvitationSerializer,
     TeamJoinRequestSerializer,
     TeamSerializer,
+    ValidateInvitationSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -39,13 +53,7 @@ class TeamViewSet(viewsets.ModelViewSet):
 
 
 class TeamJoinRequestViewSet(viewsets.ModelViewSet):
-    """
-    Self-signup join request flow.
-    - POST   /join-requests/        : create (any authenticated user)
-    - GET    /join-requests/        : own + managed teams' requests
-    - GET    /join-requests/{id}/   : detail (participant only)
-    - PATCH  /join-requests/{id}/   : cancel (requester) or accept/reject (manager)
-    """
+    """Self-signup join request flow."""
     permission_classes = [IsAuthenticated, IsJoinRequestParticipant]
     filterset_fields = ['status', 'team']
     ordering_fields = ['requested_at', 'responded_at']
@@ -68,18 +76,13 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
         self._notify_managers(instance)
 
     def _notify_managers(self, join_request):
-        from django.conf import settings as dj_settings
-        from django.core.mail import send_mail
-
         team = join_request.team
         recipients = list(team.managers.values_list('email', flat=True))
         if team.owner.email:
             recipients.append(team.owner.email)
         recipients = [r for r in recipients if r]
-
         if not recipients:
             return
-
         subject = f"[TrainingManager] Nouvelle demande de {join_request.user.username}"
         body = (
             f"L'utilisateur {join_request.user.username} ({join_request.user.email}) "
@@ -155,3 +158,182 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
             user=user,
         )
         member.teams.add(team)
+
+
+class TeamInvitationViewSet(viewsets.ModelViewSet):
+    """Trainer invitation flow."""
+    permission_classes = [IsAuthenticated, IsTrainer]
+    filterset_fields = ['status', 'team']
+    ordering_fields = ['created_at', 'expires_at']
+    ordering = ['-created_at']
+    http_method_names = ['get', 'post', 'delete', 'head', 'options']
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CreateInvitationSerializer
+        return TeamInvitationSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        managed = Team.objects.filter(Q(owner=user) | Q(managers=user))
+        return TeamInvitation.objects.filter(team__in=managed).distinct()
+
+    def create(self, request, *args, **kwargs):
+        from member.models import Member
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        User = get_user_model()
+        existing_user = User.objects.filter(email=data['email']).first()
+
+        member = Member.objects.create(
+            firstname=data['firstname'],
+            lastname=data['lastname'],
+            email=data['email'],
+            phonenumber=data.get('phonenumber', ''),
+            user=existing_user,
+        )
+        member.teams.add(data['team'])
+
+        if existing_user is not None:
+            self._send_existing_user_notification(existing_user, data['team'])
+            return Response(
+                {
+                    "detail": "User already exists; Member created and linked.",
+                    "member_id": member.id,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
+        invitation = TeamInvitation.objects.create(
+            team=data['team'],
+            invited_by=request.user,
+            member=member,
+            email=data['email'],
+        )
+        self._send_invitation_email(invitation)
+        return Response(
+            TeamInvitationSerializer(invitation, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    def _send_invitation_email(self, invitation):
+        frontend_url = dj_settings.FRONTEND_URL.rstrip('/')
+        link = f"{frontend_url}/invitation/{invitation.token}"
+        subject = f"[TrainingManager] Vous etes invite dans {invitation.team.name}"
+        body = (
+            f"Bonjour {invitation.member.firstname},\n\n"
+            f"{invitation.invited_by.username} vous a invite a rejoindre "
+            f"la team \"{invitation.team.name}\".\n\n"
+            f"Pour finaliser votre inscription, cliquez sur ce lien :\n"
+            f"{link}\n\n"
+            f"Le lien est valable jusqu'au {invitation.expires_at.strftime('%d/%m/%Y')}.\n"
+        )
+        try:
+            send_mail(
+                subject=subject,
+                message=body,
+                from_email=dj_settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[invitation.email],
+                fail_silently=False,
+            )
+        except Exception:
+            logger.exception("Failed to send invitation email")
+
+    def _send_existing_user_notification(self, user, team):
+        subject = f"[TrainingManager] Vous avez ete ajoute a {team.name}"
+        body = (
+            f"Bonjour {user.first_name or user.username},\n\n"
+            f"Vous avez ete ajoute a la team \"{team.name}\". "
+            f"Vous pouvez vous y connecter depuis votre compte existant.\n"
+        )
+        try:
+            send_mail(
+                subject=subject,
+                message=body,
+                from_email=dj_settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+        except Exception:
+            logger.exception("Failed to send existing-user notification")
+
+    def perform_destroy(self, instance):
+        if instance.status != 'pending':
+            raise drf_serializers.ValidationError(
+                {"detail": "Seules les invitations pending peuvent etre annulees."}
+            )
+        instance.status = 'cancelled'
+        instance.save()
+
+
+class InvitationLookupView(APIView):
+    """Public endpoint to validate and finalize an invitation token."""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request, token):
+        invitation = get_object_or_404(TeamInvitation, token=token)
+        if not invitation.is_valid():
+            if invitation.status == 'pending' and timezone.now() > invitation.expires_at:
+                invitation.status = 'expired'
+                invitation.save()
+                return Response(
+                    {"detail": "Invitation expired."},
+                    status=status.HTTP_410_GONE,
+                )
+            return Response(
+                {"detail": f"Invitation {invitation.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(ValidateInvitationSerializer(invitation).data)
+
+    def post(self, request, token):
+        from allauth.account.models import EmailAddress
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        invitation = get_object_or_404(TeamInvitation, token=token)
+        if not invitation.is_valid():
+            return Response(
+                {"detail": f"Invitation {invitation.status}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = CompleteInvitationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        User = get_user_model()
+        user = User.objects.create_user(
+            username=serializer.validated_data['username'],
+            email=invitation.email,
+            password=serializer.validated_data['password'],
+        )
+        user.first_name = invitation.member.firstname
+        user.last_name = invitation.member.lastname
+        user.is_active = True
+        user.save()
+        EmailAddress.objects.create(
+            user=user,
+            email=invitation.email,
+            verified=True,
+            primary=True,
+        )
+        invitation.member.user = user
+        invitation.member.save()
+
+        invitation.status = 'completed'
+        invitation.completed_at = timezone.now()
+        invitation.save()
+
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                "detail": "Compte cree et invitation finalisee.",
+                "username": user.username,
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+            },
+            status=status.HTTP_201_CREATED,
+        )

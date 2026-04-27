@@ -1,5 +1,17 @@
+import secrets
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
+
+
+def generate_invitation_token():
+    return secrets.token_urlsafe(32)
+
+
+def default_invitation_expiration():
+    return timezone.now() + timedelta(days=7)
 
 
 class Team(models.Model):
@@ -66,3 +78,52 @@ class TeamJoinRequest(models.Model):
 
     def __str__(self):
         return f"{self.user} -> {self.team} ({self.status})"
+
+
+class TeamInvitation(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('expired', 'Expired'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    team = models.ForeignKey(
+        'team.Team',
+        on_delete=models.CASCADE,
+        related_name='invitations',
+    )
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='sent_invitations',
+    )
+    member = models.OneToOneField(
+        'member.Member',
+        on_delete=models.CASCADE,
+        related_name='invitation',
+    )
+    email = models.EmailField()
+    token = models.CharField(
+        max_length=64,
+        unique=True,
+        default=generate_invitation_token,
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(default=default_invitation_expiration)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Invitation to {self.team.name} for {self.email} ({self.status})"
+
+    def is_valid(self):
+        if self.status != 'pending':
+            return False
+        if timezone.now() > self.expires_at:
+            return False
+        return True
