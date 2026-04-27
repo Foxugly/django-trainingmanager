@@ -17,6 +17,12 @@ class Program(GenericClass):
         on_delete=models.PROTECT,
         related_name='programs',
     )
+    frequency_per_week = models.PositiveIntegerField(null=True, blank=True)
+    description = models.TextField(blank=True, default='')
+    generated_by_ai = models.BooleanField(default=False)
+    ai_prompt = models.TextField(blank=True, default='')
+    ai_response = models.TextField(blank=True, default='')
+    ai_generated_at = models.DateTimeField(null=True, blank=True)
 
     def get_members(self):
         return self.members.all()

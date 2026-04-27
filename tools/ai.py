@@ -84,3 +84,58 @@ def call_claude(
         "output_tokens": response.usage.output_tokens,
         "stop_reason": response.stop_reason,
     }
+
+
+def call_claude_with_tool(
+    prompt: str,
+    *,
+    tool: dict,
+    system: Optional[str] = None,
+    model: Optional[str] = None,
+    max_tokens: Optional[int] = None,
+) -> dict:
+    """Call Claude with a forced tool, guaranteeing a structured JSON payload."""
+    client = _get_client()
+
+    kwargs = {
+        "model": model or settings.ANTHROPIC_MODEL_DEFAULT,
+        "max_tokens": max_tokens or settings.ANTHROPIC_MAX_TOKENS_DEFAULT,
+        "messages": [{"role": "user", "content": prompt}],
+        "tools": [tool],
+        "tool_choice": {"type": "tool", "name": tool["name"]},
+    }
+    if system:
+        kwargs["system"] = system
+
+    try:
+        response = client.messages.create(**kwargs)
+    except AuthenticationError as e:
+        logger.error("Anthropic authentication failed: %s", e)
+        raise AIConfigurationError("AI authentication failed. Check API key.")
+    except APITimeoutError as e:
+        logger.error("Anthropic API timeout: %s", e)
+        raise AIServiceError("AI request timed out.")
+    except APIError as e:
+        logger.error("Anthropic API error: %s", e)
+        raise AIServiceError(f"AI request failed: {e}")
+    except Exception as e:
+        logger.exception("Unexpected error calling Anthropic")
+        raise AIServiceError(f"Unexpected error: {e}")
+
+    tool_use_block = None
+    for block in response.content:
+        if hasattr(block, "type") and block.type == "tool_use":
+            tool_use_block = block
+            break
+
+    if tool_use_block is None:
+        raise AIServiceError("AI did not call the expected tool.")
+
+    return {
+        "tool_input": tool_use_block.input,
+        "tool_name": tool_use_block.name,
+        "model": response.model,
+        "input_tokens": response.usage.input_tokens,
+        "output_tokens": response.usage.output_tokens,
+        "stop_reason": response.stop_reason,
+    }
