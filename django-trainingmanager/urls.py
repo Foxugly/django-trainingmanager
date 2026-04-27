@@ -8,6 +8,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 urlpatterns = [
     path('admin/', admin.site.urls),
 
+    # Allauth headless (register, login, email confirmation, password reset)
+    path('api/v1/auth/', include('allauth.headless.urls')),
+
     # Auth API (JWT)
     path('api/v1/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
