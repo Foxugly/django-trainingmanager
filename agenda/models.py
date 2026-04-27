@@ -16,7 +16,6 @@ class Agenda(GenericClass):
         'team.Team',
         on_delete=models.PROTECT,
         related_name='agendas',
-        null=True, blank=True,
     )
 
     def get_members(self):
