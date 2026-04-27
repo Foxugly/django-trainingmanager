@@ -1,6 +1,7 @@
 import json
 
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.utils.translation import gettext as _
@@ -66,6 +67,7 @@ class EventDeleteView(LoginRequiredMixin, BSModalDeleteView):
             return self.success_url
 
 
+@login_required
 def attendance_member(request, event_id, member_id):
     e = Event.objects.get(id=event_id)
     m = Member.objects.get(id=member_id)

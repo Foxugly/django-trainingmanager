@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timedelta
 
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.utils.translation import gettext as _
@@ -65,6 +66,7 @@ def qdict_to_dict(qdict):
     return {k: v[0] if len(v) == 1 else v for k, v in qdict.lists()}
 
 
+@login_required
 def create_events(request, agenda_id):
     results = {}
     if request.is_ajax() and request.method == "GET":
@@ -99,6 +101,7 @@ def create_events(request, agenda_id):
     return HttpResponse(json.dumps(results))
 
 
+@login_required
 def get_events_json(request, agenda_id):
     a = Agenda.objects.get(id=agenda_id)
     return HttpResponse(json.dumps([e.as_json() for e in a.get_events()]))
