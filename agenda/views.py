@@ -12,7 +12,7 @@ from event.models import Event
 from tools.generic_views import *
 
 
-class AgendaCreateView(BSModalCreateView):
+class AgendaCreateView(LoginRequiredMixin, BSModalCreateView):
     model = Agenda
     fields = None
     form_class = BSAgendaCreateForm
@@ -31,7 +31,7 @@ class AgendaListView(GenericListView):
     model = Agenda
 
 
-class AgendaUpdateView(BSModalUpdateView):
+class AgendaUpdateView(LoginRequiredMixin, BSModalUpdateView):
     model = Agenda
     fields = None
     form_class = BSAgendaCreateForm
