@@ -1,6 +1,10 @@
-from rest_framework import viewsets
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
+from exercise.models import Exercise
+from exercise.serializers import ExerciseSerializer
 from team.permissions import IsTrainer
 
 from .models import Round
@@ -16,3 +20,50 @@ class RoundViewSet(viewsets.ModelViewSet):
     search_fields = []
     ordering_fields = ['order', 'id']
     ordering = ['order']
+
+    @action(detail=True, methods=['post'])
+    def clone(self, request, pk=None):
+        """Standalone clone : new Round with the same scalar fields and the
+        same exercise list (M2M copied)."""
+        original = self.get_object()
+        clone = Round.objects.create(
+            count=original.count,
+            t_start=original.t_start,
+            t_break=original.t_break,
+            order=original.order,
+        )
+        clone.exercises.set(original.exercises.all())
+        serializer = self.get_serializer(clone)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='clone-exercise')
+    def clone_exercise(self, request, pk=None):
+        """Clone an Exercise and attach it to this Round.
+        Body: {"exercise_id": <id>}."""
+        round_obj = self.get_object()
+        exercise_id = request.data.get('exercise_id')
+        if not exercise_id:
+            return Response(
+                {"detail": "exercise_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            original = Exercise.objects.get(pk=exercise_id)
+        except Exercise.DoesNotExist:
+            return Response(
+                {"detail": "Exercise not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        cloned_exercise = Exercise.objects.create(
+            t_start=original.t_start,
+            t_break=original.t_break,
+            repetition=original.repetition,
+            distance=original.distance,
+            notes=original.notes,
+            stroke=original.stroke,
+            energysegment=original.energysegment,
+            order=original.order,
+        )
+        round_obj.exercises.add(cloned_exercise)
+        serializer = ExerciseSerializer(cloned_exercise, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

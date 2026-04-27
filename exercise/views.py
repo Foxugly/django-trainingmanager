@@ -1,5 +1,7 @@
-from rest_framework import viewsets
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from team.permissions import IsTrainer
 
@@ -51,3 +53,20 @@ class ExerciseViewSet(viewsets.ModelViewSet):
     search_fields = ['notes']
     ordering_fields = ['order', 'id', 'distance']
     ordering = ['order']
+
+    @action(detail=True, methods=['post'])
+    def clone(self, request, pk=None):
+        """Standalone clone : new Exercise with the same scalar fields."""
+        original = self.get_object()
+        clone = Exercise.objects.create(
+            t_start=original.t_start,
+            t_break=original.t_break,
+            repetition=original.repetition,
+            distance=original.distance,
+            notes=original.notes,
+            stroke=original.stroke,
+            energysegment=original.energysegment,
+            order=original.order,
+        )
+        serializer = self.get_serializer(clone)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
