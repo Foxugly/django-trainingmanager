@@ -1,8 +1,13 @@
-from rest_framework import viewsets
+from django.db import transaction
+from django.utils import timezone
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 
 from team.queries import accessible_teams, managed_teams
 
+from .ai import generate_training as ai_generate_training
 from .models import Event
 from .serializers import EventSerializer
 
@@ -35,3 +40,80 @@ class EventViewSet(viewsets.ModelViewSet):
             serializer.validated_data.get('refer_program', serializer.instance.refer_program)
         )
         serializer.save()
+
+    @action(detail=True, methods=['post'], url_path='generate-training')
+    def generate_training(self, request, pk=None):
+        """POST /api/v1/events/{id}/generate-training/ — Claude-generated rounds."""
+        from exercise.models import EnergySegment, Exercise, Modality
+        from round.models import Round
+
+        event = self.get_object()
+
+        if not event.refer_program or not event.refer_program.team.is_managed_by(request.user):
+            return Response(
+                {"detail": "You must be owner or manager of this event's team."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if event.rounds.exists():
+            return Response(
+                {"detail": "Event already has rounds. Remove them before regenerating."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        ai_result = ai_generate_training(event=event)
+
+        created_rounds = 0
+        created_exercises = 0
+        reused_exercises = 0
+
+        with transaction.atomic():
+            for r_idx, r_data in enumerate(ai_result['rounds'], start=1):
+                round_obj = Round.objects.create(
+                    count=r_data.get('count', 1),
+                    t_start=r_data.get('t_start', '00:00'),
+                    t_break=r_data.get('t_break', '00:00'),
+                    order=r_idx,
+                )
+                created_rounds += 1
+
+                for ex_idx, ex_data in enumerate(r_data.get('exercises', []), start=1):
+                    modality = Modality.objects.get(pk=ex_data['modality_id'])
+                    segment = EnergySegment.objects.get(pk=ex_data['energysegment_id'])
+
+                    exercise, created = Exercise.objects.get_or_create(
+                        modality=modality,
+                        energysegment=segment,
+                        distance=ex_data['distance'],
+                        repetition=ex_data['repetition'],
+                        t_start=ex_data.get('t_start', '00:00'),
+                        t_break=ex_data.get('t_break', '00:00'),
+                        notes=ex_data.get('notes', ''),
+                        defaults={'order': ex_idx},
+                    )
+                    if created:
+                        created_exercises += 1
+                    else:
+                        reused_exercises += 1
+
+                    round_obj.exercises.add(exercise)
+
+                event.rounds.add(round_obj)
+
+            event.generated_by_ai = True
+            event.ai_prompt = ai_result['prompt_sent']
+            event.ai_response = ai_result['rationale']
+            event.ai_generated_at = timezone.now()
+            event.save()
+
+        return Response({
+            "rounds_created": created_rounds,
+            "exercises_created": created_exercises,
+            "exercises_reused": reused_exercises,
+            "rationale": ai_result['rationale'],
+            "model": ai_result['model'],
+            "tokens_used": {
+                "input": ai_result['input_tokens'],
+                "output": ai_result['output_tokens'],
+            },
+        }, status=status.HTTP_200_OK)

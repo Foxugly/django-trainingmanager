@@ -24,5 +24,8 @@ class EventSerializer(serializers.ModelSerializer):
             'id', 'name', 'goal', 'color',
             'date', 'hour_start', 'hour_end', 'total',
             'refer_program', 'rounds', 'members',
+            'generated_by_ai', 'ai_prompt', 'ai_response', 'ai_generated_at',
         ]
-        read_only_fields = ['id']
+        read_only_fields = [
+            'id', 'generated_by_ai', 'ai_prompt', 'ai_response', 'ai_generated_at',
+        ]

@@ -19,6 +19,10 @@ class Event(GenericClass):
     members = models.ManyToManyField(Member, blank=True, )
     refer_program = models.ForeignKey('program.Program', verbose_name=_('refer_program'), related_name='back_program',
                                       null=True, on_delete=models.CASCADE)
+    generated_by_ai = models.BooleanField(default=False)
+    ai_prompt = models.TextField(blank=True, default='')
+    ai_response = models.TextField(blank=True, default='')
+    ai_generated_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return "%s %d" % (_('Event'), self.pk)
