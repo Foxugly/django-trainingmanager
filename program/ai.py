@@ -4,6 +4,7 @@ import logging
 from datetime import date as _date
 
 from tools.ai import AIServiceError, call_claude_with_tool
+from tools.i18n import resolve_language_label
 
 logger = logging.getLogger(__name__)
 
@@ -74,31 +75,46 @@ PLAN_TOOL_SCHEMA = {
 
 def build_system_prompt(sport_name):
     return (
-        f"Tu es un coach expert en planification d'entrainement de {sport_name}. "
-        f"Tu generes des plans d'entrainement structures et progressifs. "
-        f"Tu adaptes la frequence, l'intensite et la variete en fonction des objectifs. "
-        f"Tu DOIS toujours repondre en utilisant le tool 'create_training_plan'. "
-        f"N'ecris jamais de texte libre."
+        f"You are an expert coach in {sport_name} training planning. "
+        f"You generate structured and progressive training plans for athletes. "
+        f"You adapt frequency, intensity, and variety based on the goals. "
+        f"You MUST always respond using the 'create_training_plan' tool. "
+        f"Never write free-form text."
     )
 
 
-def build_user_prompt(*, sport_name, date_start, date_end, frequency_per_week, description):
+def build_user_prompt(
+    *, sport_name, language, date_start, date_end, frequency_per_week, description
+):
     duration_days = (date_end - date_start).days + 1
     weeks = max(duration_days // 7, 1)
     expected_events = weeks * frequency_per_week
+    language_label = resolve_language_label(language)
 
     return (
-        f"Genere un plan d'entrainement avec ces contraintes :\n"
-        f"- Sport : {sport_name}\n"
-        f"- Periode : du {date_start.isoformat()} au {date_end.isoformat()} "
-        f"({duration_days} jours, soit ~{weeks} semaines)\n"
-        f"- Frequence : {frequency_per_week} seances par semaine "
-        f"(soit ~{expected_events} seances au total)\n"
-        f"- Objectifs et contraintes : {description or '(aucun precise)'}\n\n"
-        f"Genere environ {expected_events} seances reparties intelligemment "
-        f"sur la periode. Chaque seance doit avoir une date dans la range. "
-        f"Varie les types d'effort (endurance, technique, intensite, recuperation) "
-        f"selon une progression coherente."
+        f"Generate a training plan with these constraints:\n"
+        f"- Sport: {sport_name}\n"
+        f"- Period: from {date_start.isoformat()} to {date_end.isoformat()} "
+        f"({duration_days} days, ~{weeks} weeks)\n"
+        f"- Frequency: {frequency_per_week} sessions per week "
+        f"(~{expected_events} sessions total)\n"
+        f"- Description and constraints provided by the coach: "
+        f"{description or '(none)'}\n"
+        f"\n"
+        f"IMPORTANT instructions:\n"
+        f"- The 'Description and constraints' above is provided by the coach "
+        f"in {language_label}. It may contain critical information about the "
+        f"athletes' age category, current performance level, training goals, "
+        f"available equipment, or other constraints. Take ALL of this "
+        f"information into account when designing the plan.\n"
+        f"- Generate approximately {expected_events} sessions distributed "
+        f"intelligently across the period. Each session must have a date "
+        f"within the requested range.\n"
+        f"- Vary effort types (endurance, technique, intensity, recovery) "
+        f"following a coherent progression.\n"
+        f"- Respond ENTIRELY in {language_label}: all event names, goals, "
+        f"and the rationale must be in {language_label}.\n"
+        f"- Use the 'create_training_plan' tool only.\n"
     )
 
 
@@ -110,11 +126,13 @@ def _parse_date_strict(s):
 
 
 def generate_plan(*, program, date_start, date_end, frequency_per_week, description):
-    sport_name = program.team.sport.name if program.team.sport else "le sport pratique"
+    sport_name = program.team.sport.name if program.team.sport else "the practiced sport"
+    language = program.team.language
 
     system = build_system_prompt(sport_name)
     user_prompt = build_user_prompt(
         sport_name=sport_name,
+        language=language,
         date_start=date_start,
         date_end=date_end,
         frequency_per_week=frequency_per_week,

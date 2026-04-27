@@ -3,6 +3,7 @@
 import logging
 
 from tools.ai import AIServiceError, call_claude_with_tool
+from tools.i18n import resolve_language_label
 
 logger = logging.getLogger(__name__)
 
@@ -98,33 +99,48 @@ def build_training_tool_schema(*, modality_ids, energysegment_ids):
 
 def build_system_prompt(sport_name):
     return (
-        f"Tu es un coach expert en planification d'entrainement de {sport_name}. "
-        f"Tu generes des seances detaillees et progressives en utilisant UNIQUEMENT "
-        f"les modalities et energysegments fournis dans le catalogue. "
-        f"Tu DOIS toujours repondre en utilisant le tool 'create_training_session'. "
-        f"N'ecris jamais de texte libre."
+        f"You are an expert coach in {sport_name} training. "
+        f"You generate detailed and progressive training sessions using "
+        f"ONLY the modalities and energysegments from the provided catalog. "
+        f"You MUST always respond using the 'create_training_session' tool. "
+        f"Never write free-form text."
     )
 
 
 def build_user_prompt(*, event, modalities_catalog, energysegments_catalog):
+    language = (
+        event.refer_program.team.language
+        if event.refer_program and event.refer_program.team
+        else "fr"
+    )
+    language_label = resolve_language_label(language)
+
     cat_modalities = "\n".join(f"  {m['id']}: {m['name']}" for m in modalities_catalog)
     cat_segments = "\n".join(f"  {s['id']}: {s['abv']}" for s in energysegments_catalog)
 
     return (
-        f"Genere le detail d'une seance d'entrainement avec ces contraintes :\n"
-        f"- Nom de la seance : {event.name}\n"
-        f"- Objectif : {event.goal or '(non precise)'}\n"
-        f"- Date prevue : {event.date.isoformat() if event.date else '(non precisee)'}\n"
-        f"- Distance totale visee : {event.total or 0} metres\n\n"
-        f"Catalogue de modalities autorisees (id: name) :\n{cat_modalities}\n\n"
-        f"Catalogue d'energysegments autorises (id: abv) :\n{cat_segments}\n\n"
-        f"Construis une seance structuree avec :\n"
-        f"- Un round d'echauffement\n"
-        f"- Un ou plusieurs rounds de corps de seance\n"
-        f"- Un round de retour au calme\n"
-        f"\nLa somme des distances de tous les exercises x leur repetition x le count "
-        f"de leur round doit approcher {event.total or 0} metres.\n"
-        f"Utilise UNIQUEMENT les ids fournis dans les catalogues."
+        f"Generate the detail of a training session with these constraints:\n"
+        f"- Session name: {event.name}\n"
+        f"- Goal: {event.goal or '(not specified)'}\n"
+        f"- Planned date: {event.date.isoformat() if event.date else '(not specified)'}\n"
+        f"- Target total distance: {event.total or 0} meters\n\n"
+        f"Authorized modalities catalog (id: name):\n{cat_modalities}\n\n"
+        f"Authorized energysegments catalog (id: abv):\n{cat_segments}\n\n"
+        f"IMPORTANT instructions:\n"
+        f"- The 'Session name' and 'Goal' above are provided by the coach in "
+        f"{language_label}. They may contain indications about intensity, "
+        f"target athlete population, or equipment to use. Take this into "
+        f"account when designing the session.\n"
+        f"- Build a structured session with:\n"
+        f"  * a warm-up round\n"
+        f"  * one or more main rounds\n"
+        f"  * a cool-down round\n"
+        f"- The sum of (exercise.distance * exercise.repetition * round.count) "
+        f"across the whole session must approach {event.total or 0} meters.\n"
+        f"- Use ONLY the ids provided in the catalogs.\n"
+        f"- Respond ENTIRELY in {language_label}: all notes and the rationale "
+        f"must be in {language_label}.\n"
+        f"- Use the 'create_training_session' tool only.\n"
     )
 
 
@@ -134,7 +150,7 @@ def generate_training(*, event):
     sport = (
         event.refer_program.team.sport if event.refer_program and event.refer_program.team else None
     )
-    sport_name = sport.name if sport else "le sport pratique"
+    sport_name = sport.name if sport else "the practiced sport"
 
     modalities_qs = Modality.objects.filter(sport=sport) if sport else Modality.objects.all()
     modalities = list(modalities_qs.values("id", "name"))

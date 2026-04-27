@@ -33,6 +33,11 @@ class Team(models.Model):
         related_name="managed_teams",
         blank=True,
     )
+    language = models.CharField(
+        max_length=2,
+        choices=settings.LANGUAGES,
+        default=settings.LANGUAGE_CODE,
+    )
     is_active = models.BooleanField(default=True)
     is_public = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

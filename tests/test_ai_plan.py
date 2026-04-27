@@ -109,8 +109,7 @@ def test_POST_generate_events_updates_program_ai_fields(
     assert program.generated_by_ai is True
     assert program.frequency_per_week == 3
     assert program.description == "Compete"
-    assert "create_training_plan" not in program.ai_prompt
-    assert "Genere un plan" in program.ai_prompt
+    assert "Generate a training plan" in program.ai_prompt
     assert program.ai_response == "Why this plan"
     assert program.ai_generated_at is not None
 

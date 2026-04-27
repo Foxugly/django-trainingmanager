@@ -3,7 +3,6 @@ from pathlib import Path
 
 import environ
 from django.conf import settings
-from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -101,16 +100,18 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "fr"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-LANGUAGES = (
-    ("en", _("English")),
-    ("fr", _("Français")),
-    ("nl", _("Nederlands")),
-)
+LANGUAGES = [
+    ("fr", "Français"),
+    ("nl", "Nederlands"),
+    ("en", "English"),
+    ("it", "Italiano"),
+    ("es", "Español"),
+]
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

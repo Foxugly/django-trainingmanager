@@ -13,6 +13,7 @@ class TeamSerializer(serializers.ModelSerializer):
             "sport",
             "owner",
             "managers",
+            "language",
             "is_active",
             "is_public",
             "created_at",

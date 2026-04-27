@@ -22,7 +22,12 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
-    language = models.CharField(_("language"), max_length=8, choices=settings.LANGUAGES, default=1)
+    language = models.CharField(
+        _("language"),
+        max_length=2,
+        choices=settings.LANGUAGES,
+        default=settings.LANGUAGE_CODE,
+    )
     objects = CustomUserManager()
 
     USERNAME_FIELD = "username"
