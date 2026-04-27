@@ -24,8 +24,6 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractUser):
     language = models.CharField(_("language"), max_length=8, choices=settings.LANGUAGES, default=1)
-    is_foo_admin = models.BooleanField(_("Foo admin"), default=False,
-                                       help_text=_('Designates users that are foo Admin.'), )
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'username'

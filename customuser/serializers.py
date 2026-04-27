@@ -8,10 +8,10 @@ class MeSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
-            'language', 'is_foo_admin', 'is_staff', 'is_superuser',
+            'language', 'is_staff', 'is_superuser',
             'last_login', 'date_joined',
         ]
         read_only_fields = [
-            'id', 'username', 'is_foo_admin', 'is_staff', 'is_superuser',
+            'id', 'username', 'is_staff', 'is_superuser',
             'last_login', 'date_joined',
         ]
