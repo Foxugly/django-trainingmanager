@@ -18,6 +18,9 @@ urlpatterns = [
     # CustomUser (/me/)
     path('api/v1/', include('customuser.urls')),
 
+    # Teams
+    path('api/v1/', include('team.urls')),
+
     # Endpoints métier
     path('api/v1/', include('agenda.urls')),
     path('api/v1/', include('event.urls')),
