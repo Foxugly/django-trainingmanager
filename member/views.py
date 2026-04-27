@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
 
@@ -21,11 +22,11 @@ class MemberViewSet(viewsets.ModelViewSet):
 
     def _check_teams_write(self, teams):
         if not teams:
-            raise PermissionDenied("At least one team is required.")
+            raise PermissionDenied(_("At least one team is required."))
         manageable = managed_teams(self.request.user)
         for t in teams:
             if not manageable.filter(pk=t.pk).exists():
-                raise PermissionDenied(f"You do not manage team {t.pk}.")
+                raise PermissionDenied(_("You do not manage one of the requested teams."))
 
     def perform_create(self, serializer):
         self._check_teams_write(serializer.validated_data.get("teams", []))

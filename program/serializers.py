@@ -28,7 +28,6 @@ class ProgramSerializer(serializers.ModelSerializer):
             "frequency_per_week",
             "description",
             "generated_by_ai",
-            "ai_prompt",
             "ai_response",
             "ai_generated_at",
             "created_at",
@@ -37,7 +36,6 @@ class ProgramSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "generated_by_ai",
-            "ai_prompt",
             "ai_response",
             "ai_generated_at",
             "created_at",

@@ -9,7 +9,7 @@ from .models import Event
 
 class EventSerializer(serializers.ModelSerializer):
     refer_program = serializers.PrimaryKeyRelatedField(
-        queryset=Program.objects.all(), required=False, allow_null=True
+        queryset=Program.objects.all(), required=True, allow_null=False
     )
     rounds = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Round.objects.all(), required=False
@@ -33,7 +33,6 @@ class EventSerializer(serializers.ModelSerializer):
             "rounds",
             "members",
             "generated_by_ai",
-            "ai_prompt",
             "ai_response",
             "ai_generated_at",
             "created_at",
@@ -42,7 +41,6 @@ class EventSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "generated_by_ai",
-            "ai_prompt",
             "ai_response",
             "ai_generated_at",
             "created_at",
