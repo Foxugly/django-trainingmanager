@@ -12,6 +12,12 @@ class Agenda(GenericClass):
     date_end = models.DateField(blank=True, null=True, )
     events = models.ManyToManyField(Event, blank=True, )
     members = models.ManyToManyField(Member, blank=True, )
+    team = models.ForeignKey(
+        'team.Team',
+        on_delete=models.PROTECT,
+        related_name='agendas',
+        null=True, blank=True,
+    )
 
     def get_members(self):
         return self.members.all()
