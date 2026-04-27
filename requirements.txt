@@ -8,4 +8,5 @@ django-hijack
 django-hijack-admin
 django-qr-code
 django-debug-toolbar
+django-environ==0.13.0
 django-bootstrap4

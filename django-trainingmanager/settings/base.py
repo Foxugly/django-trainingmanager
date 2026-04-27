@@ -1,15 +1,23 @@
 import os
+from pathlib import Path
 
+import environ
+
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SECRET_KEY = 'ke2rim3a=ukld9cjh6$d$fb%ztgobvrs807i^d!_whg%@n^%v#'
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-DEBUG = True
-STATE = 'INT'  # or ACC or PROD
-WEBSITE = "www.example.com"
+env = environ.Env()
+environ.Env.read_env(BASE_DIR / '.env')
 
-ALLOWED_HOSTS = ['*']
+SECRET_KEY = env('SECRET_KEY')
+
+DEBUG = env.bool('DEBUG', default=False)
+STATE = env('STATE', default='INT')
+WEBSITE = env('WEBSITE', default='www.example.com')
+
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -71,10 +79,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'django-trainingmanager.wsgi.application'
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3'),
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -97,7 +102,6 @@ LOGOUT_REDIRECT_URL = '/'
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 
 LANGUAGES = (
@@ -114,10 +118,7 @@ STATICFILES_FINDERS = [
 ]
 
 STATIC_URL = '/static/'
-# ACTIVE TO PROD / COMMENT TO TEST
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-# COMMENT TO PROD / ACTIVE TO TEST
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
+STATIC_ROOT = BASE_DIR / 'static'
 WKHTMLTOPDF_CMD = 'xvfb-run /usr/bin/wkhtmltopdf'
 
 HIJACK_LOGIN_REDIRECT_URL = '/'
@@ -132,13 +133,9 @@ AUTH_USER_MODEL = "customuser.CustomUser"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-if DEBUG:
-    def show_toolbar(request):
-        return True
-
-    DEBUG_TOOLBAR_CONFIG = {
-        'SHOW_TOOLBAR_CALLBACK': 'django_timesheets.settings.show_toolbar',
-    }
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': lambda request: settings.DEBUG,
+}
 
 BOOTSTRAP4 = {
 
