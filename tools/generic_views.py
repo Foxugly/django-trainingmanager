@@ -1,10 +1,11 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
 
 
-class GenericCreateView(SuccessMessageMixin, CreateView):
+class GenericCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     model = None
     app_name = None
     model_name = None
@@ -26,7 +27,7 @@ class GenericCreateView(SuccessMessageMixin, CreateView):
         return context
 
 
-class GenericListView(ListView):
+class GenericListView(LoginRequiredMixin, ListView):
     model = None
     paginate_by = 10
     ordering = ['pk']
@@ -41,7 +42,7 @@ class GenericListView(ListView):
         return context
 
 
-class GenericUpdateView(SuccessMessageMixin, UpdateView):
+class GenericUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = None
     app_name = None
     model_name = None
@@ -67,7 +68,7 @@ class GenericUpdateView(SuccessMessageMixin, UpdateView):
         return context
 
 
-class GenericDetailView(DetailView):
+class GenericDetailView(LoginRequiredMixin, DetailView):
     model = None
     app_name = None
     model_name = None
@@ -85,7 +86,7 @@ class GenericDetailView(DetailView):
         return self.success_url
 
 
-class GenericDeleteView(SuccessMessageMixin, DeleteView):
+class GenericDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     model = None
     app_name = None
     model_name = None

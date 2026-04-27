@@ -27,7 +27,7 @@ class AgendaCreateView(BSModalCreateView):
             return self.success_url
 
 
-class AgendaListView(LoginRequiredMixin, GenericListView):
+class AgendaListView(GenericListView):
     model = Agenda
 
 
@@ -46,12 +46,12 @@ class AgendaUpdateView(BSModalUpdateView):
             return self.success_url
 
 
-class AgendaDetailView(LoginRequiredMixin, GenericDetailView):
+class AgendaDetailView(GenericDetailView):
     model = Agenda
     template_name = 'agenda.html'
 
 
-class AgendaDeleteView(LoginRequiredMixin, GenericDeleteView):
+class AgendaDeleteView(GenericDeleteView):
     model = Agenda
 
     def get_success_url(self):
