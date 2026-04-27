@@ -166,3 +166,11 @@ HEADLESS_FRONTEND_URLS = {
     'account_confirm_email': env('FRONTEND_URL') + '/auth/confirm-email/{key}',
     'account_reset_password_from_key': env('FRONTEND_URL') + '/auth/reset-password/{key}',
 }
+
+GRAPH_TENANT_ID = env('GRAPH_TENANT_ID')
+GRAPH_CLIENT_ID = env('GRAPH_CLIENT_ID')
+GRAPH_CLIENT_SECRET = env('GRAPH_CLIENT_SECRET')
+GRAPH_SENDER = env('GRAPH_SENDER')
+
+EMAIL_BACKEND = 'tools.email.GraphEmailBackend'
+DEFAULT_FROM_EMAIL = env('GRAPH_SENDER')
