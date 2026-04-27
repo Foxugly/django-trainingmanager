@@ -22,6 +22,7 @@ urlpatterns = [
     path('api/v1/', include('team.urls')),
 
     # Endpoints métier
+    path('api/v1/', include('sport.urls')),
     path('api/v1/', include('program.urls')),
     path('api/v1/', include('event.urls')),
     path('api/v1/', include('round.urls')),

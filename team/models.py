@@ -16,6 +16,12 @@ def default_invitation_expiration():
 
 class Team(models.Model):
     name = models.CharField(max_length=200, unique=True)
+    sport = models.ForeignKey(
+        'sport.Sport',
+        on_delete=models.PROTECT,
+        related_name='teams',
+        null=True, blank=True,
+    )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,

@@ -4,8 +4,17 @@ from django.utils.translation import gettext as _
 from tools.generic_class import GenericClass
 
 
-class Stroke(GenericClass):
+class Modality(GenericClass):
     name = models.CharField(max_length=20, verbose_name=_("name"))
+    sport = models.ForeignKey(
+        'sport.Sport',
+        on_delete=models.PROTECT,
+        related_name='modalities',
+    )
+
+    class Meta:
+        unique_together = ('name', 'sport')
+        ordering = ['sport', 'name']
 
     def __str__(self):
         return self.name
@@ -33,7 +42,7 @@ class Exercise(GenericClass):
     t_break = models.CharField(max_length=10, null=True, blank=True, verbose_name=_("break"), )
     repetition = models.PositiveIntegerField(verbose_name=_("repetition"), default=1)
     distance = models.PositiveIntegerField(verbose_name=_("distance"), default=100)
-    stroke = models.ForeignKey(Stroke, verbose_name=_("stroke"), null=True, blank=True, on_delete=models.CASCADE)
+    modality = models.ForeignKey(Modality, verbose_name=_("modality"), null=True, blank=True, on_delete=models.CASCADE)
     energysegment = models.ForeignKey(EnergySegment, null=True, blank=True, verbose_name=_("Energy Segment"),
                                       on_delete=models.CASCADE)
     notes = models.CharField(max_length=200, blank=True, verbose_name=_("notes"), )

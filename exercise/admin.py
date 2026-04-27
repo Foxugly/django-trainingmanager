@@ -1,28 +1,15 @@
 from django.contrib import admin
 
-from exercise.models import Stroke, EnergySystem, EnergySegment, Exercise
+from exercise.models import EnergySegment, EnergySystem, Exercise, Modality
 
 
-# Register your models here.
+@admin.register(Modality)
+class ModalityAdmin(admin.ModelAdmin):
+    list_display = ('name', 'sport')
+    list_filter = ('sport',)
+    search_fields = ('name',)
 
 
-class StrokeAdmin(admin.ModelAdmin):
-    pass
-
-
-class EnergySystemAdmin(admin.ModelAdmin):
-    pass
-
-
-class EnergySegmentAdmin(admin.ModelAdmin):
-    pass
-
-
-class ExerciseAdmin(admin.ModelAdmin):
-    pass
-
-
-admin.site.register(Stroke, StrokeAdmin)
-admin.site.register(EnergySystem, EnergySystemAdmin)
-admin.site.register(EnergySegment, EnergySegmentAdmin)
-admin.site.register(Exercise, ExerciseAdmin)
+admin.site.register(EnergySystem)
+admin.site.register(EnergySegment)
+admin.site.register(Exercise)

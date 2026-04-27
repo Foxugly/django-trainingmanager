@@ -5,9 +5,10 @@ from tests.factories import (
     EnergySystemFactory,
     EventFactory,
     MemberFactory,
+    ModalityFactory,
     ProgramFactory,
     RoundFactory,
-    StrokeFactory,
+    SportFactory,
 )
 
 pytestmark = pytest.mark.django_db
@@ -42,13 +43,26 @@ def test_GET_teams_authenticated_returns_200(auth_client):
 
 
 def test_POST_teams_creates_with_caller_as_owner(auth_client, authenticated_user):
+    sport = SportFactory()
     response = auth_client.post(
         '/api/v1/teams/',
-        {'name': 'New Team Smoke', 'is_active': True, 'is_public': False, 'managers': []},
+        {
+            'name': 'New Team Smoke', 'sport': sport.pk,
+            'is_active': True, 'is_public': False, 'managers': [],
+        },
         format='json',
     )
     assert response.status_code == 201
     assert response.json()['owner'] == authenticated_user.pk
+
+
+def test_POST_teams_without_sport_returns_400(auth_client):
+    response = auth_client.post(
+        '/api/v1/teams/',
+        {'name': 'No sport', 'is_active': True, 'is_public': False, 'managers': []},
+        format='json',
+    )
+    assert response.status_code == 400
 
 
 def test_GET_team_detail_returns_200(auth_client, user_team):
@@ -135,17 +149,32 @@ def test_POST_exercises_returns_201(auth_client_trainer):
     assert response.status_code == 201
 
 
-# --------- /strokes/ /energy-systems/ /energy-segments/ (RO) ---------
+# --------- /sports/, nested modalities/, energy-systems/, energy-segments/ (RO) ---------
 
-def test_GET_strokes_returns_200(auth_client):
-    StrokeFactory()
-    response = auth_client.get('/api/v1/strokes/')
+def test_GET_sports_returns_200(auth_client):
+    SportFactory()
+    response = auth_client.get('/api/v1/sports/')
     assert response.status_code == 200
 
 
-def test_POST_strokes_returns_405(auth_client):
-    response = auth_client.post('/api/v1/strokes/', {'name': 'Free'}, format='json')
+def test_GET_nested_modalities_returns_200(auth_client):
+    sport = SportFactory()
+    ModalityFactory(sport=sport)
+    response = auth_client.get(f'/api/v1/sports/{sport.pk}/modalities/')
+    assert response.status_code == 200
+
+
+def test_POST_nested_modalities_returns_405(auth_client):
+    sport = SportFactory()
+    response = auth_client.post(
+        f'/api/v1/sports/{sport.pk}/modalities/', {'name': 'Foo'}, format='json'
+    )
     assert response.status_code == 405
+
+
+def test_GET_strokes_returns_404(auth_client):
+    response = auth_client.get('/api/v1/strokes/')
+    assert response.status_code == 404
 
 
 def test_GET_energy_systems_returns_200(auth_client):

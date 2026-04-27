@@ -4,10 +4,11 @@ from factory.django import DjangoModelFactory
 from django.contrib.auth import get_user_model
 
 from event.models import Event
-from exercise.models import EnergySegment, EnergySystem, Exercise, Stroke
+from exercise.models import EnergySegment, EnergySystem, Exercise, Modality
 from member.models import Member
 from program.models import Program
 from round.models import Round
+from sport.models import Sport
 from team.models import Team
 
 
@@ -21,21 +22,33 @@ class UserFactory(DjangoModelFactory):
     password = factory.PostGenerationMethodCall('set_password', 'pass1234')
 
 
+class SportFactory(DjangoModelFactory):
+    class Meta:
+        model = Sport
+        django_get_or_create = ('slug',)
+
+    name = factory.Sequence(lambda n: f"Sport {n}")
+    slug = factory.Sequence(lambda n: f"sport-{n}")
+    is_active = True
+
+
 class TeamFactory(DjangoModelFactory):
     class Meta:
         model = Team
 
     name = factory.Sequence(lambda n: f"Team {n}")
     owner = factory.SubFactory(UserFactory)
+    sport = factory.SubFactory(SportFactory)
     is_active = True
     is_public = False
 
 
-class StrokeFactory(DjangoModelFactory):
+class ModalityFactory(DjangoModelFactory):
     class Meta:
-        model = Stroke
+        model = Modality
 
-    name = factory.Sequence(lambda n: f"Stroke {n}")
+    name = factory.Sequence(lambda n: f"Modality {n}")
+    sport = factory.SubFactory(SportFactory)
 
 
 class EnergySystemFactory(DjangoModelFactory):

@@ -5,23 +5,30 @@ from rest_framework.response import Response
 
 from team.permissions import IsTrainer
 
-from .models import EnergySegment, EnergySystem, Exercise, Stroke
+from .models import EnergySegment, EnergySystem, Exercise, Modality
 from .serializers import (
     EnergySegmentSerializer,
     EnergySystemSerializer,
     ExerciseSerializer,
-    StrokeSerializer,
+    ModalitySerializer,
 )
 
 
-class StrokeViewSet(viewsets.ReadOnlyModelViewSet):
-    """Lecture seule pour Stroke (référentiel)."""
-    queryset = Stroke.objects.all()
-    serializer_class = StrokeSerializer
+class ModalityViewSet(viewsets.ReadOnlyModelViewSet):
+    """Lecture seule pour Modality (référentiel par sport, nested via /sports/<id>/modalities/)."""
+    serializer_class = ModalitySerializer
+    permission_classes = [IsAuthenticated]
     filterset_fields = ['name']
     search_fields = ['name']
     ordering_fields = ['name', 'id']
     ordering = ['name']
+
+    def get_queryset(self):
+        sport_id = self.kwargs.get('sport_pk')
+        qs = Modality.objects.all()
+        if sport_id:
+            qs = qs.filter(sport_id=sport_id)
+        return qs
 
 
 class EnergySystemViewSet(viewsets.ReadOnlyModelViewSet):
@@ -49,7 +56,7 @@ class ExerciseViewSet(viewsets.ModelViewSet):
     queryset = Exercise.objects.all()
     serializer_class = ExerciseSerializer
     permission_classes = [IsAuthenticated, IsTrainer]
-    filterset_fields = ['stroke', 'energysegment']
+    filterset_fields = ['modality', 'energysegment']
     search_fields = ['notes']
     ordering_fields = ['order', 'id', 'distance']
     ordering = ['order']
@@ -64,7 +71,7 @@ class ExerciseViewSet(viewsets.ModelViewSet):
             repetition=original.repetition,
             distance=original.distance,
             notes=original.notes,
-            stroke=original.stroke,
+            modality=original.modality,
             energysegment=original.energysegment,
             order=original.order,
         )

@@ -2,14 +2,14 @@ from rest_framework import serializers
 
 from tools.exceptions import ResourceLocked
 
-from .models import EnergySegment, EnergySystem, Exercise, Stroke
+from .models import EnergySegment, EnergySystem, Exercise, Modality
 
 
-class StrokeSerializer(serializers.ModelSerializer):
+class ModalitySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Stroke
-        fields = ['id', 'name']
-        read_only_fields = ['id']
+        model = Modality
+        fields = ['id', 'name', 'sport']
+        read_only_fields = fields
 
 
 class EnergySystemSerializer(serializers.ModelSerializer):
@@ -31,8 +31,8 @@ class EnergySegmentSerializer(serializers.ModelSerializer):
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
-    stroke = serializers.PrimaryKeyRelatedField(
-        queryset=Stroke.objects.all(), required=False, allow_null=True
+    modality = serializers.PrimaryKeyRelatedField(
+        queryset=Modality.objects.all(), required=False, allow_null=True
     )
     energysegment = serializers.PrimaryKeyRelatedField(
         queryset=EnergySegment.objects.all(), required=False, allow_null=True
@@ -43,7 +43,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'order', 'repetition', 'distance', 'notes',
             't_start', 't_break',
-            'stroke', 'energysegment',
+            'modality', 'energysegment',
             'usage_count',
         ]
         read_only_fields = ['id', 'usage_count']

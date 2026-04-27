@@ -60,7 +60,7 @@ class RoundViewSet(viewsets.ModelViewSet):
             repetition=original.repetition,
             distance=original.distance,
             notes=original.notes,
-            stroke=original.stroke,
+            modality=original.modality,
             energysegment=original.energysegment,
             order=original.order,
         )

@@ -8,11 +8,14 @@ class TeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
         fields = [
-            'id', 'name', 'owner', 'managers',
+            'id', 'name', 'sport', 'owner', 'managers',
             'is_active', 'is_public',
             'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'sport': {'required': True, 'allow_null': False},
+        }
 
 
 class TeamJoinRequestSerializer(serializers.ModelSerializer):
