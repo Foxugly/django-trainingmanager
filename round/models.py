@@ -20,32 +20,6 @@ class Round(GenericClass):
         if self.refer_event:
             self.refer_event.rounds.add(self) if self not in self.refer_event.rounds.all() else None
 
-    def get_row(self, buttons):
-        out = ""
-        nb = len(self.exercises.all())
-        for i, e in enumerate(self.exercises.all().order_by('order')):
-            if i == 0:
-                out += '<tr>' \
-                       '<th class="text-center align-middle" rowspan="%d">#%d</th>' \
-                       '<td class="align-middle text-center" rowspan="%d">%d</td>' \
-                       '<td class="align-middle text-center" rowspan="%d">%d X %s %s</td>' \
-                       '<td>%s</td>' % (nb, self.order, nb, self.get_total(), nb, self.count, "<BR>break : %s" % self.t_break if self.t_break else " ", "<BR>start : %s" % self.t_start if self.t_start else " ", e.get_row())
-                if buttons:
-                    out += '<td style="width:95px" class="align-middle text-center" rowspan="%d">' \
-                           '<button class="bs-modal btn btn-sm btn-info" type="button" data-form-url="%s" data-next="%s">' \
-                           '<span class="fa fa-edit"></span>' \
-                           '</button> ' \
-                           '<button class="bs-modal btn btn-sm btn-danger" type="button" data-form-url="%s" data-next="%s">' \
-                           '<span class="fa fa-trash"></span>' \
-                           '</button>' \
-                           '</td>' % (
-                               nb, self.get_change_url(), self.refer_event.get_absolute_url(), self.get_delete_url(),
-                               self.refer_event.get_absolute_url())
-                out += '</tr>'
-            else:
-                out += "<tr><td>%s</td></tr>" % (e.get_row())
-        return out
-
     def get_total(self):
         distance = 0
         for e in self.exercises.all():
