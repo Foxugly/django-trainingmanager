@@ -30,7 +30,8 @@ class TeamJoinRequestSerializer(serializers.ModelSerializer):
 class CreateJoinRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamJoinRequest
-        fields = ['team', 'message']
+        fields = ['id', 'team', 'message']
+        read_only_fields = ['id']
 
     def validate(self, data):
         user = self.context['request'].user
