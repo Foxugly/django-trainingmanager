@@ -12,6 +12,20 @@ def use_locmem_email_backend(settings):
     settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
 
+@pytest.fixture(autouse=True)
+def reset_throttle_cache():
+    """DRF throttle counters live in the default cache (locmem in tests).
+
+    The cache persists across tests in the same process, so without an
+    explicit clear, throttle counters from one test leak into the next
+    and silently 429 unrelated tests.
+    """
+    from django.core.cache import cache
+    cache.clear()
+    yield
+    cache.clear()
+
+
 @pytest.fixture
 def api_client():
     return APIClient()

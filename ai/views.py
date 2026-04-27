@@ -5,11 +5,13 @@ from rest_framework.views import APIView
 
 from team.permissions import IsTrainer
 from tools.ai import call_claude
+from tools.throttling import AIPingThrottle
 
 
 class AIPingView(APIView):
     """POST /api/v1/ai/ping/ — minimal Claude call for diagnostics."""
     permission_classes = [IsAuthenticated, IsTrainer]
+    throttle_classes = [AIPingThrottle]
 
     def post(self, request):
         prompt = request.data.get("prompt", "Say hello in one word.")

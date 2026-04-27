@@ -8,6 +8,8 @@ from rest_framework.response import Response
 
 from team.queries import accessible_teams, managed_teams
 
+from tools.throttling import AIPlanGenerationThrottle
+
 from .ai import generate_plan
 from .models import Program
 from .serializers import GeneratePlanRequestSerializer, ProgramSerializer
@@ -38,7 +40,12 @@ class ProgramViewSet(viewsets.ModelViewSet):
         self._check_team_write(serializer.validated_data.get('team', serializer.instance.team))
         serializer.save()
 
-    @action(detail=True, methods=['post'], url_path='generate-events')
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path='generate-events',
+        throttle_classes=[AIPlanGenerationThrottle],
+    )
     def generate_events(self, request, pk=None):
         """POST /programs/{id}/generate-events/ — Claude-generated session list."""
         program = self.get_object()

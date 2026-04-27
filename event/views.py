@@ -6,6 +6,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from team.queries import accessible_teams, managed_teams
+from tools.throttling import AITrainingGenerationThrottle
 
 from .ai import generate_training as ai_generate_training
 from .models import Event
@@ -41,7 +42,12 @@ class EventViewSet(viewsets.ModelViewSet):
         )
         serializer.save()
 
-    @action(detail=True, methods=['post'], url_path='generate-training')
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path='generate-training',
+        throttle_classes=[AITrainingGenerationThrottle],
+    )
     def generate_training(self, request, pk=None):
         """POST /api/v1/events/{id}/generate-training/ — Claude-generated rounds."""
         from exercise.models import EnergySegment, Exercise, Modality
