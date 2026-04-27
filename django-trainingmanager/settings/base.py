@@ -164,6 +164,10 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API pour la gestion d entrainements",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "ENUM_NAME_OVERRIDES": {
+        "JoinRequestStatusEnum": "team.models.TeamJoinRequest.STATUS_CHOICES",
+        "InvitationStatusEnum": "team.models.TeamInvitation.STATUS_CHOICES",
+    },
 }
 
 AUTHENTICATION_BACKENDS = [
