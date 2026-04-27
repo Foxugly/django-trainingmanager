@@ -9,14 +9,14 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register(r'teams', TeamViewSet, basename='team')
-router.register(r'join-requests', TeamJoinRequestViewSet, basename='joinrequest')
-router.register(r'invitations', TeamInvitationViewSet, basename='invitation')
+router.register(r"teams", TeamViewSet, basename="team")
+router.register(r"join-requests", TeamJoinRequestViewSet, basename="joinrequest")
+router.register(r"invitations", TeamInvitationViewSet, basename="invitation")
 
 urlpatterns = router.urls + [
     path(
-        'invitations/lookup/<str:token>/',
+        "invitations/lookup/<str:token>/",
         InvitationLookupView.as_view(),
-        name='invitation-lookup',
+        name="invitation-lookup",
     ),
 ]

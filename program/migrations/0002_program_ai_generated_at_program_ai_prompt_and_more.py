@@ -6,38 +6,38 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('program', '0001_initial'),
+        ("program", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='program',
-            name='ai_generated_at',
+            model_name="program",
+            name="ai_generated_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='program',
-            name='ai_prompt',
-            field=models.TextField(blank=True, default=''),
+            model_name="program",
+            name="ai_prompt",
+            field=models.TextField(blank=True, default=""),
         ),
         migrations.AddField(
-            model_name='program',
-            name='ai_response',
-            field=models.TextField(blank=True, default=''),
+            model_name="program",
+            name="ai_response",
+            field=models.TextField(blank=True, default=""),
         ),
         migrations.AddField(
-            model_name='program',
-            name='description',
-            field=models.TextField(blank=True, default=''),
+            model_name="program",
+            name="description",
+            field=models.TextField(blank=True, default=""),
         ),
         migrations.AddField(
-            model_name='program',
-            name='frequency_per_week',
+            model_name="program",
+            name="frequency_per_week",
             field=models.PositiveIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='program',
-            name='generated_by_ai',
+            model_name="program",
+            name="generated_by_ai",
             field=models.BooleanField(default=False),
         ),
     ]

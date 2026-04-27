@@ -5,7 +5,6 @@ from django.utils.translation import gettext_lazy as _
 
 
 class CustomUserManager(BaseUserManager):
-
     def create_user(self, username, email, password):
         user = self.model(username=username, email=email, password=password)
         user.set_password(password)
@@ -26,7 +25,7 @@ class CustomUser(AbstractUser):
     language = models.CharField(_("language"), max_length=8, choices=settings.LANGUAGES, default=1)
     objects = CustomUserManager()
 
-    USERNAME_FIELD = 'username'
+    USERNAME_FIELD = "username"
 
     def __str__(self):
         return self.username

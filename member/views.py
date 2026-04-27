@@ -9,16 +9,15 @@ from .serializers import MemberSerializer
 
 class MemberViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Member, scopé par teams du Member."""
+
     serializer_class = MemberSerializer
-    filterset_fields = ['lastname', 'firstname']
-    search_fields = ['firstname', 'lastname', 'email']
-    ordering_fields = ['lastname', 'firstname', 'id']
-    ordering = ['lastname', 'firstname']
+    filterset_fields = ["lastname", "firstname"]
+    search_fields = ["firstname", "lastname", "email"]
+    ordering_fields = ["lastname", "firstname", "id"]
+    ordering = ["lastname", "firstname"]
 
     def get_queryset(self):
-        return Member.objects.filter(
-            teams__in=accessible_teams(self.request.user)
-        ).distinct()
+        return Member.objects.filter(teams__in=accessible_teams(self.request.user)).distinct()
 
     def _check_teams_write(self, teams):
         if not teams:
@@ -29,11 +28,11 @@ class MemberViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied(f"You do not manage team {t.pk}.")
 
     def perform_create(self, serializer):
-        self._check_teams_write(serializer.validated_data.get('teams', []))
+        self._check_teams_write(serializer.validated_data.get("teams", []))
         serializer.save()
 
     def perform_update(self, serializer):
-        teams = serializer.validated_data.get('teams')
+        teams = serializer.validated_data.get("teams")
         if teams is not None:
             self._check_teams_write(teams)
         serializer.save()

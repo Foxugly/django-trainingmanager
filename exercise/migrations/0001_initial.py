@@ -9,59 +9,123 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('sport', '0001_initial'),
+        ("sport", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EnergySystem',
+            name="EnergySystem",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=20, verbose_name='name')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=20, verbose_name="name")),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='EnergySegment',
+            name="EnergySegment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('abv', models.CharField(max_length=10, verbose_name='abv')),
-                ('description', models.CharField(blank=True, max_length=200, null=True, verbose_name='description')),
-                ('energysystem', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='exercise.energysystem')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("abv", models.CharField(max_length=10, verbose_name="abv")),
+                (
+                    "description",
+                    models.CharField(
+                        blank=True, max_length=200, null=True, verbose_name="description"
+                    ),
+                ),
+                (
+                    "energysystem",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="exercise.energysystem",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='Modality',
+            name="Modality",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=20, verbose_name='name')),
-                ('sport', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='modalities', to='sport.sport')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=20, verbose_name="name")),
+                (
+                    "sport",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="modalities",
+                        to="sport.sport",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['sport', 'name'],
-                'unique_together': {('name', 'sport')},
+                "ordering": ["sport", "name"],
+                "unique_together": {("name", "sport")},
             },
         ),
         migrations.CreateModel(
-            name='Exercise',
+            name="Exercise",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('order', models.IntegerField(default=1, verbose_name='order')),
-                ('t_start', models.CharField(blank=True, max_length=10, null=True, verbose_name='start')),
-                ('t_break', models.CharField(blank=True, max_length=10, null=True, verbose_name='break')),
-                ('repetition', models.PositiveIntegerField(default=1, verbose_name='repetition')),
-                ('distance', models.PositiveIntegerField(default=100, verbose_name='distance')),
-                ('notes', models.CharField(blank=True, max_length=200, verbose_name='notes')),
-                ('energysegment', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='exercise.energysegment', verbose_name='Energy Segment')),
-                ('modality', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='exercise.modality', verbose_name='modality')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("order", models.IntegerField(default=1, verbose_name="order")),
+                (
+                    "t_start",
+                    models.CharField(blank=True, max_length=10, null=True, verbose_name="start"),
+                ),
+                (
+                    "t_break",
+                    models.CharField(blank=True, max_length=10, null=True, verbose_name="break"),
+                ),
+                ("repetition", models.PositiveIntegerField(default=1, verbose_name="repetition")),
+                ("distance", models.PositiveIntegerField(default=100, verbose_name="distance")),
+                ("notes", models.CharField(blank=True, max_length=200, verbose_name="notes")),
+                (
+                    "energysegment",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="exercise.energysegment",
+                        verbose_name="Energy Segment",
+                    ),
+                ),
+                (
+                    "modality",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="exercise.modality",
+                        verbose_name="modality",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Exercise',
+                "verbose_name": "Exercise",
             },
         ),
     ]

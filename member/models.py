@@ -6,20 +6,37 @@ from tools.generic_class import GenericClass
 
 
 class Member(GenericClass):
-    firstname = models.CharField(max_length=100, verbose_name=_("Firstname"), )
-    lastname = models.CharField(max_length=100, verbose_name=_("Lastname"), )
-    phonenumber = models.CharField(max_length=20, blank=True, null=True, verbose_name=_("Phonenumber"), )
-    email = models.EmailField(max_length=50, blank=True, null=True, verbose_name=_("Email"), )
+    firstname = models.CharField(
+        max_length=100,
+        verbose_name=_("Firstname"),
+    )
+    lastname = models.CharField(
+        max_length=100,
+        verbose_name=_("Lastname"),
+    )
+    phonenumber = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name=_("Phonenumber"),
+    )
+    email = models.EmailField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name=_("Email"),
+    )
     teams = models.ManyToManyField(
-        'team.Team',
-        related_name='members',
+        "team.Team",
+        related_name="members",
         blank=True,
     )
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
-        related_name='member_profile',
-        null=True, blank=True,
+        related_name="member_profile",
+        null=True,
+        blank=True,
     )
 
     def get_fullname(self):
@@ -29,4 +46,4 @@ class Member(GenericClass):
         return self.get_fullname()
 
     class Meta:
-        verbose_name = _('Member')
+        verbose_name = _("Member")

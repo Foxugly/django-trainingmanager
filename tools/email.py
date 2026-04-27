@@ -1,10 +1,9 @@
 import logging
 
 import httpx
-from msal import ConfidentialClientApplication
-
 from django.conf import settings
 from django.core.mail.backends.base import BaseEmailBackend
+from msal import ConfidentialClientApplication
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +25,7 @@ class GraphEmailBackend(BaseEmailBackend):
                 client_credential=settings.GRAPH_CLIENT_SECRET,
                 authority=f"https://login.microsoftonline.com/{settings.GRAPH_TENANT_ID}",
             )
-        result = self._app.acquire_token_for_client(
-            scopes=["https://graph.microsoft.com/.default"]
-        )
+        result = self._app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
         if "access_token" not in result:
             raise RuntimeError(f"Graph auth failed: {result.get('error_description')}")
         self._token = result["access_token"]
@@ -51,7 +48,7 @@ class GraphEmailBackend(BaseEmailBackend):
         sender = settings.GRAPH_SENDER
         url = f"https://graph.microsoft.com/v1.0/users/{sender}/sendMail"
 
-        is_html = msg.content_subtype == 'html'
+        is_html = msg.content_subtype == "html"
         graph_msg = {
             "message": {
                 "subject": msg.subject,
@@ -59,9 +56,7 @@ class GraphEmailBackend(BaseEmailBackend):
                     "contentType": "HTML" if is_html else "Text",
                     "content": msg.body,
                 },
-                "toRecipients": [
-                    {"emailAddress": {"address": addr}} for addr in msg.to
-                ],
+                "toRecipients": [{"emailAddress": {"address": addr}} for addr in msg.to],
             },
             "saveToSentItems": False,
         }

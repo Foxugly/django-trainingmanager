@@ -17,13 +17,26 @@ class ProgramSerializer(serializers.ModelSerializer):
     class Meta:
         model = Program
         fields = [
-            'id', 'name', 'date_start', 'date_end', 'team',
-            'events', 'members',
-            'frequency_per_week', 'description',
-            'generated_by_ai', 'ai_prompt', 'ai_response', 'ai_generated_at',
+            "id",
+            "name",
+            "date_start",
+            "date_end",
+            "team",
+            "events",
+            "members",
+            "frequency_per_week",
+            "description",
+            "generated_by_ai",
+            "ai_prompt",
+            "ai_response",
+            "ai_generated_at",
         ]
         read_only_fields = [
-            'id', 'generated_by_ai', 'ai_prompt', 'ai_response', 'ai_generated_at',
+            "id",
+            "generated_by_ai",
+            "ai_prompt",
+            "ai_response",
+            "ai_generated_at",
         ]
 
 
@@ -31,19 +44,15 @@ class GeneratePlanRequestSerializer(serializers.Serializer):
     date_start = serializers.DateField()
     date_end = serializers.DateField()
     frequency_per_week = serializers.IntegerField(min_value=1, max_value=14)
-    description = serializers.CharField(required=False, allow_blank=True, default='')
+    description = serializers.CharField(required=False, allow_blank=True, default="")
     overlap_strategy = serializers.ChoiceField(
-        choices=['add_only', 'merge', 'replace'],
-        default='add_only',
+        choices=["add_only", "merge", "replace"],
+        default="add_only",
     )
 
     def validate(self, data):
-        if data['date_end'] < data['date_start']:
-            raise serializers.ValidationError(
-                {"date_end": "date_end must be after date_start"}
-            )
-        if (data['date_end'] - data['date_start']).days > 365:
-            raise serializers.ValidationError(
-                {"date_end": "range cannot exceed 365 days"}
-            )
+        if data["date_end"] < data["date_start"]:
+            raise serializers.ValidationError({"date_end": "date_end must be after date_start"})
+        if (data["date_end"] - data["date_start"]).days > 365:
+            raise serializers.ValidationError({"date_end": "range cannot exceed 365 days"})
         return data

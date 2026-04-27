@@ -6,6 +6,7 @@ from .serializers import MeSerializer
 
 class MeView(RetrieveUpdateAPIView):
     """GET/PATCH du profil de l'utilisateur connecté."""
+
     serializer_class = MeSerializer
     permission_classes = [IsAuthenticated]
 

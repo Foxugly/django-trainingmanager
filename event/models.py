@@ -11,21 +11,41 @@ class Event(GenericClass):
     name = models.CharField(max_length=100, verbose_name=_("name"))
     goal = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("goal"))
     color = models.CharField(max_length=10, blank=True, verbose_name=_("color"))
-    date = models.DateField(blank=True, null=True, )
-    hour_start = models.TimeField(blank=True, null=True, )
-    hour_end = models.TimeField(blank=True, null=True, )
+    date = models.DateField(
+        blank=True,
+        null=True,
+    )
+    hour_start = models.TimeField(
+        blank=True,
+        null=True,
+    )
+    hour_end = models.TimeField(
+        blank=True,
+        null=True,
+    )
     total = models.PositiveIntegerField(default=0)
-    rounds = models.ManyToManyField(Round, blank=True, )
-    members = models.ManyToManyField(Member, blank=True, )
-    refer_program = models.ForeignKey('program.Program', verbose_name=_('refer_program'), related_name='back_program',
-                                      null=True, on_delete=models.CASCADE)
+    rounds = models.ManyToManyField(
+        Round,
+        blank=True,
+    )
+    members = models.ManyToManyField(
+        Member,
+        blank=True,
+    )
+    refer_program = models.ForeignKey(
+        "program.Program",
+        verbose_name=_("refer_program"),
+        related_name="back_program",
+        null=True,
+        on_delete=models.CASCADE,
+    )
     generated_by_ai = models.BooleanField(default=False)
-    ai_prompt = models.TextField(blank=True, default='')
-    ai_response = models.TextField(blank=True, default='')
+    ai_prompt = models.TextField(blank=True, default="")
+    ai_response = models.TextField(blank=True, default="")
     ai_generated_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return "%s %d" % (_('Event'), self.pk)
+        return "%s %d" % (_("Event"), self.pk)
 
     def get_members_present(self):
         return self.members.all()
@@ -41,16 +61,22 @@ class Event(GenericClass):
 
     @staticmethod
     def hour_t(t):
-        return t.strftime('%H:%M:%S')
+        return t.strftime("%H:%M:%S")
 
     def start_t(self):
-        return self.date.strftime('%Y-%m-%d') + "T" + self.hour_t(self.hour_start)
+        return self.date.strftime("%Y-%m-%d") + "T" + self.hour_t(self.hour_start)
 
     def end_t(self):
-        return self.date.strftime('%Y-%m-%d') + "T" + self.hour_t(self.hour_end)
+        return self.date.strftime("%Y-%m-%d") + "T" + self.hour_t(self.hour_end)
 
     def as_json(self):
-        return dict(id=str(self.id), start=self.start_t(), end=self.end_t(), title=self.name, color=self.color)
+        return dict(
+            id=str(self.id),
+            start=self.start_t(),
+            end=self.end_t(),
+            title=self.name,
+            color=self.color,
+        )
 
     def get_attendance_members(self):
         l = []

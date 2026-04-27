@@ -6,5 +6,5 @@ from .models import Sport
 class SportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sport
-        fields = ['id', 'name', 'slug', 'is_active', 'created_at']
+        fields = ["id", "name", "slug", "is_active", "created_at"]
         read_only_fields = fields

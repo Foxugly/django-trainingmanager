@@ -110,9 +110,7 @@ def _parse_date_strict(s):
 
 
 def generate_plan(*, program, date_start, date_end, frequency_per_week, description):
-    sport_name = (
-        program.team.sport.name if program.team.sport else "le sport pratique"
-    )
+    sport_name = program.team.sport.name if program.team.sport else "le sport pratique"
 
     system = build_system_prompt(sport_name)
     user_prompt = build_user_prompt(
@@ -139,9 +137,7 @@ def generate_plan(*, program, date_start, date_end, frequency_per_week, descript
     for ev in events:
         ev_date = _parse_date_strict(ev.get("date"))
         if ev_date < date_start or ev_date > date_end:
-            raise AIServiceError(
-                f"AI generated event with out-of-range date: {ev.get('date')}"
-            )
+            raise AIServiceError(f"AI generated event with out-of-range date: {ev.get('date')}")
 
     return {
         "events": events,

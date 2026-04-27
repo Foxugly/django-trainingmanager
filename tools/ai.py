@@ -5,10 +5,8 @@ should sit in domain-specific modules and call into this one.
 """
 
 import logging
-from typing import Optional
 
 from anthropic import Anthropic, APIError, APITimeoutError, AuthenticationError
-
 from django.conf import settings
 from rest_framework.exceptions import APIException
 
@@ -30,9 +28,7 @@ class AIConfigurationError(APIException):
 def _get_client() -> Anthropic:
     api_key = settings.ANTHROPIC_API_KEY
     if not api_key:
-        raise AIConfigurationError(
-            "ANTHROPIC_API_KEY is not set. Configure it in .env."
-        )
+        raise AIConfigurationError("ANTHROPIC_API_KEY is not set. Configure it in .env.")
     return Anthropic(
         api_key=api_key,
         timeout=settings.ANTHROPIC_TIMEOUT_SECONDS,
@@ -42,9 +38,9 @@ def _get_client() -> Anthropic:
 def call_claude(
     prompt: str,
     *,
-    system: Optional[str] = None,
-    model: Optional[str] = None,
-    max_tokens: Optional[int] = None,
+    system: str | None = None,
+    model: str | None = None,
+    max_tokens: int | None = None,
 ) -> dict:
     """Send a single user prompt to Claude and return the response payload."""
     client = _get_client()
@@ -90,9 +86,9 @@ def call_claude_with_tool(
     prompt: str,
     *,
     tool: dict,
-    system: Optional[str] = None,
-    model: Optional[str] = None,
-    max_tokens: Optional[int] = None,
+    system: str | None = None,
+    model: str | None = None,
+    max_tokens: int | None = None,
 ) -> dict:
     """Call Claude with a forced tool, guaranteeing a structured JSON payload."""
     client = _get_client()

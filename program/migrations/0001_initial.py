@@ -9,25 +9,37 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('event', '0001_initial'),
-        ('member', '0002_initial'),
-        ('team', '0001_initial'),
+        ("event", "0001_initial"),
+        ("member", "0002_initial"),
+        ("team", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Program',
+            name="Program",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, verbose_name='name')),
-                ('date_start', models.DateField(blank=True, null=True)),
-                ('date_end', models.DateField(blank=True, null=True)),
-                ('events', models.ManyToManyField(blank=True, to='event.event')),
-                ('members', models.ManyToManyField(blank=True, to='member.member')),
-                ('team', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='programs', to='team.team')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=100, verbose_name="name")),
+                ("date_start", models.DateField(blank=True, null=True)),
+                ("date_end", models.DateField(blank=True, null=True)),
+                ("events", models.ManyToManyField(blank=True, to="event.event")),
+                ("members", models.ManyToManyField(blank=True, to="member.member")),
+                (
+                    "team",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="programs",
+                        to="team.team",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Program',
+                "verbose_name": "Program",
             },
         ),
     ]

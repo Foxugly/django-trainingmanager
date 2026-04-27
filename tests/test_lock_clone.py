@@ -1,7 +1,5 @@
 import pytest
 
-from exercise.models import Exercise
-from round.models import Round
 from tests.factories import EventFactory, ExerciseFactory, RoundFactory
 
 pytestmark = pytest.mark.django_db
@@ -9,16 +7,17 @@ pytestmark = pytest.mark.django_db
 
 # ----------------------------- LOCK ----------------------------------
 
+
 def test_PATCH_exercise_unlocked_returns_200(auth_client_trainer):
     ex = ExerciseFactory()
     RoundFactory(exercises=[ex])
     response = auth_client_trainer.patch(
-        f'/api/v1/exercises/{ex.pk}/',
-        {'notes': 'updated'},
-        format='json',
+        f"/api/v1/exercises/{ex.pk}/",
+        {"notes": "updated"},
+        format="json",
     )
     assert response.status_code == 200
-    assert response.json()['notes'] == 'updated'
+    assert response.json()["notes"] == "updated"
 
 
 def test_PATCH_exercise_locked_returns_409(auth_client_trainer):
@@ -26,9 +25,9 @@ def test_PATCH_exercise_locked_returns_409(auth_client_trainer):
     RoundFactory(exercises=[ex])
     RoundFactory(exercises=[ex])
     response = auth_client_trainer.patch(
-        f'/api/v1/exercises/{ex.pk}/',
-        {'notes': 'should fail'},
-        format='json',
+        f"/api/v1/exercises/{ex.pk}/",
+        {"notes": "should fail"},
+        format="json",
     )
     assert response.status_code == 409
 
@@ -37,12 +36,12 @@ def test_PATCH_round_unlocked_returns_200(auth_client_trainer):
     r = RoundFactory()
     EventFactory(rounds=[r])
     response = auth_client_trainer.patch(
-        f'/api/v1/rounds/{r.pk}/',
-        {'count': 5},
-        format='json',
+        f"/api/v1/rounds/{r.pk}/",
+        {"count": 5},
+        format="json",
     )
     assert response.status_code == 200
-    assert response.json()['count'] == 5
+    assert response.json()["count"] == 5
 
 
 def test_PATCH_round_locked_returns_409(auth_client_trainer):
@@ -50,26 +49,27 @@ def test_PATCH_round_locked_returns_409(auth_client_trainer):
     EventFactory(rounds=[r])
     EventFactory(rounds=[r])
     response = auth_client_trainer.patch(
-        f'/api/v1/rounds/{r.pk}/',
-        {'count': 9},
-        format='json',
+        f"/api/v1/rounds/{r.pk}/",
+        {"count": 9},
+        format="json",
     )
     assert response.status_code == 409
 
 
 # ----------------------------- CLONE ---------------------------------
 
+
 def test_POST_exercise_clone_returns_201_with_new_id(auth_client_trainer):
-    ex = ExerciseFactory(notes='original')
+    ex = ExerciseFactory(notes="original")
     response = auth_client_trainer.post(
-        f'/api/v1/exercises/{ex.pk}/clone/',
+        f"/api/v1/exercises/{ex.pk}/clone/",
         {},
-        format='json',
+        format="json",
     )
     assert response.status_code == 201
     body = response.json()
-    assert body['id'] != ex.pk
-    assert body['notes'] == 'original'
+    assert body["id"] != ex.pk
+    assert body["notes"] == "original"
 
 
 def test_POST_round_clone_returns_201_with_m2m_exercises_copied(auth_client_trainer):
@@ -80,30 +80,30 @@ def test_POST_round_clone_returns_201_with_m2m_exercises_copied(auth_client_trai
     r.exercises.add(e1, e2, e3)
 
     response = auth_client_trainer.post(
-        f'/api/v1/rounds/{r.pk}/clone/',
+        f"/api/v1/rounds/{r.pk}/clone/",
         {},
-        format='json',
+        format="json",
     )
     assert response.status_code == 201
     body = response.json()
-    assert body['id'] != r.pk
-    assert body['count'] == 3
-    assert set(body['exercises']) == {e1.pk, e2.pk, e3.pk}
+    assert body["id"] != r.pk
+    assert body["count"] == 3
+    assert set(body["exercises"]) == {e1.pk, e2.pk, e3.pk}
 
 
 def test_POST_round_clone_exercise_attaches_to_round(auth_client_trainer):
     r = RoundFactory()
-    ex = ExerciseFactory(notes='source')
+    ex = ExerciseFactory(notes="source")
     response = auth_client_trainer.post(
-        f'/api/v1/rounds/{r.pk}/clone-exercise/',
-        {'exercise_id': ex.pk},
-        format='json',
+        f"/api/v1/rounds/{r.pk}/clone-exercise/",
+        {"exercise_id": ex.pk},
+        format="json",
     )
     assert response.status_code == 201
     body = response.json()
-    new_id = body['id']
+    new_id = body["id"]
     assert new_id != ex.pk
-    assert body['notes'] == 'source'
+    assert body["notes"] == "source"
     r.refresh_from_db()
     assert r.exercises.filter(pk=new_id).exists()
 
@@ -111,9 +111,9 @@ def test_POST_round_clone_exercise_attaches_to_round(auth_client_trainer):
 def test_POST_round_clone_exercise_missing_id_returns_400(auth_client_trainer):
     r = RoundFactory()
     response = auth_client_trainer.post(
-        f'/api/v1/rounds/{r.pk}/clone-exercise/',
+        f"/api/v1/rounds/{r.pk}/clone-exercise/",
         {},
-        format='json',
+        format="json",
     )
     assert response.status_code == 400
 
@@ -121,21 +121,22 @@ def test_POST_round_clone_exercise_missing_id_returns_400(auth_client_trainer):
 def test_POST_round_clone_exercise_unknown_id_returns_404(auth_client_trainer):
     r = RoundFactory()
     response = auth_client_trainer.post(
-        f'/api/v1/rounds/{r.pk}/clone-exercise/',
-        {'exercise_id': 999999},
-        format='json',
+        f"/api/v1/rounds/{r.pk}/clone-exercise/",
+        {"exercise_id": 999999},
+        format="json",
     )
     assert response.status_code == 404
 
 
 # ------------------------- PERMISSION 403 ----------------------------
 
+
 def test_PATCH_exercise_as_non_trainer_returns_403(auth_client_non_trainer):
     ex = ExerciseFactory()
     response = auth_client_non_trainer.patch(
-        f'/api/v1/exercises/{ex.pk}/',
-        {'notes': 'forbidden'},
-        format='json',
+        f"/api/v1/exercises/{ex.pk}/",
+        {"notes": "forbidden"},
+        format="json",
     )
     assert response.status_code == 403
 
@@ -143,9 +144,9 @@ def test_PATCH_exercise_as_non_trainer_returns_403(auth_client_non_trainer):
 def test_clone_exercise_as_non_trainer_returns_403(auth_client_non_trainer):
     ex = ExerciseFactory()
     response = auth_client_non_trainer.post(
-        f'/api/v1/exercises/{ex.pk}/clone/',
+        f"/api/v1/exercises/{ex.pk}/clone/",
         {},
-        format='json',
+        format="json",
     )
     assert response.status_code == 403
 
@@ -153,8 +154,8 @@ def test_clone_exercise_as_non_trainer_returns_403(auth_client_non_trainer):
 def test_clone_round_as_non_trainer_returns_403(auth_client_non_trainer):
     r = RoundFactory()
     response = auth_client_non_trainer.post(
-        f'/api/v1/rounds/{r.pk}/clone/',
+        f"/api/v1/rounds/{r.pk}/clone/",
         {},
-        format='json',
+        format="json",
     )
     assert response.status_code == 403

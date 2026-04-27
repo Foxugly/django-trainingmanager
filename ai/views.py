@@ -11,14 +11,15 @@ from tools.throttling import AIPingThrottle
 
 class AIPingView(APIView):
     """POST /api/v1/ai/ping/ — minimal Claude call for diagnostics."""
+
     permission_classes = [IsAuthenticated, IsTrainer]
     throttle_classes = [AIPingThrottle]
 
     @extend_schema(
         request=inline_serializer(
-            name='AIPingRequest',
+            name="AIPingRequest",
             fields={
-                'prompt': serializers.CharField(
+                "prompt": serializers.CharField(
                     required=False,
                     help_text="Prompt to send to Claude. Defaults to a hello-world prompt.",
                 ),
@@ -27,22 +28,22 @@ class AIPingView(APIView):
         responses={
             200: OpenApiResponse(
                 response=inline_serializer(
-                    name='AIPingResponse',
+                    name="AIPingResponse",
                     fields={
-                        'text': serializers.CharField(),
-                        'model': serializers.CharField(),
-                        'input_tokens': serializers.IntegerField(),
-                        'output_tokens': serializers.IntegerField(),
-                        'stop_reason': serializers.CharField(),
+                        "text": serializers.CharField(),
+                        "model": serializers.CharField(),
+                        "input_tokens": serializers.IntegerField(),
+                        "output_tokens": serializers.IntegerField(),
+                        "stop_reason": serializers.CharField(),
                     },
                 ),
-                description='Claude responded successfully',
+                description="Claude responded successfully",
             ),
-            400: OpenApiResponse(description='Invalid prompt'),
-            500: OpenApiResponse(description='AI configuration error'),
-            502: OpenApiResponse(description='AI service error'),
+            400: OpenApiResponse(description="Invalid prompt"),
+            500: OpenApiResponse(description="AI configuration error"),
+            502: OpenApiResponse(description="AI service error"),
         },
-        description='Diagnostic ping to the Anthropic API.',
+        description="Diagnostic ping to the Anthropic API.",
     )
     def post(self, request):
         prompt = request.data.get("prompt", "Say hello in one word.")

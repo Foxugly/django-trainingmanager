@@ -19,13 +19,13 @@ class UserFactory(DjangoModelFactory):
     username = factory.Sequence(lambda n: f"user_factory_{n}")
     email = factory.LazyAttribute(lambda o: f"{o.username}@local.test")
     is_active = True
-    password = factory.PostGenerationMethodCall('set_password', 'pass1234')
+    password = factory.PostGenerationMethodCall("set_password", "pass1234")
 
 
 class SportFactory(DjangoModelFactory):
     class Meta:
         model = Sport
-        django_get_or_create = ('slug',)
+        django_get_or_create = ("slug",)
 
     name = factory.Sequence(lambda n: f"Sport {n}")
     slug = factory.Sequence(lambda n: f"sport-{n}")
@@ -73,9 +73,7 @@ class MemberFactory(DjangoModelFactory):
 
     firstname = factory.Sequence(lambda n: f"First{n}")
     lastname = factory.Sequence(lambda n: f"Last{n}")
-    email = factory.LazyAttribute(
-        lambda o: f"{o.firstname}.{o.lastname}@local.test".lower()
-    )
+    email = factory.LazyAttribute(lambda o: f"{o.firstname}.{o.lastname}@local.test".lower())
     phonenumber = "+32400000000"
 
     @factory.post_generation

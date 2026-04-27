@@ -8,9 +8,22 @@ from tools.generic_class import GenericClass
 class Round(GenericClass):
     order = models.PositiveIntegerField(default=1)
     count = models.PositiveIntegerField(default=1)
-    t_start = models.CharField(max_length=10, null=True, blank=True, verbose_name=_("start"), )
-    t_break = models.CharField(max_length=10, null=True, blank=True, verbose_name=_("break"), )
-    exercises = models.ManyToManyField(Exercise, blank=True, )
+    t_start = models.CharField(
+        max_length=10,
+        null=True,
+        blank=True,
+        verbose_name=_("start"),
+    )
+    t_break = models.CharField(
+        max_length=10,
+        null=True,
+        blank=True,
+        verbose_name=_("break"),
+    )
+    exercises = models.ManyToManyField(
+        Exercise,
+        blank=True,
+    )
 
     def get_total(self):
         distance = 0
@@ -23,7 +36,7 @@ class Round(GenericClass):
         return self.event_set.count()
 
     def __str__(self):
-        return "%s %d" % (_('Round'), self.id)
+        return "%s %d" % (_("Round"), self.id)
 
     class Meta:
-        verbose_name = _('Round')
+        verbose_name = _("Round")

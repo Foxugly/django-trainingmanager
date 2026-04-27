@@ -1,11 +1,12 @@
 from django.db.models import Q
-from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
 class IsTeamOwnerOrReadOnly(BasePermission):
     """
     SAFE_METHODS for any authenticated user; mutations only for owner.
     """
+
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True
@@ -16,6 +17,7 @@ class IsTeamManagerOrReadOnly(BasePermission):
     """
     SAFE_METHODS for any authenticated user; mutations for owner or managers.
     """
+
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
             return True
@@ -27,6 +29,7 @@ class IsTrainer(BasePermission):
     Read access for any authenticated user.
     Write access requires owning or managing at least one active team.
     """
+
     message = "Only trainers (owners or managers of an active team) can modify the catalog."
 
     def has_permission(self, request, view):
@@ -35,6 +38,7 @@ class IsTrainer(BasePermission):
         if request.method in SAFE_METHODS:
             return True
         from team.models import Team
+
         return Team.objects.filter(
             Q(owner=request.user) | Q(managers=request.user),
             is_active=True,
@@ -47,6 +51,7 @@ class IsJoinRequestParticipant(BasePermission):
     - the requester (obj.user)
     - the team owner or any team manager
     """
+
     def has_object_permission(self, request, view, obj):
         if not request.user.is_authenticated:
             return False

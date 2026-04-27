@@ -9,26 +9,32 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('event', '0001_initial'),
-        ('member', '0002_initial'),
-        ('program', '0001_initial'),
-        ('round', '0001_initial'),
+        ("event", "0001_initial"),
+        ("member", "0002_initial"),
+        ("program", "0001_initial"),
+        ("round", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='event',
-            name='members',
-            field=models.ManyToManyField(blank=True, to='member.member'),
+            model_name="event",
+            name="members",
+            field=models.ManyToManyField(blank=True, to="member.member"),
         ),
         migrations.AddField(
-            model_name='event',
-            name='refer_program',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='back_program', to='program.program', verbose_name='refer_program'),
+            model_name="event",
+            name="refer_program",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="back_program",
+                to="program.program",
+                verbose_name="refer_program",
+            ),
         ),
         migrations.AddField(
-            model_name='event',
-            name='rounds',
-            field=models.ManyToManyField(blank=True, to='round.round'),
+            model_name="event",
+            name="rounds",
+            field=models.ManyToManyField(blank=True, to="round.round"),
         ),
     ]

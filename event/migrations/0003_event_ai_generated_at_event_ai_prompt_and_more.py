@@ -6,28 +6,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('event', '0002_initial'),
+        ("event", "0002_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='event',
-            name='ai_generated_at',
+            model_name="event",
+            name="ai_generated_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='event',
-            name='ai_prompt',
-            field=models.TextField(blank=True, default=''),
+            model_name="event",
+            name="ai_prompt",
+            field=models.TextField(blank=True, default=""),
         ),
         migrations.AddField(
-            model_name='event',
-            name='ai_response',
-            field=models.TextField(blank=True, default=''),
+            model_name="event",
+            name="ai_response",
+            field=models.TextField(blank=True, default=""),
         ),
         migrations.AddField(
-            model_name='event',
-            name='generated_by_ai',
+            model_name="event",
+            name="generated_by_ai",
             field=models.BooleanField(default=False),
         ),
     ]

@@ -8,7 +8,6 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from team.queries import accessible_teams, managed_teams
-
 from tools.throttling import AIPlanGenerationThrottle
 
 from .ai import generate_plan
@@ -18,27 +17,26 @@ from .serializers import GeneratePlanRequestSerializer, ProgramSerializer
 
 class ProgramViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Program, scopé par team."""
+
     serializer_class = ProgramSerializer
-    filterset_fields = ['name', 'date_start', 'date_end', 'team']
-    search_fields = ['name']
-    ordering_fields = ['name', 'date_start', 'date_end']
-    ordering = ['name']
+    filterset_fields = ["name", "date_start", "date_end", "team"]
+    search_fields = ["name"]
+    ordering_fields = ["name", "date_start", "date_end"]
+    ordering = ["name"]
 
     def get_queryset(self):
-        return Program.objects.filter(
-            team__in=accessible_teams(self.request.user)
-        )
+        return Program.objects.filter(team__in=accessible_teams(self.request.user))
 
     def _check_team_write(self, team):
         if team is None or not managed_teams(self.request.user).filter(pk=team.pk).exists():
             raise PermissionDenied("You do not manage this team.")
 
     def perform_create(self, serializer):
-        self._check_team_write(serializer.validated_data.get('team'))
+        self._check_team_write(serializer.validated_data.get("team"))
         serializer.save()
 
     def perform_update(self, serializer):
-        self._check_team_write(serializer.validated_data.get('team', serializer.instance.team))
+        self._check_team_write(serializer.validated_data.get("team", serializer.instance.team))
         serializer.save()
 
     @extend_schema(
@@ -46,34 +44,34 @@ class ProgramViewSet(viewsets.ModelViewSet):
         responses={
             200: OpenApiResponse(
                 response=inline_serializer(
-                    name='GeneratePlanResponse',
+                    name="GeneratePlanResponse",
                     fields={
-                        'created_count': serializers.IntegerField(),
-                        'deleted_count': serializers.IntegerField(),
-                        'rationale': serializers.CharField(),
-                        'model': serializers.CharField(),
-                        'tokens_used': inline_serializer(
-                            name='GeneratePlanTokensUsed',
+                        "created_count": serializers.IntegerField(),
+                        "deleted_count": serializers.IntegerField(),
+                        "rationale": serializers.CharField(),
+                        "model": serializers.CharField(),
+                        "tokens_used": inline_serializer(
+                            name="GeneratePlanTokensUsed",
                             fields={
-                                'input': serializers.IntegerField(),
-                                'output': serializers.IntegerField(),
+                                "input": serializers.IntegerField(),
+                                "output": serializers.IntegerField(),
                             },
                         ),
                     },
                 ),
-                description='Plan generated successfully',
+                description="Plan generated successfully",
             ),
-            400: OpenApiResponse(description='Invalid request data'),
-            403: OpenApiResponse(description='Not a manager of this program team'),
-            500: OpenApiResponse(description='AI configuration error'),
-            502: OpenApiResponse(description='AI service error'),
+            400: OpenApiResponse(description="Invalid request data"),
+            403: OpenApiResponse(description="Not a manager of this program team"),
+            500: OpenApiResponse(description="AI configuration error"),
+            502: OpenApiResponse(description="AI service error"),
         },
-        description='Generate a training plan with AI for the given Program.',
+        description="Generate a training plan with AI for the given Program.",
     )
     @action(
         detail=True,
-        methods=['post'],
-        url_path='generate-events',
+        methods=["post"],
+        url_path="generate-events",
         throttle_classes=[AIPlanGenerationThrottle],
     )
     def generate_events(self, request, pk=None):
@@ -92,45 +90,47 @@ class ProgramViewSet(viewsets.ModelViewSet):
 
         ai_result = generate_plan(
             program=program,
-            date_start=data['date_start'],
-            date_end=data['date_end'],
-            frequency_per_week=data['frequency_per_week'],
-            description=data['description'],
+            date_start=data["date_start"],
+            date_end=data["date_end"],
+            frequency_per_week=data["frequency_per_week"],
+            description=data["description"],
         )
 
         created_count, deleted_count = self._apply_overlap_strategy(
             program=program,
-            new_events_data=ai_result['events'],
-            strategy=data['overlap_strategy'],
-            date_start=data['date_start'],
-            date_end=data['date_end'],
+            new_events_data=ai_result["events"],
+            strategy=data["overlap_strategy"],
+            date_start=data["date_start"],
+            date_end=data["date_end"],
         )
 
-        program.frequency_per_week = data['frequency_per_week']
-        program.description = data['description']
+        program.frequency_per_week = data["frequency_per_week"]
+        program.description = data["description"]
         program.generated_by_ai = True
-        program.ai_prompt = ai_result['prompt_sent']
-        program.ai_response = ai_result['rationale']
+        program.ai_prompt = ai_result["prompt_sent"]
+        program.ai_response = ai_result["rationale"]
         program.ai_generated_at = timezone.now()
         program.save()
 
-        return Response({
-            "created_count": created_count,
-            "deleted_count": deleted_count,
-            "rationale": ai_result['rationale'],
-            "model": ai_result['model'],
-            "tokens_used": {
-                "input": ai_result['input_tokens'],
-                "output": ai_result['output_tokens'],
+        return Response(
+            {
+                "created_count": created_count,
+                "deleted_count": deleted_count,
+                "rationale": ai_result["rationale"],
+                "model": ai_result["model"],
+                "tokens_used": {
+                    "input": ai_result["input_tokens"],
+                    "output": ai_result["output_tokens"],
+                },
             },
-        }, status=status.HTTP_200_OK)
+            status=status.HTTP_200_OK,
+        )
 
-    def _apply_overlap_strategy(self, *, program, new_events_data, strategy,
-                                 date_start, date_end):
+    def _apply_overlap_strategy(self, *, program, new_events_data, strategy, date_start, date_end):
         from event.models import Event
 
         deleted_count = 0
-        if strategy == 'replace':
+        if strategy == "replace":
             existing = Event.objects.filter(
                 refer_program=program,
                 date__gte=date_start,
@@ -141,19 +141,19 @@ class ProgramViewSet(viewsets.ModelViewSet):
 
         created_count = 0
         for ev_data in new_events_data:
-            ev_date = _date.fromisoformat(ev_data['date'])
+            ev_date = _date.fromisoformat(ev_data["date"])
 
-            if strategy == 'add_only':
+            if strategy == "add_only":
                 if Event.objects.filter(refer_program=program, date=ev_date).exists():
                     continue
 
             Event.objects.create(
                 refer_program=program,
-                name=ev_data['name'][:100],
-                goal=ev_data['goal'][:100],
+                name=ev_data["name"][:100],
+                goal=ev_data["goal"][:100],
                 date=ev_date,
-                color=ev_data['color'],
-                total=ev_data['total_distance'],
+                color=ev_data["color"],
+                total=ev_data["total_distance"],
             )
             created_count += 1
 

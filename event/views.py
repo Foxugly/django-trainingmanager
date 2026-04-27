@@ -16,16 +16,15 @@ from .serializers import EventSerializer
 
 class EventViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Event, scopé par team du program."""
+
     serializer_class = EventSerializer
-    filterset_fields = ['refer_program', 'date', 'color']
-    search_fields = ['name', 'goal']
-    ordering_fields = ['date', 'hour_start', 'name', 'id']
-    ordering = ['-date', 'hour_start']
+    filterset_fields = ["refer_program", "date", "color"]
+    search_fields = ["name", "goal"]
+    ordering_fields = ["date", "hour_start", "name", "id"]
+    ordering = ["-date", "hour_start"]
 
     def get_queryset(self):
-        return Event.objects.filter(
-            refer_program__team__in=accessible_teams(self.request.user)
-        )
+        return Event.objects.filter(refer_program__team__in=accessible_teams(self.request.user))
 
     def _check_program_write(self, program):
         if program is None:
@@ -34,12 +33,12 @@ class EventViewSet(viewsets.ModelViewSet):
             raise PermissionDenied("You do not manage the team of this program.")
 
     def perform_create(self, serializer):
-        self._check_program_write(serializer.validated_data.get('refer_program'))
+        self._check_program_write(serializer.validated_data.get("refer_program"))
         serializer.save()
 
     def perform_update(self, serializer):
         self._check_program_write(
-            serializer.validated_data.get('refer_program', serializer.instance.refer_program)
+            serializer.validated_data.get("refer_program", serializer.instance.refer_program)
         )
         serializer.save()
 
@@ -48,35 +47,35 @@ class EventViewSet(viewsets.ModelViewSet):
         responses={
             200: OpenApiResponse(
                 response=inline_serializer(
-                    name='GenerateTrainingResponse',
+                    name="GenerateTrainingResponse",
                     fields={
-                        'rounds_created': serializers.IntegerField(),
-                        'exercises_created': serializers.IntegerField(),
-                        'exercises_reused': serializers.IntegerField(),
-                        'rationale': serializers.CharField(),
-                        'model': serializers.CharField(),
-                        'tokens_used': inline_serializer(
-                            name='GenerateTrainingTokensUsed',
+                        "rounds_created": serializers.IntegerField(),
+                        "exercises_created": serializers.IntegerField(),
+                        "exercises_reused": serializers.IntegerField(),
+                        "rationale": serializers.CharField(),
+                        "model": serializers.CharField(),
+                        "tokens_used": inline_serializer(
+                            name="GenerateTrainingTokensUsed",
                             fields={
-                                'input': serializers.IntegerField(),
-                                'output': serializers.IntegerField(),
+                                "input": serializers.IntegerField(),
+                                "output": serializers.IntegerField(),
                             },
                         ),
                     },
                 ),
-                description='Training session generated successfully',
+                description="Training session generated successfully",
             ),
-            403: OpenApiResponse(description='Not a manager of this event team'),
-            409: OpenApiResponse(description='Event already has rounds'),
-            500: OpenApiResponse(description='AI configuration error'),
-            502: OpenApiResponse(description='AI service error'),
+            403: OpenApiResponse(description="Not a manager of this event team"),
+            409: OpenApiResponse(description="Event already has rounds"),
+            500: OpenApiResponse(description="AI configuration error"),
+            502: OpenApiResponse(description="AI service error"),
         },
-        description='Generate detailed Rounds and Exercises with AI for an Event.',
+        description="Generate detailed Rounds and Exercises with AI for an Event.",
     )
     @action(
         detail=True,
-        methods=['post'],
-        url_path='generate-training',
+        methods=["post"],
+        url_path="generate-training",
         throttle_classes=[AITrainingGenerationThrottle],
     )
     def generate_training(self, request, pk=None):
@@ -105,28 +104,28 @@ class EventViewSet(viewsets.ModelViewSet):
         reused_exercises = 0
 
         with transaction.atomic():
-            for r_idx, r_data in enumerate(ai_result['rounds'], start=1):
+            for r_idx, r_data in enumerate(ai_result["rounds"], start=1):
                 round_obj = Round.objects.create(
-                    count=r_data.get('count', 1),
-                    t_start=r_data.get('t_start', '00:00'),
-                    t_break=r_data.get('t_break', '00:00'),
+                    count=r_data.get("count", 1),
+                    t_start=r_data.get("t_start", "00:00"),
+                    t_break=r_data.get("t_break", "00:00"),
                     order=r_idx,
                 )
                 created_rounds += 1
 
-                for ex_idx, ex_data in enumerate(r_data.get('exercises', []), start=1):
-                    modality = Modality.objects.get(pk=ex_data['modality_id'])
-                    segment = EnergySegment.objects.get(pk=ex_data['energysegment_id'])
+                for ex_idx, ex_data in enumerate(r_data.get("exercises", []), start=1):
+                    modality = Modality.objects.get(pk=ex_data["modality_id"])
+                    segment = EnergySegment.objects.get(pk=ex_data["energysegment_id"])
 
                     exercise, created = Exercise.objects.get_or_create(
                         modality=modality,
                         energysegment=segment,
-                        distance=ex_data['distance'],
-                        repetition=ex_data['repetition'],
-                        t_start=ex_data.get('t_start', '00:00'),
-                        t_break=ex_data.get('t_break', '00:00'),
-                        notes=ex_data.get('notes', ''),
-                        defaults={'order': ex_idx},
+                        distance=ex_data["distance"],
+                        repetition=ex_data["repetition"],
+                        t_start=ex_data.get("t_start", "00:00"),
+                        t_break=ex_data.get("t_break", "00:00"),
+                        notes=ex_data.get("notes", ""),
+                        defaults={"order": ex_idx},
                     )
                     if created:
                         created_exercises += 1
@@ -138,19 +137,22 @@ class EventViewSet(viewsets.ModelViewSet):
                 event.rounds.add(round_obj)
 
             event.generated_by_ai = True
-            event.ai_prompt = ai_result['prompt_sent']
-            event.ai_response = ai_result['rationale']
+            event.ai_prompt = ai_result["prompt_sent"]
+            event.ai_response = ai_result["rationale"]
             event.ai_generated_at = timezone.now()
             event.save()
 
-        return Response({
-            "rounds_created": created_rounds,
-            "exercises_created": created_exercises,
-            "exercises_reused": reused_exercises,
-            "rationale": ai_result['rationale'],
-            "model": ai_result['model'],
-            "tokens_used": {
-                "input": ai_result['input_tokens'],
-                "output": ai_result['output_tokens'],
+        return Response(
+            {
+                "rounds_created": created_rounds,
+                "exercises_created": created_exercises,
+                "exercises_reused": reused_exercises,
+                "rationale": ai_result["rationale"],
+                "model": ai_result["model"],
+                "tokens_used": {
+                    "input": ai_result["input_tokens"],
+                    "output": ai_result["output_tokens"],
+                },
             },
-        }, status=status.HTTP_200_OK)
+            status=status.HTTP_200_OK,
+        )

@@ -17,19 +17,20 @@ def default_invitation_expiration():
 class Team(models.Model):
     name = models.CharField(max_length=200, unique=True)
     sport = models.ForeignKey(
-        'sport.Sport',
+        "sport.Sport",
         on_delete=models.PROTECT,
-        related_name='teams',
-        null=True, blank=True,
+        related_name="teams",
+        null=True,
+        blank=True,
     )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        related_name='owned_teams',
+        related_name="owned_teams",
     )
     managers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        related_name='managed_teams',
+        related_name="managed_teams",
         blank=True,
     )
     is_active = models.BooleanField(default=True)
@@ -38,7 +39,7 @@ class Team(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
@@ -51,23 +52,23 @@ class Team(models.Model):
 
 class TeamJoinRequest(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('accepted', 'Accepted'),
-        ('rejected', 'Rejected'),
-        ('cancelled', 'Cancelled'),
+        ("pending", "Pending"),
+        ("accepted", "Accepted"),
+        ("rejected", "Rejected"),
+        ("cancelled", "Cancelled"),
     ]
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='join_requests',
+        related_name="join_requests",
     )
     team = models.ForeignKey(
-        'team.Team',
+        "team.Team",
         on_delete=models.CASCADE,
-        related_name='join_requests',
+        related_name="join_requests",
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     message = models.TextField(blank=True)
     response_message = models.TextField(blank=True)
     requested_at = models.DateTimeField(auto_now_add=True)
@@ -75,12 +76,13 @@ class TeamJoinRequest(models.Model):
     responded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
-        related_name='handled_join_requests',
-        null=True, blank=True,
+        related_name="handled_join_requests",
+        null=True,
+        blank=True,
     )
 
     class Meta:
-        ordering = ['-requested_at']
+        ordering = ["-requested_at"]
 
     def __str__(self):
         return f"{self.user} -> {self.team} ({self.status})"
@@ -88,27 +90,27 @@ class TeamJoinRequest(models.Model):
 
 class TeamInvitation(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('expired', 'Expired'),
-        ('cancelled', 'Cancelled'),
+        ("pending", "Pending"),
+        ("completed", "Completed"),
+        ("expired", "Expired"),
+        ("cancelled", "Cancelled"),
     ]
 
     team = models.ForeignKey(
-        'team.Team',
+        "team.Team",
         on_delete=models.CASCADE,
-        related_name='invitations',
+        related_name="invitations",
     )
     invited_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
-        related_name='sent_invitations',
+        related_name="sent_invitations",
     )
     member = models.OneToOneField(
-        'member.Member',
+        "member.Member",
         on_delete=models.CASCADE,
-        related_name='invitation',
+        related_name="invitation",
     )
     email = models.EmailField()
     token = models.CharField(
@@ -116,19 +118,19 @@ class TeamInvitation(models.Model):
         unique=True,
         default=generate_invitation_token,
     )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(default=default_invitation_expiration)
     completed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"Invitation to {self.team.name} for {self.email} ({self.status})"
 
     def is_valid(self):
-        if self.status != 'pending':
+        if self.status != "pending":
             return False
         if timezone.now() > self.expires_at:
             return False

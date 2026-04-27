@@ -24,7 +24,7 @@ def set_throttle_rate(monkeypatch):
     def _set(scope, rate):
         new_rates[scope] = rate
 
-    monkeypatch.setattr(UserRateThrottle, 'THROTTLE_RATES', new_rates)
+    monkeypatch.setattr(UserRateThrottle, "THROTTLE_RATES", new_rates)
     return _set
 
 
@@ -46,11 +46,15 @@ def _mock_plan_response():
     tool_block.type = "tool_use"
     tool_block.name = "create_training_plan"
     tool_block.input = {
-        "events": [{
-            "name": "X", "goal": "Y",
-            "date": date(2026, 5, 1).isoformat(),
-            "total_distance": 1000, "color": "#3498db",
-        }],
+        "events": [
+            {
+                "name": "X",
+                "goal": "Y",
+                "date": date(2026, 5, 1).isoformat(),
+                "total_distance": 1000,
+                "color": "#3498db",
+            }
+        ],
         "rationale": "Test",
     }
     response.content = [tool_block]
@@ -77,42 +81,40 @@ def _mock_training_response(rounds_payload):
 
 # ----------------------------- /ai/ping/ -----------------------------
 
-def test_ai_ping_throttle_after_limit_returns_429(
-    auth_client_trainer, settings, set_throttle_rate
-):
-    set_throttle_rate('ai_ping', '2/min')
+
+def test_ai_ping_throttle_after_limit_returns_429(auth_client_trainer, settings, set_throttle_rate):
+    set_throttle_rate("ai_ping", "2/min")
     settings.ANTHROPIC_API_KEY = "sk-ant-fake"
 
     with patch("tools.ai.Anthropic") as MockAnthropic:
         MockAnthropic.return_value.messages.create.return_value = _mock_ping_response()
-        r1 = auth_client_trainer.post('/api/v1/ai/ping/', {"prompt": "hi"}, format="json")
-        r2 = auth_client_trainer.post('/api/v1/ai/ping/', {"prompt": "hi"}, format="json")
-        r3 = auth_client_trainer.post('/api/v1/ai/ping/', {"prompt": "hi"}, format="json")
+        r1 = auth_client_trainer.post("/api/v1/ai/ping/", {"prompt": "hi"}, format="json")
+        r2 = auth_client_trainer.post("/api/v1/ai/ping/", {"prompt": "hi"}, format="json")
+        r3 = auth_client_trainer.post("/api/v1/ai/ping/", {"prompt": "hi"}, format="json")
 
     assert r1.status_code == 200
     assert r2.status_code == 200
     assert r3.status_code == 429
 
 
-def test_ai_ping_throttle_below_limit_passes(
-    auth_client_trainer, settings, set_throttle_rate
-):
-    set_throttle_rate('ai_ping', '5/min')
+def test_ai_ping_throttle_below_limit_passes(auth_client_trainer, settings, set_throttle_rate):
+    set_throttle_rate("ai_ping", "5/min")
     settings.ANTHROPIC_API_KEY = "sk-ant-fake"
 
     with patch("tools.ai.Anthropic") as MockAnthropic:
         MockAnthropic.return_value.messages.create.return_value = _mock_ping_response()
         for _ in range(5):
-            r = auth_client_trainer.post('/api/v1/ai/ping/', {"prompt": "hi"}, format="json")
+            r = auth_client_trainer.post("/api/v1/ai/ping/", {"prompt": "hi"}, format="json")
             assert r.status_code == 200
 
 
 # ----------------- /programs/{id}/generate-events/ -------------------
 
+
 def test_generate_events_throttle_after_limit_returns_429(
     auth_client_trainer, trainer_user, settings, set_throttle_rate
 ):
-    set_throttle_rate('ai_plan_generation', '2/min')
+    set_throttle_rate("ai_plan_generation", "2/min")
     settings.ANTHROPIC_API_KEY = "sk-ant-fake"
     program = ProgramFactory(team=trainer_user.owned_teams.first())
 
@@ -127,11 +129,14 @@ def test_generate_events_throttle_after_limit_returns_429(
     with patch("tools.ai.Anthropic") as MockAnthropic:
         MockAnthropic.return_value.messages.create.return_value = _mock_plan_response()
         r1 = auth_client_trainer.post(
-            f'/api/v1/programs/{program.pk}/generate-events/', payload, format="json")
+            f"/api/v1/programs/{program.pk}/generate-events/", payload, format="json"
+        )
         r2 = auth_client_trainer.post(
-            f'/api/v1/programs/{program.pk}/generate-events/', payload, format="json")
+            f"/api/v1/programs/{program.pk}/generate-events/", payload, format="json"
+        )
         r3 = auth_client_trainer.post(
-            f'/api/v1/programs/{program.pk}/generate-events/', payload, format="json")
+            f"/api/v1/programs/{program.pk}/generate-events/", payload, format="json"
+        )
 
     assert r1.status_code == 200
     assert r2.status_code == 200
@@ -140,12 +145,13 @@ def test_generate_events_throttle_after_limit_returns_429(
 
 # --------------- /events/{id}/generate-training/ --------------------
 
+
 def _trainer_event(trainer_user):
     team = trainer_user.owned_teams.first()
     sport = team.sport
-    Modality.objects.create(name='Free', sport=sport)
-    es = EnergySystem.objects.create(name='Aero')
-    EnergySegment.objects.create(abv='A1', energysystem=es)
+    Modality.objects.create(name="Free", sport=sport)
+    es = EnergySystem.objects.create(name="Aero")
+    EnergySegment.objects.create(abv="A1", energysystem=es)
     program = ProgramFactory(team=team)
     return EventFactory(refer_program=program, total=1000)
 
@@ -153,7 +159,7 @@ def _trainer_event(trainer_user):
 def test_generate_training_throttle_after_limit_returns_429(
     auth_client_trainer, trainer_user, settings, set_throttle_rate
 ):
-    set_throttle_rate('ai_training_generation', '1/min')
+    set_throttle_rate("ai_training_generation", "1/min")
     settings.ANTHROPIC_API_KEY = "sk-ant-fake"
 
     e1 = _trainer_event(trainer_user)
@@ -163,22 +169,30 @@ def test_generate_training_throttle_after_limit_returns_429(
 
     mod = Modality.objects.first()
     seg = EnergySegment.objects.first()
-    rounds_payload = [{
-        "count": 1,
-        "exercises": [{
-            "modality_id": mod.id,
-            "energysegment_id": seg.id,
-            "distance": 100,
-            "repetition": 1,
-        }],
-    }]
+    rounds_payload = [
+        {
+            "count": 1,
+            "exercises": [
+                {
+                    "modality_id": mod.id,
+                    "energysegment_id": seg.id,
+                    "distance": 100,
+                    "repetition": 1,
+                }
+            ],
+        }
+    ]
 
     with patch("tools.ai.Anthropic") as MockAnthropic:
-        MockAnthropic.return_value.messages.create.return_value = _mock_training_response(rounds_payload)
+        MockAnthropic.return_value.messages.create.return_value = _mock_training_response(
+            rounds_payload
+        )
         r1 = auth_client_trainer.post(
-            f'/api/v1/events/{e1.pk}/generate-training/', {}, format="json")
+            f"/api/v1/events/{e1.pk}/generate-training/", {}, format="json"
+        )
         r2 = auth_client_trainer.post(
-            f'/api/v1/events/{e2.pk}/generate-training/', {}, format="json")
+            f"/api/v1/events/{e2.pk}/generate-training/", {}, format="json"
+        )
 
     assert r1.status_code == 200
     assert r2.status_code == 429
@@ -186,12 +200,13 @@ def test_generate_training_throttle_after_limit_returns_429(
 
 # -------------------- Independence between scopes --------------------
 
+
 def test_throttle_scopes_are_independent(
     auth_client_trainer, trainer_user, settings, set_throttle_rate
 ):
     """Saturer ai_ping ne doit pas bloquer ai_plan_generation."""
-    set_throttle_rate('ai_ping', '1/min')
-    set_throttle_rate('ai_plan_generation', '5/min')
+    set_throttle_rate("ai_ping", "1/min")
+    set_throttle_rate("ai_plan_generation", "5/min")
     settings.ANTHROPIC_API_KEY = "sk-ant-fake"
 
     program = ProgramFactory(team=trainer_user.owned_teams.first())
@@ -205,12 +220,13 @@ def test_throttle_scopes_are_independent(
 
     with patch("tools.ai.Anthropic") as MockAnthropic:
         MockAnthropic.return_value.messages.create.return_value = _mock_ping_response()
-        r_p1 = auth_client_trainer.post('/api/v1/ai/ping/', {"prompt": "hi"}, format="json")
-        r_p2 = auth_client_trainer.post('/api/v1/ai/ping/', {"prompt": "hi"}, format="json")
+        r_p1 = auth_client_trainer.post("/api/v1/ai/ping/", {"prompt": "hi"}, format="json")
+        r_p2 = auth_client_trainer.post("/api/v1/ai/ping/", {"prompt": "hi"}, format="json")
         assert r_p1.status_code == 200
         assert r_p2.status_code == 429
 
         MockAnthropic.return_value.messages.create.return_value = _mock_plan_response()
         r_g = auth_client_trainer.post(
-            f'/api/v1/programs/{program.pk}/generate-events/', payload, format="json")
+            f"/api/v1/programs/{program.pk}/generate-events/", payload, format="json"
+        )
     assert r_g.status_code == 200

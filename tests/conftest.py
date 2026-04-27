@@ -1,7 +1,6 @@
 import pytest
-from rest_framework.test import APIClient
-
 from django.contrib.auth import get_user_model
+from rest_framework.test import APIClient
 
 from tests.factories import TeamFactory
 
@@ -9,7 +8,7 @@ from tests.factories import TeamFactory
 @pytest.fixture(autouse=True)
 def use_locmem_email_backend(settings):
     """Block real Graph email sends across the test suite."""
-    settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+    settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 
 @pytest.fixture(autouse=True)
@@ -21,6 +20,7 @@ def reset_throttle_cache():
     and silently 429 unrelated tests.
     """
     from django.core.cache import cache
+
     cache.clear()
     yield
     cache.clear()
@@ -35,9 +35,9 @@ def api_client():
 def authenticated_user(db):
     User = get_user_model()
     user = User.objects.create_user(
-        username='testuser',
-        email='testuser@local.test',
-        password='Str0ngP@ssTest!',
+        username="testuser",
+        email="testuser@local.test",
+        password="Str0ngP@ssTest!",
     )
     return user
 
@@ -57,9 +57,9 @@ def user_team(authenticated_user):
 def trainer_user(db):
     User = get_user_model()
     user = User.objects.create_user(
-        username='trainer',
-        email='trainer@local.test',
-        password='Str0ngP@ssTrainer!',
+        username="trainer",
+        email="trainer@local.test",
+        password="Str0ngP@ssTrainer!",
     )
     TeamFactory(owner=user, is_active=True)
     return user
@@ -75,9 +75,9 @@ def auth_client_trainer(api_client, trainer_user):
 def non_trainer_user(db):
     User = get_user_model()
     return User.objects.create_user(
-        username='spectator',
-        email='spectator@local.test',
-        password='Str0ngP@ssSpec!',
+        username="spectator",
+        email="spectator@local.test",
+        password="Str0ngP@ssSpec!",
     )
 
 

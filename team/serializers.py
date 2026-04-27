@@ -8,13 +8,19 @@ class TeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
         fields = [
-            'id', 'name', 'sport', 'owner', 'managers',
-            'is_active', 'is_public',
-            'created_at', 'updated_at',
+            "id",
+            "name",
+            "sport",
+            "owner",
+            "managers",
+            "is_active",
+            "is_public",
+            "created_at",
+            "updated_at",
         ]
-        read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
+        read_only_fields = ["id", "owner", "created_at", "updated_at"]
         extra_kwargs = {
-            'sport': {'required': True, 'allow_null': False},
+            "sport": {"required": True, "allow_null": False},
         }
 
 
@@ -22,30 +28,38 @@ class TeamJoinRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamJoinRequest
         fields = [
-            'id', 'user', 'team', 'status', 'message',
-            'response_message', 'requested_at', 'responded_at',
-            'responded_by',
+            "id",
+            "user",
+            "team",
+            "status",
+            "message",
+            "response_message",
+            "requested_at",
+            "responded_at",
+            "responded_by",
         ]
         read_only_fields = [
-            'id', 'user', 'requested_at', 'responded_at', 'responded_by',
+            "id",
+            "user",
+            "requested_at",
+            "responded_at",
+            "responded_by",
         ]
 
 
 class CreateJoinRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamJoinRequest
-        fields = ['id', 'team', 'message']
-        read_only_fields = ['id']
+        fields = ["id", "team", "message"]
+        read_only_fields = ["id"]
 
     def validate(self, data):
-        user = self.context['request'].user
-        team = data['team']
-        member_profile = getattr(user, 'member_profile', None)
+        user = self.context["request"].user
+        team = data["team"]
+        member_profile = getattr(user, "member_profile", None)
         if member_profile is not None and member_profile.teams.filter(pk=team.pk).exists():
-            raise serializers.ValidationError(
-                {"team": "Vous etes deja membre de cette team."}
-            )
-        if TeamJoinRequest.objects.filter(user=user, team=team, status='pending').exists():
+            raise serializers.ValidationError({"team": "Vous etes deja membre de cette team."})
+        if TeamJoinRequest.objects.filter(user=user, team=team, status="pending").exists():
             raise serializers.ValidationError(
                 {"team": "Vous avez deja une demande en attente pour cette team."}
             )
@@ -58,15 +72,28 @@ class CreateJoinRequestSerializer(serializers.ModelSerializer):
 
 class TeamInvitationSerializer(serializers.ModelSerializer):
     """List/detail view for managers. Token is intentionally excluded."""
+
     class Meta:
         model = TeamInvitation
         fields = [
-            'id', 'team', 'invited_by', 'member', 'email',
-            'status', 'created_at', 'expires_at', 'completed_at',
+            "id",
+            "team",
+            "invited_by",
+            "member",
+            "email",
+            "status",
+            "created_at",
+            "expires_at",
+            "completed_at",
         ]
         read_only_fields = [
-            'id', 'invited_by', 'member', 'status',
-            'created_at', 'expires_at', 'completed_at',
+            "id",
+            "invited_by",
+            "member",
+            "status",
+            "created_at",
+            "expires_at",
+            "completed_at",
         ]
 
 
@@ -75,12 +102,10 @@ class CreateInvitationSerializer(serializers.Serializer):
     email = serializers.EmailField()
     firstname = serializers.CharField(max_length=100)
     lastname = serializers.CharField(max_length=100)
-    phonenumber = serializers.CharField(
-        max_length=20, required=False, allow_blank=True, default=''
-    )
+    phonenumber = serializers.CharField(max_length=20, required=False, allow_blank=True, default="")
 
     def validate_team(self, team):
-        user = self.context['request'].user
+        user = self.context["request"].user
         if not team.is_managed_by(user):
             raise serializers.ValidationError("Vous ne gerez pas cette team.")
         if not team.is_active:
@@ -89,22 +114,22 @@ class CreateInvitationSerializer(serializers.Serializer):
 
     def validate(self, data):
         if TeamInvitation.objects.filter(
-            email=data['email'],
-            team=data['team'],
-            status='pending',
+            email=data["email"],
+            team=data["team"],
+            status="pending",
         ).exists():
-            raise serializers.ValidationError({
-                "email": "Une invitation est deja en cours pour cet email sur cette team."
-            })
+            raise serializers.ValidationError(
+                {"email": "Une invitation est deja en cours pour cet email sur cette team."}
+            )
         return data
 
 
 class ValidateInvitationSerializer(serializers.ModelSerializer):
-    team_name = serializers.CharField(source='team.name', read_only=True)
+    team_name = serializers.CharField(source="team.name", read_only=True)
 
     class Meta:
         model = TeamInvitation
-        fields = ['email', 'team_name', 'status', 'expires_at']
+        fields = ["email", "team_name", "status", "expires_at"]
         read_only_fields = fields
 
 
@@ -120,5 +145,6 @@ class CompleteInvitationSerializer(serializers.Serializer):
 
     def validate_password(self, password):
         from django.contrib.auth.password_validation import validate_password
+
         validate_password(password)
         return password

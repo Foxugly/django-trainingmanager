@@ -7,14 +7,14 @@ from tools.generic_class import GenericClass
 class Modality(GenericClass):
     name = models.CharField(max_length=20, verbose_name=_("name"))
     sport = models.ForeignKey(
-        'sport.Sport',
+        "sport.Sport",
         on_delete=models.PROTECT,
-        related_name='modalities',
+        related_name="modalities",
     )
 
     class Meta:
-        unique_together = ('name', 'sport')
-        ordering = ['sport', 'name']
+        unique_together = ("name", "sport")
+        ordering = ["sport", "name"]
 
     def __str__(self):
         return self.name
@@ -29,23 +29,46 @@ class EnergySystem(GenericClass):
 
 class EnergySegment(GenericClass):
     abv = models.CharField(max_length=10, verbose_name=_("abv"))
-    description = models.CharField(max_length=200, null=True, blank=True, verbose_name=_("description"))
+    description = models.CharField(
+        max_length=200, null=True, blank=True, verbose_name=_("description")
+    )
     energysystem = models.ForeignKey(EnergySystem, null=True, blank=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return '%s (%s)' % (self.abv, self.energysystem)
+        return "%s (%s)" % (self.abv, self.energysystem)
 
 
 class Exercise(GenericClass):
     order = models.IntegerField(verbose_name=_("order"), default=1)
-    t_start = models.CharField(max_length=10, null=True, blank=True, verbose_name=_("start"), )
-    t_break = models.CharField(max_length=10, null=True, blank=True, verbose_name=_("break"), )
+    t_start = models.CharField(
+        max_length=10,
+        null=True,
+        blank=True,
+        verbose_name=_("start"),
+    )
+    t_break = models.CharField(
+        max_length=10,
+        null=True,
+        blank=True,
+        verbose_name=_("break"),
+    )
     repetition = models.PositiveIntegerField(verbose_name=_("repetition"), default=1)
     distance = models.PositiveIntegerField(verbose_name=_("distance"), default=100)
-    modality = models.ForeignKey(Modality, verbose_name=_("modality"), null=True, blank=True, on_delete=models.CASCADE)
-    energysegment = models.ForeignKey(EnergySegment, null=True, blank=True, verbose_name=_("Energy Segment"),
-                                      on_delete=models.CASCADE)
-    notes = models.CharField(max_length=200, blank=True, verbose_name=_("notes"), )
+    modality = models.ForeignKey(
+        Modality, verbose_name=_("modality"), null=True, blank=True, on_delete=models.CASCADE
+    )
+    energysegment = models.ForeignKey(
+        EnergySegment,
+        null=True,
+        blank=True,
+        verbose_name=_("Energy Segment"),
+        on_delete=models.CASCADE,
+    )
+    notes = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name=_("notes"),
+    )
 
     def get_total(self):
         return self.repetition * self.distance
@@ -55,7 +78,7 @@ class Exercise(GenericClass):
         return self.round_set.count()
 
     def __str__(self):
-        return "%s %d" % (_('Exercise'), self.id)
+        return "%s %d" % (_("Exercise"), self.id)
 
     class Meta:
-        verbose_name = _('Exercise')
+        verbose_name = _("Exercise")

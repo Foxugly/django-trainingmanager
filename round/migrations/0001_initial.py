@@ -8,22 +8,33 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('exercise', '0001_initial'),
+        ("exercise", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Round',
+            name="Round",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('order', models.PositiveIntegerField(default=1)),
-                ('count', models.PositiveIntegerField(default=1)),
-                ('t_start', models.CharField(blank=True, max_length=10, null=True, verbose_name='start')),
-                ('t_break', models.CharField(blank=True, max_length=10, null=True, verbose_name='break')),
-                ('exercises', models.ManyToManyField(blank=True, to='exercise.exercise')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("order", models.PositiveIntegerField(default=1)),
+                ("count", models.PositiveIntegerField(default=1)),
+                (
+                    "t_start",
+                    models.CharField(blank=True, max_length=10, null=True, verbose_name="start"),
+                ),
+                (
+                    "t_break",
+                    models.CharField(blank=True, max_length=10, null=True, verbose_name="break"),
+                ),
+                ("exercises", models.ManyToManyField(blank=True, to="exercise.exercise")),
             ],
             options={
-                'verbose_name': 'Round',
+                "verbose_name": "Round",
             },
         ),
     ]

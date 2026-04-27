@@ -17,15 +17,16 @@ from .serializers import (
 
 class ModalityViewSet(viewsets.ReadOnlyModelViewSet):
     """Lecture seule pour Modality (référentiel par sport, nested via /sports/<id>/modalities/)."""
+
     serializer_class = ModalitySerializer
     permission_classes = [IsAuthenticated]
-    filterset_fields = ['name']
-    search_fields = ['name']
-    ordering_fields = ['name', 'id']
-    ordering = ['name']
+    filterset_fields = ["name"]
+    search_fields = ["name"]
+    ordering_fields = ["name", "id"]
+    ordering = ["name"]
 
     def get_queryset(self):
-        sport_id = self.kwargs.get('sport_pk')
+        sport_id = self.kwargs.get("sport_pk")
         qs = Modality.objects.all()
         if sport_id:
             qs = qs.filter(sport_id=sport_id)
@@ -34,40 +35,43 @@ class ModalityViewSet(viewsets.ReadOnlyModelViewSet):
 
 class EnergySystemViewSet(viewsets.ReadOnlyModelViewSet):
     """Lecture seule pour EnergySystem (référentiel)."""
+
     queryset = EnergySystem.objects.all()
     serializer_class = EnergySystemSerializer
-    filterset_fields = ['name']
-    search_fields = ['name']
-    ordering_fields = ['name', 'id']
-    ordering = ['name']
+    filterset_fields = ["name"]
+    search_fields = ["name"]
+    ordering_fields = ["name", "id"]
+    ordering = ["name"]
 
 
 class EnergySegmentViewSet(viewsets.ReadOnlyModelViewSet):
     """Lecture seule pour EnergySegment (référentiel)."""
+
     queryset = EnergySegment.objects.all()
     serializer_class = EnergySegmentSerializer
-    filterset_fields = ['energysystem']
-    search_fields = ['abv', 'description']
-    ordering_fields = ['id']
-    ordering = ['pk']
+    filterset_fields = ["energysystem"]
+    search_fields = ["abv", "description"]
+    ordering_fields = ["id"]
+    ordering = ["pk"]
 
 
 class ExerciseViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Exercise."""
+
     queryset = Exercise.objects.all()
     serializer_class = ExerciseSerializer
     permission_classes = [IsAuthenticated, IsTrainer]
-    filterset_fields = ['modality', 'energysegment']
-    search_fields = ['notes']
-    ordering_fields = ['order', 'id', 'distance']
-    ordering = ['order']
+    filterset_fields = ["modality", "energysegment"]
+    search_fields = ["notes"]
+    ordering_fields = ["order", "id", "distance"]
+    ordering = ["order"]
 
     @extend_schema(
         request=None,
         responses={201: ExerciseSerializer},
-        description='Clone this Exercise. Returns the new Exercise.',
+        description="Clone this Exercise. Returns the new Exercise.",
     )
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=["post"])
     def clone(self, request, pk=None):
         """Standalone clone : new Exercise with the same scalar fields."""
         original = self.get_object()

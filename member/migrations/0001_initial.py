@@ -7,21 +7,33 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Member',
+            name="Member",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('firstname', models.CharField(max_length=100, verbose_name='Firstname')),
-                ('lastname', models.CharField(max_length=100, verbose_name='Lastname')),
-                ('phonenumber', models.CharField(blank=True, max_length=20, null=True, verbose_name='Phonenumber')),
-                ('email', models.EmailField(blank=True, max_length=50, null=True, verbose_name='Email')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("firstname", models.CharField(max_length=100, verbose_name="Firstname")),
+                ("lastname", models.CharField(max_length=100, verbose_name="Lastname")),
+                (
+                    "phonenumber",
+                    models.CharField(
+                        blank=True, max_length=20, null=True, verbose_name="Phonenumber"
+                    ),
+                ),
+                (
+                    "email",
+                    models.EmailField(blank=True, max_length=50, null=True, verbose_name="Email"),
+                ),
             ],
             options={
-                'verbose_name': 'Member',
+                "verbose_name": "Member",
             },
         ),
     ]

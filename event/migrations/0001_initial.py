@@ -7,24 +7,31 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Event',
+            name="Event",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, verbose_name='name')),
-                ('goal', models.CharField(blank=True, max_length=100, null=True, verbose_name='goal')),
-                ('color', models.CharField(blank=True, max_length=10, verbose_name='color')),
-                ('date', models.DateField(blank=True, null=True)),
-                ('hour_start', models.TimeField(blank=True, null=True)),
-                ('hour_end', models.TimeField(blank=True, null=True)),
-                ('total', models.PositiveIntegerField(default=0)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=100, verbose_name="name")),
+                (
+                    "goal",
+                    models.CharField(blank=True, max_length=100, null=True, verbose_name="goal"),
+                ),
+                ("color", models.CharField(blank=True, max_length=10, verbose_name="color")),
+                ("date", models.DateField(blank=True, null=True)),
+                ("hour_start", models.TimeField(blank=True, null=True)),
+                ("hour_end", models.TimeField(blank=True, null=True)),
+                ("total", models.PositiveIntegerField(default=0)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]
