@@ -15,6 +15,9 @@ urlpatterns = [
     path('api/v1/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
+    # CustomUser (/me/)
+    path('api/v1/', include('customuser.urls')),
+
     # Endpoints métier
     path('api/v1/', include('agenda.urls')),
     path('api/v1/', include('event.urls')),
