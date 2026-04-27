@@ -132,6 +132,18 @@ pytest
 pytest --tb=short
 ```
 
+## Catalogue partagé par sport
+
+`Exercise` et `Round` forment un catalogue **partagé entre toutes les teams du même sport**. Concrètement :
+
+- Un coach Natation voit **tous** les Exercises et Rounds liés au sport Natation, peu importe la team d'origine.
+- Un coach Course à pied ne voit pas les Exercises de Natation, et inversement.
+- L'enrichissement collectif est encouragé : un Exercise créé par un coach bénéficie à tous les coaches du même sport.
+- Le mécanisme **lock + clone** protège l'intégrité : un Exercise utilisé dans 2+ Rounds (ou un Round utilisé dans 2+ Events) devient immutable. Pour modifier, il faut le cloner via `POST /api/v1/exercises/{id}/clone/` ou `POST /api/v1/rounds/{id}/clone/`.
+- **Permission d'écriture** : owner ou manager d'au moins une team active (permission `IsTrainer`).
+- **Permission de lecture** : tout user authentifié, **scopé par sport** via `team.utils.user_accessible_sport_ids` (l'union des sports des teams où le user est owner, manager, ou athlète).
+- `Round` porte un FK `sport` explicite (PROTECT). La validation refuse qu'un exercise d'un sport différent soit attaché à un Round.
+
 ## i18n
 
 - **Source** : anglais (`gettext_lazy(_("..."))` partout)
