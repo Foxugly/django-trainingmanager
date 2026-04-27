@@ -1,6 +1,6 @@
 import pytest
 
-from tests.factories import EventFactory, ExerciseFactory, RoundFactory
+from tests.factories import EventFactory, ExerciseFactory, ModalityFactory, RoundFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -8,9 +8,10 @@ pytestmark = pytest.mark.django_db
 # ----------------------------- LOCK ----------------------------------
 
 
-def test_PATCH_exercise_unlocked_returns_200(auth_client_trainer):
-    ex = ExerciseFactory()
-    RoundFactory(exercises=[ex])
+def test_PATCH_exercise_unlocked_returns_200(auth_client_trainer, trainer_sport):
+    modality = ModalityFactory(sport=trainer_sport)
+    ex = ExerciseFactory(modality=modality)
+    RoundFactory(sport=trainer_sport, exercises=[ex])
     response = auth_client_trainer.patch(
         f"/api/v1/exercises/{ex.pk}/",
         {"notes": "updated"},
@@ -20,10 +21,11 @@ def test_PATCH_exercise_unlocked_returns_200(auth_client_trainer):
     assert response.json()["notes"] == "updated"
 
 
-def test_PATCH_exercise_locked_returns_409(auth_client_trainer):
-    ex = ExerciseFactory()
-    RoundFactory(exercises=[ex])
-    RoundFactory(exercises=[ex])
+def test_PATCH_exercise_locked_returns_409(auth_client_trainer, trainer_sport):
+    modality = ModalityFactory(sport=trainer_sport)
+    ex = ExerciseFactory(modality=modality)
+    RoundFactory(sport=trainer_sport, exercises=[ex])
+    RoundFactory(sport=trainer_sport, exercises=[ex])
     response = auth_client_trainer.patch(
         f"/api/v1/exercises/{ex.pk}/",
         {"notes": "should fail"},
@@ -32,8 +34,8 @@ def test_PATCH_exercise_locked_returns_409(auth_client_trainer):
     assert response.status_code == 409
 
 
-def test_PATCH_round_unlocked_returns_200(auth_client_trainer):
-    r = RoundFactory()
+def test_PATCH_round_unlocked_returns_200(auth_client_trainer, trainer_sport):
+    r = RoundFactory(sport=trainer_sport)
     EventFactory(rounds=[r])
     response = auth_client_trainer.patch(
         f"/api/v1/rounds/{r.pk}/",
@@ -44,8 +46,8 @@ def test_PATCH_round_unlocked_returns_200(auth_client_trainer):
     assert response.json()["count"] == 5
 
 
-def test_PATCH_round_locked_returns_409(auth_client_trainer):
-    r = RoundFactory()
+def test_PATCH_round_locked_returns_409(auth_client_trainer, trainer_sport):
+    r = RoundFactory(sport=trainer_sport)
     EventFactory(rounds=[r])
     EventFactory(rounds=[r])
     response = auth_client_trainer.patch(
@@ -59,8 +61,9 @@ def test_PATCH_round_locked_returns_409(auth_client_trainer):
 # ----------------------------- CLONE ---------------------------------
 
 
-def test_POST_exercise_clone_returns_201_with_new_id(auth_client_trainer):
-    ex = ExerciseFactory(notes="original")
+def test_POST_exercise_clone_returns_201_with_new_id(auth_client_trainer, trainer_sport):
+    modality = ModalityFactory(sport=trainer_sport)
+    ex = ExerciseFactory(notes="original", modality=modality)
     response = auth_client_trainer.post(
         f"/api/v1/exercises/{ex.pk}/clone/",
         {},
@@ -72,11 +75,12 @@ def test_POST_exercise_clone_returns_201_with_new_id(auth_client_trainer):
     assert body["notes"] == "original"
 
 
-def test_POST_round_clone_returns_201_with_m2m_exercises_copied(auth_client_trainer):
-    r = RoundFactory(count=3)
-    e1 = ExerciseFactory()
-    e2 = ExerciseFactory()
-    e3 = ExerciseFactory()
+def test_POST_round_clone_returns_201_with_m2m_exercises_copied(auth_client_trainer, trainer_sport):
+    modality = ModalityFactory(sport=trainer_sport)
+    r = RoundFactory(sport=trainer_sport, count=3)
+    e1 = ExerciseFactory(modality=modality)
+    e2 = ExerciseFactory(modality=modality)
+    e3 = ExerciseFactory(modality=modality)
     r.exercises.add(e1, e2, e3)
 
     response = auth_client_trainer.post(
@@ -91,9 +95,10 @@ def test_POST_round_clone_returns_201_with_m2m_exercises_copied(auth_client_trai
     assert set(body["exercises"]) == {e1.pk, e2.pk, e3.pk}
 
 
-def test_POST_round_clone_exercise_attaches_to_round(auth_client_trainer):
-    r = RoundFactory()
-    ex = ExerciseFactory(notes="source")
+def test_POST_round_clone_exercise_attaches_to_round(auth_client_trainer, trainer_sport):
+    modality = ModalityFactory(sport=trainer_sport)
+    r = RoundFactory(sport=trainer_sport)
+    ex = ExerciseFactory(notes="source", modality=modality)
     response = auth_client_trainer.post(
         f"/api/v1/rounds/{r.pk}/clone-exercise/",
         {"exercise_id": ex.pk},
@@ -108,8 +113,8 @@ def test_POST_round_clone_exercise_attaches_to_round(auth_client_trainer):
     assert r.exercises.filter(pk=new_id).exists()
 
 
-def test_POST_round_clone_exercise_missing_id_returns_400(auth_client_trainer):
-    r = RoundFactory()
+def test_POST_round_clone_exercise_missing_id_returns_400(auth_client_trainer, trainer_sport):
+    r = RoundFactory(sport=trainer_sport)
     response = auth_client_trainer.post(
         f"/api/v1/rounds/{r.pk}/clone-exercise/",
         {},
@@ -118,8 +123,8 @@ def test_POST_round_clone_exercise_missing_id_returns_400(auth_client_trainer):
     assert response.status_code == 400
 
 
-def test_POST_round_clone_exercise_unknown_id_returns_404(auth_client_trainer):
-    r = RoundFactory()
+def test_POST_round_clone_exercise_unknown_id_returns_404(auth_client_trainer, trainer_sport):
+    r = RoundFactory(sport=trainer_sport)
     response = auth_client_trainer.post(
         f"/api/v1/rounds/{r.pk}/clone-exercise/",
         {"exercise_id": 999999},

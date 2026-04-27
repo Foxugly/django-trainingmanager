@@ -36,19 +36,17 @@ def test_400_response_has_code_and_detail(auth_client_trainer):
     assert "detail" in body
 
 
-def test_resource_locked_body_has_code(auth_client_trainer, trainer_user, settings):
+def test_resource_locked_body_has_code(auth_client_trainer, trainer_sport):
     """Triggering ResourceLocked yields {code: 'resource_locked', detail: ...}."""
     from exercise.models import EnergySegment, EnergySystem, Exercise, Modality
     from round.models import Round
-    from sport.models import Sport
 
-    sport = Sport.objects.create(name="Test sport", slug="test-sport")
-    modality = Modality.objects.create(name="Crawl", sport=sport)
+    modality = Modality.objects.create(name="Crawl", sport=trainer_sport)
     system = EnergySystem.objects.create(name="Aerobic")
     segment = EnergySegment.objects.create(abv="A1", description="A1", energysystem=system)
     exercise = Exercise.objects.create(modality=modality, energysegment=segment, distance=100)
-    Round.objects.create(sport=sport, order=1).exercises.add(exercise)
-    Round.objects.create(sport=sport, order=2).exercises.add(exercise)
+    Round.objects.create(sport=trainer_sport, order=1).exercises.add(exercise)
+    Round.objects.create(sport=trainer_sport, order=2).exercises.add(exercise)
     # Now exercise.usage_count >= 2 → mutation triggers ResourceLocked
 
     response = auth_client_trainer.patch(

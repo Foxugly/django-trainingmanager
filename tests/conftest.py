@@ -66,6 +66,12 @@ def trainer_user(db):
 
 
 @pytest.fixture
+def trainer_sport(trainer_user):
+    """Sport of the trainer's first team — useful for catalog scoping tests."""
+    return trainer_user.owned_teams.first().sport
+
+
+@pytest.fixture
 def auth_client_trainer(api_client, trainer_user):
     api_client.force_authenticate(user=trainer_user)
     return api_client

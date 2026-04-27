@@ -16,16 +16,24 @@ from .serializers import RoundSerializer
 class RoundViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Round."""
 
-    queryset = Round.objects.select_related("sport").prefetch_related(
-        "exercises__modality__sport",
-        "exercises__energysegment__energysystem",
-    )
     serializer_class = RoundSerializer
     permission_classes = [IsAuthenticated, IsTrainer]
     filterset_fields = ["sport"]
     search_fields = []
     ordering_fields = ["order", "id"]
     ordering = ["order"]
+
+    def get_queryset(self):
+        from team.utils import user_accessible_sport_ids
+
+        sport_ids = user_accessible_sport_ids(self.request.user)
+        qs = Round.objects.select_related("sport").prefetch_related(
+            "exercises__modality__sport",
+            "exercises__energysegment__energysystem",
+        )
+        if not sport_ids:
+            return qs.none()
+        return qs.filter(sport_id__in=sport_ids)
 
     @extend_schema(
         request=None,

@@ -58,16 +58,24 @@ class EnergySegmentViewSet(viewsets.ReadOnlyModelViewSet):
 class ExerciseViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Exercise."""
 
-    queryset = Exercise.objects.select_related(
-        "modality__sport",
-        "energysegment__energysystem",
-    )
     serializer_class = ExerciseSerializer
     permission_classes = [IsAuthenticated, IsTrainer]
     filterset_fields = ["modality", "energysegment"]
     search_fields = ["notes"]
     ordering_fields = ["order", "id", "distance"]
     ordering = ["order"]
+
+    def get_queryset(self):
+        from team.utils import user_accessible_sport_ids
+
+        sport_ids = user_accessible_sport_ids(self.request.user)
+        qs = Exercise.objects.select_related(
+            "modality__sport",
+            "energysegment__energysystem",
+        )
+        if not sport_ids:
+            return qs.none()
+        return qs.filter(modality__sport_id__in=sport_ids)
 
     @extend_schema(
         request=None,
