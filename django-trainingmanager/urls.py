@@ -12,11 +12,12 @@ urlpatterns = [
     path('api/v1/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
+    # Endpoints métier
+    path('api/v1/', include('member.urls')),
+
     # OpenAPI schema + Swagger UI
     path('api/v1/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/v1/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-
-    # Endpoints métier : à câbler à l'étape 3
 ]
 
 if settings.DEBUG:
