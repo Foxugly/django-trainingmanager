@@ -1,28 +1,27 @@
 #!/usr/bin/env python
-"""manage.py — local development entry point.
+"""Django's command-line utility for administrative tasks.
 
-This script ALWAYS forces DJANGO_SETTINGS_MODULE to
-'django-trainingmanager.settings.dev', overriding any value injected by
-the host environment (IDE Run Configuration, shell exports, etc.).
-That keeps `python manage.py runserver` reliable: no more cryptic
-"ALLOWED_HOSTS must be set if DEBUG is False" when an IDE silently
-points it at .prod.
+Default settings module: django-trainingmanager.settings.dev
 
-Production never invokes manage.py — it goes through wsgi.py /
-asgi.py with DJANGO_SETTINGS_MODULE explicitly set in the deploy
-environment.
+To override (e.g. in production), set the DJANGO_SETTINGS_MODULE
+environment variable before invoking the script:
 
-Escape hatch: if you ever need to run a management command against
-prod settings locally, pass the flag explicitly:
-    python manage.py <cmd> --settings=django-trainingmanager.settings.prod
+    DJANGO_SETTINGS_MODULE=django-trainingmanager.settings.prod \\
+        python manage.py migrate
+
+Or pass the --settings flag explicitly:
+
+    python manage.py shell --settings=django-trainingmanager.settings.prod
+
+In production, this file is typically not invoked: gunicorn / uwsgi
+load wsgi.py directly, which uses its own setdefault pattern.
 """
 
 import os
 import sys
 
 if __name__ == "__main__":
-    if not any(arg.startswith("--settings=") for arg in sys.argv):
-        os.environ["DJANGO_SETTINGS_MODULE"] = "django-trainingmanager.settings.dev"
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "django-trainingmanager.settings.dev")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
