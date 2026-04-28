@@ -3071,9 +3071,22 @@ components:
           type: string
           format: date-time
           readOnly: true
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
+        is_superuser:
+          type: boolean
+          readOnly: true
+          title: Superuser status
+          description: Designates that this user has all permissions without explicitly
+            assigning them.
       required:
       - date_joined
       - id
+      - is_staff
+      - is_superuser
       - last_login
       - username
     Member:
@@ -3710,6 +3723,17 @@ components:
           type: string
           format: date-time
           readOnly: true
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
+        is_superuser:
+          type: boolean
+          readOnly: true
+          title: Superuser status
+          description: Designates that this user has all permissions without explicitly
+            assigning them.
     PatchedMember:
       type: object
       properties:

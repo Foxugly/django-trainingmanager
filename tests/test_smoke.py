@@ -33,6 +33,41 @@ def test_GET_me_unauthenticated_returns_401(api_client):
     assert response.status_code == 401
 
 
+def test_GET_me_exposes_is_staff_and_is_superuser(auth_client):
+    response = auth_client.get("/api/v1/me/")
+    assert response.status_code == 200
+    body = response.json()
+    assert "is_staff" in body
+    assert "is_superuser" in body
+    assert isinstance(body["is_staff"], bool)
+    assert isinstance(body["is_superuser"], bool)
+    assert body["is_staff"] is False
+    assert body["is_superuser"] is False
+
+
+def test_PATCH_me_cannot_promote_to_staff(auth_client, authenticated_user):
+    """A regular user must not be able to escalate via PATCH /me/."""
+    assert authenticated_user.is_staff is False
+    assert authenticated_user.is_superuser is False
+
+    response = auth_client.patch(
+        "/api/v1/me/",
+        {"is_staff": True, "is_superuser": True, "first_name": "Hacker"},
+        format="json",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["is_staff"] is False
+    assert body["is_superuser"] is False
+    # first_name update should still go through (proves PATCH wasn't blocked
+    # entirely; only the privileged fields were silently ignored).
+    assert body["first_name"] == "Hacker"
+
+    authenticated_user.refresh_from_db()
+    assert authenticated_user.is_staff is False
+    assert authenticated_user.is_superuser is False
+
+
 # ------------------------------ /teams/ ------------------------------
 
 
