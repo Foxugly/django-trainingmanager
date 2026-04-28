@@ -51,6 +51,17 @@ pre-commit install
 
 Ruff (lint+format) et Black tournent à chaque commit.
 
+## Configuration prod
+
+`manage.py` et `wsgi.py` utilisent `os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django-trainingmanager.settings.dev')` — le défaut est `dev` pour faciliter le développement local. En production, exporter `DJANGO_SETTINGS_MODULE` avant de lancer le serveur :
+
+```bash
+export DJANGO_SETTINGS_MODULE=django-trainingmanager.settings.prod
+gunicorn django-trainingmanager.wsgi:application
+```
+
+ou en CLI ponctuelle : `python manage.py <cmd> --settings=django-trainingmanager.settings.prod`.
+
 ## Variables d'environnement
 
 Voir `.env.example`. Critiques :

@@ -3,6 +3,7 @@ import logging
 from django.conf import settings as dj_settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -366,27 +367,28 @@ class InvitationLookupView(APIView):
         serializer.is_valid(raise_exception=True)
 
         User = get_user_model()
-        user = User.objects.create_user(
-            username=serializer.validated_data["username"],
-            email=invitation.email,
-            password=serializer.validated_data["password"],
-        )
-        user.first_name = invitation.member.firstname
-        user.last_name = invitation.member.lastname
-        user.is_active = True
-        user.save()
-        EmailAddress.objects.create(
-            user=user,
-            email=invitation.email,
-            verified=True,
-            primary=True,
-        )
-        invitation.member.user = user
-        invitation.member.save()
+        with transaction.atomic():
+            user = User.objects.create_user(
+                username=serializer.validated_data["username"],
+                email=invitation.email,
+                password=serializer.validated_data["password"],
+            )
+            user.first_name = invitation.member.firstname
+            user.last_name = invitation.member.lastname
+            user.is_active = True
+            user.save()
+            EmailAddress.objects.create(
+                user=user,
+                email=invitation.email,
+                verified=True,
+                primary=True,
+            )
+            invitation.member.user = user
+            invitation.member.save()
 
-        invitation.status = "completed"
-        invitation.completed_at = timezone.now()
-        invitation.save()
+            invitation.status = "completed"
+            invitation.completed_at = timezone.now()
+            invitation.save()
 
         refresh = RefreshToken.for_user(user)
         return Response(

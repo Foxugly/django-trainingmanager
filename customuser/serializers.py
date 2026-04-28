@@ -27,16 +27,12 @@ class MeSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "language",
-            "is_staff",
-            "is_superuser",
             "last_login",
             "date_joined",
         ]
         read_only_fields = [
             "id",
             "username",
-            "is_staff",
-            "is_superuser",
             "last_login",
             "date_joined",
         ]

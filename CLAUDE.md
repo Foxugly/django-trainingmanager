@@ -8,7 +8,7 @@ Django 4.2+ training manager (originally for swim training). Domain: an `Agenda`
 
 ## Common commands
 
-The Django project package is literally named `django-trainingmanager` (with a hyphen). The settings module is `'django-trainingmanager.settings'` — referenced as a string by `manage.py`. **Do not** rename or `import` it as a Python module; only `manage.py` and `wsgi.py` reach it.
+The Django project package is literally named `django-trainingmanager` (with a hyphen). Settings are split into `django-trainingmanager/settings/{base,dev,prod}.py`; `manage.py` and `wsgi.py` default to `django-trainingmanager.settings.dev` via `os.environ.setdefault('DJANGO_SETTINGS_MODULE', ...)`. Override with `DJANGO_SETTINGS_MODULE=django-trainingmanager.settings.prod` (env var) or `--settings=django-trainingmanager.settings.prod` (CLI flag) when targeting prod settings. **Do not** rename or `import` the package as a Python module; only `manage.py` and `wsgi.py` reach it.
 
 ```bash
 python manage.py runserver

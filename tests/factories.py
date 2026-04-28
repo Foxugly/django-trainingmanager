@@ -70,6 +70,7 @@ class EnergySegmentFactory(DjangoModelFactory):
 class MemberFactory(DjangoModelFactory):
     class Meta:
         model = Member
+        skip_postgeneration_save = True
 
     firstname = factory.Sequence(lambda n: f"First{n}")
     lastname = factory.Sequence(lambda n: f"Last{n}")
@@ -95,6 +96,7 @@ class ProgramFactory(DjangoModelFactory):
 class EventFactory(DjangoModelFactory):
     class Meta:
         model = Event
+        skip_postgeneration_save = True
 
     name = factory.Sequence(lambda n: f"Event {n}")
     refer_program = factory.SubFactory(ProgramFactory)
@@ -110,6 +112,7 @@ class EventFactory(DjangoModelFactory):
 class RoundFactory(DjangoModelFactory):
     class Meta:
         model = Round
+        skip_postgeneration_save = True
 
     order = 1
     count = 1
@@ -134,6 +137,7 @@ class RoundFactory(DjangoModelFactory):
 class ExerciseFactory(DjangoModelFactory):
     class Meta:
         model = Exercise
+        skip_postgeneration_save = True
 
     order = 1
     repetition = 1

@@ -1,5 +1,6 @@
 from datetime import date as _date
 
+from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
@@ -104,21 +105,22 @@ class ProgramViewSet(viewsets.ModelViewSet):
             description=data["description"],
         )
 
-        created_count, deleted_count = self._apply_overlap_strategy(
-            program=program,
-            new_events_data=ai_result["events"],
-            strategy=data["overlap_strategy"],
-            date_start=data["date_start"],
-            date_end=data["date_end"],
-        )
+        with transaction.atomic():
+            created_count, deleted_count = self._apply_overlap_strategy(
+                program=program,
+                new_events_data=ai_result["events"],
+                strategy=data["overlap_strategy"],
+                date_start=data["date_start"],
+                date_end=data["date_end"],
+            )
 
-        program.frequency_per_week = data["frequency_per_week"]
-        program.description = data["description"]
-        program.generated_by_ai = True
-        program.ai_prompt = ai_result["prompt_sent"]
-        program.ai_response = ai_result["rationale"]
-        program.ai_generated_at = timezone.now()
-        program.save()
+            program.frequency_per_week = data["frequency_per_week"]
+            program.description = data["description"]
+            program.generated_by_ai = True
+            program.ai_prompt = ai_result["prompt_sent"]
+            program.ai_response = ai_result["rationale"]
+            program.ai_generated_at = timezone.now()
+            program.save()
 
         return Response(
             {
