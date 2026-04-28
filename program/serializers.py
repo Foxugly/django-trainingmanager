@@ -6,6 +6,7 @@ from member.models import Member
 from team.models import Team
 from team.serializers import TeamMinimalSerializer
 
+from .choices import OVERLAP_STRATEGY_CHOICES
 from .models import Program
 
 
@@ -67,7 +68,7 @@ class GeneratePlanRequestSerializer(serializers.Serializer):
     frequency_per_week = serializers.IntegerField(min_value=1, max_value=14)
     description = serializers.CharField(required=False, allow_blank=True, default="")
     overlap_strategy = serializers.ChoiceField(
-        choices=["add_only", "merge", "replace"],
+        choices=OVERLAP_STRATEGY_CHOICES,
         default="add_only",
     )
 

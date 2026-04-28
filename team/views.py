@@ -38,7 +38,7 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     serializer_class = TeamSerializer
     permission_classes = [IsAuthenticated, IsTeamOwnerOrReadOnly]
-    filterset_fields = ["is_active", "is_public"]
+    filterset_fields = ["is_active", "is_public", "language"]
     search_fields = ["name"]
     ordering_fields = ["name", "created_at"]
     ordering = ["name"]

@@ -148,6 +148,68 @@ def test_PATCH_round_with_mismatching_language_returns_400(
     assert response.status_code == 400
 
 
+# --------------------- clone-exercise scoping (HIGH) ------------------
+
+
+def test_clone_exercise_cross_language_returns_404(auth_client_trainer, trainer_sport):
+    """Cloning an exercise from a different language must return 404 (back-door read prevention)."""
+    fr_round = RoundFactory(sport=trainer_sport, language="fr")
+    modality = ModalityFactory(sport=trainer_sport)
+    it_exercise = ExerciseFactory(
+        modality=modality, energysegment=EnergySegmentFactory(), language="it"
+    )
+
+    response = auth_client_trainer.post(
+        f"/api/v1/rounds/{fr_round.pk}/clone-exercise/",
+        {"exercise_id": it_exercise.pk},
+        format="json",
+    )
+    assert response.status_code == 404
+    assert response.json()["code"] == "exercise_not_found"
+
+
+def test_clone_exercise_cross_sport_returns_404(auth_client_trainer, trainer_sport):
+    """Cloning an exercise from a different sport must return 404."""
+    fr_round = RoundFactory(sport=trainer_sport, language="fr")
+    other_sport = SportFactory(slug="other-sport-clone", name="Other Sport Clone")
+    other_modality = ModalityFactory(sport=other_sport)
+    other_exercise = ExerciseFactory(
+        modality=other_modality, energysegment=EnergySegmentFactory(), language="fr"
+    )
+
+    response = auth_client_trainer.post(
+        f"/api/v1/rounds/{fr_round.pk}/clone-exercise/",
+        {"exercise_id": other_exercise.pk},
+        format="json",
+    )
+    assert response.status_code == 404
+    assert response.json()["code"] == "exercise_not_found"
+
+
+# --------------------- ?language= filter -----------------------------
+
+
+def test_GET_exercises_filter_by_language(auth_client_trainer, trainer_user, trainer_sport):
+    """A multi-team trainer can narrow the catalog by ?language=."""
+    # Add a second team in 'nl' so the trainer's accessible pairs cover both fr and nl
+    from tests.factories import TeamFactory
+
+    TeamFactory(owner=trainer_user, sport=trainer_sport, language="nl", is_active=True)
+
+    modality = ModalityFactory(sport=trainer_sport)
+    seg = EnergySegmentFactory()
+    fr_ex = ExerciseFactory(modality=modality, energysegment=seg, language="fr")
+    nl_ex = ExerciseFactory(modality=modality, energysegment=seg, language="nl")
+
+    response = auth_client_trainer.get("/api/v1/exercises/?language=fr")
+    assert response.status_code == 200
+    ids = {e["id"] for e in response.json()["results"]}
+    assert fr_ex.pk in ids
+    assert nl_ex.pk not in ids
+    for e in response.json()["results"]:
+        assert e["language"] == "fr"
+
+
 # ----------------------------- inheritance ----------------------------
 
 

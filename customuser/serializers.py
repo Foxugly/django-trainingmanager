@@ -3,12 +3,17 @@ from rest_framework import serializers
 from .models import CustomUser
 
 
-class CustomUserMinimalSerializer(serializers.ModelSerializer):
-    """Minimal user payload for nested read contexts (owner, invited_by, etc.)."""
+class CustomUserPublicSerializer(serializers.ModelSerializer):
+    """Public user payload for nested read contexts.
+
+    Excludes email and other privacy-sensitive fields. Use this whenever
+    a user is exposed inside another resource (Team.owner, Member.user,
+    TeamInvitation.invited_by, ...).
+    """
 
     class Meta:
         model = CustomUser
-        fields = ["id", "username", "first_name", "last_name", "email"]
+        fields = ["id", "username", "first_name", "last_name"]
         read_only_fields = fields
 
 

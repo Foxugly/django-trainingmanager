@@ -167,6 +167,7 @@ SPECTACULAR_SETTINGS = {
     "ENUM_NAME_OVERRIDES": {
         "JoinRequestStatusEnum": "team.models.TeamJoinRequest.STATUS_CHOICES",
         "InvitationStatusEnum": "team.models.TeamInvitation.STATUS_CHOICES",
+        "OverlapStrategyEnum": "program.choices.OVERLAP_STRATEGY_CHOICES",
     },
 }
 

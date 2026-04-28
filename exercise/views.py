@@ -60,7 +60,7 @@ class ExerciseViewSet(viewsets.ModelViewSet):
 
     serializer_class = ExerciseSerializer
     permission_classes = [IsAuthenticated, IsTrainer]
-    filterset_fields = ["modality", "energysegment"]
+    filterset_fields = ["modality", "energysegment", "language"]
     search_fields = ["notes"]
     ordering_fields = ["order", "id", "distance"]
     ordering = ["order"]

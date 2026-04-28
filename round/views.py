@@ -18,7 +18,7 @@ class RoundViewSet(viewsets.ModelViewSet):
 
     serializer_class = RoundSerializer
     permission_classes = [IsAuthenticated, IsTrainer]
-    filterset_fields = ["sport"]
+    filterset_fields = ["sport", "language"]
     search_fields = []
     ordering_fields = ["order", "id"]
     ordering = ["order"]
@@ -85,20 +85,19 @@ class RoundViewSet(viewsets.ModelViewSet):
                 {"code": "exercise_id_required", "detail": _("exercise_id is required.")},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        scoped_qs = Exercise.objects.filter(
+            modality__sport_id=round_obj.sport_id,
+            language=round_obj.language,
+        )
         try:
-            original = Exercise.objects.get(pk=exercise_id)
+            original = scoped_qs.get(pk=exercise_id)
         except Exercise.DoesNotExist:
             return Response(
-                {"code": "exercise_not_found", "detail": _("Exercise not found.")},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        if original.modality and original.modality.sport_id != round_obj.sport_id:
-            return Response(
                 {
-                    "code": "exercise_sport_mismatch",
-                    "detail": _("Exercise sport does not match round sport."),
+                    "code": "exercise_not_found",
+                    "detail": _("Exercise not found or not accessible."),
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_404_NOT_FOUND,
             )
         cloned_exercise = Exercise.objects.create(
             t_start=original.t_start,

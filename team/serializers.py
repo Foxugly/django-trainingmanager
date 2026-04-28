@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from customuser.serializers import CustomUserMinimalSerializer
+from customuser.serializers import CustomUserPublicSerializer
 from sport.models import Sport
 from sport.serializers import SportSerializer
 
@@ -25,7 +25,7 @@ class TeamSerializer(serializers.ModelSerializer):
         queryset=Sport.objects.all(),
         write_only=True,
     )
-    owner = CustomUserMinimalSerializer(read_only=True)
+    owner = CustomUserPublicSerializer(read_only=True)
 
     class Meta:
         model = Team

@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from customuser.serializers import CustomUserMinimalSerializer
+from customuser.serializers import CustomUserPublicSerializer
 
 from .models import Member
 
@@ -11,7 +11,7 @@ User = get_user_model()
 
 class MemberSerializer(serializers.ModelSerializer):
     fullname = serializers.SerializerMethodField()
-    user = CustomUserMinimalSerializer(read_only=True)
+    user = CustomUserPublicSerializer(read_only=True)
     user_id = serializers.PrimaryKeyRelatedField(
         source="user",
         queryset=User.objects.all(),
