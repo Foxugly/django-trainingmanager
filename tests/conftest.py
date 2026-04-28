@@ -91,3 +91,23 @@ def non_trainer_user(db):
 def auth_client_non_trainer(api_client, non_trainer_user):
     api_client.force_authenticate(user=non_trainer_user)
     return api_client
+
+
+@pytest.fixture
+def admin_user(db):
+    User = get_user_model()
+    user = User.objects.create_user(
+        username="adminuser",
+        email="adminuser@local.test",
+        password="Str0ngP@ssAdmin!",
+    )
+    user.is_staff = True
+    user.is_active = True
+    user.save(update_fields=["is_staff", "is_active"])
+    return user
+
+
+@pytest.fixture
+def admin_client(api_client, admin_user):
+    api_client.force_authenticate(user=admin_user)
+    return api_client

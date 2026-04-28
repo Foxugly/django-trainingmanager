@@ -12,14 +12,49 @@ class ModalitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Modality
-        fields = ["id", "name", "sport"]
+        fields = ["id", "name", "sport", "is_active"]
         read_only_fields = fields
+
+
+class ModalityAdminSerializer(serializers.ModelSerializer):
+    """Admin flavor: per-language name variants + writable sport FK."""
+
+    class Meta:
+        model = Modality
+        fields = [
+            "id",
+            "name_fr",
+            "name_nl",
+            "name_en",
+            "name_it",
+            "name_es",
+            "sport",
+            "is_active",
+        ]
+        read_only_fields = ["id"]
 
 
 class EnergySystemSerializer(serializers.ModelSerializer):
     class Meta:
         model = EnergySystem
-        fields = ["id", "name"]
+        fields = ["id", "name", "is_active"]
+        read_only_fields = ["id", "name", "is_active"]
+
+
+class EnergySystemAdminSerializer(serializers.ModelSerializer):
+    """Admin flavor: per-language name variants."""
+
+    class Meta:
+        model = EnergySystem
+        fields = [
+            "id",
+            "name_fr",
+            "name_nl",
+            "name_en",
+            "name_it",
+            "name_es",
+            "is_active",
+        ]
         read_only_fields = ["id"]
 
 
@@ -35,7 +70,26 @@ class EnergySegmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EnergySegment
-        fields = ["id", "abv", "description", "energysystem", "energysystem_id"]
+        fields = ["id", "abv", "description", "energysystem", "energysystem_id", "is_active"]
+        read_only_fields = ["id", "is_active"]
+
+
+class EnergySegmentAdminSerializer(serializers.ModelSerializer):
+    """Admin flavor: per-language description variants + writable energysystem FK."""
+
+    class Meta:
+        model = EnergySegment
+        fields = [
+            "id",
+            "abv",
+            "description_fr",
+            "description_nl",
+            "description_en",
+            "description_it",
+            "description_es",
+            "energysystem",
+            "is_active",
+        ]
         read_only_fields = ["id"]
 
 

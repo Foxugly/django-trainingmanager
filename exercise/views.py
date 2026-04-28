@@ -5,54 +5,126 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from team.permissions import IsTrainer
+from tools.permissions import AdminWriteAuthRead
 
 from .models import EnergySegment, EnergySystem, Exercise, Modality
 from .serializers import (
+    EnergySegmentAdminSerializer,
     EnergySegmentSerializer,
+    EnergySystemAdminSerializer,
     EnergySystemSerializer,
     ExerciseSerializer,
+    ModalityAdminSerializer,
     ModalitySerializer,
 )
 
 
-class ModalityViewSet(viewsets.ReadOnlyModelViewSet):
-    """Lecture seule pour Modality (référentiel par sport, nested via /sports/<id>/modalities/)."""
+def _staff_include_inactive(request):
+    """Return True iff the request asks for inactive items AND the user is staff."""
+    return (
+        request.query_params.get("include_inactive") == "true"
+        and request.user.is_authenticated
+        and request.user.is_staff
+    )
 
-    serializer_class = ModalitySerializer
-    permission_classes = [IsAuthenticated]
-    filterset_fields = ["name"]
+
+class ModalityViewSet(viewsets.ModelViewSet):
+    """CRUD on Modality referential, scoped by sport when nested."""
+
+    permission_classes = [AdminWriteAuthRead]
+    filterset_fields = ["is_active", "sport", "name"]
     search_fields = ["name"]
     ordering_fields = ["name", "id"]
     ordering = ["name"]
 
     def get_queryset(self):
-        sport_id = self.kwargs.get("sport_pk")
+        if getattr(self, "swagger_fake_view", False):
+            return Modality.objects.none()
+
         qs = Modality.objects.all()
-        if sport_id:
-            qs = qs.filter(sport_id=sport_id)
+        sport_pk = self.kwargs.get("sport_pk")
+        if sport_pk:
+            qs = qs.filter(sport_id=sport_pk)
+        if not _staff_include_inactive(self.request):
+            qs = qs.filter(is_active=True)
         return qs
 
+    def get_serializer_class(self):
+        if (
+            self.request.user.is_authenticated
+            and self.request.user.is_staff
+            and self.action in ("create", "update", "partial_update", "retrieve")
+        ):
+            return ModalityAdminSerializer
+        return ModalitySerializer
 
-class EnergySystemViewSet(viewsets.ReadOnlyModelViewSet):
-    """Lecture seule pour EnergySystem (référentiel)."""
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save(update_fields=["is_active"])
 
-    queryset = EnergySystem.objects.all()
-    serializer_class = EnergySystemSerializer
-    filterset_fields = ["name"]
+
+class EnergySystemViewSet(viewsets.ModelViewSet):
+    """CRUD on EnergySystem referential."""
+
+    permission_classes = [AdminWriteAuthRead]
+    filterset_fields = ["is_active", "name"]
     search_fields = ["name"]
     ordering_fields = ["name", "id"]
     ordering = ["name"]
 
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return EnergySystem.objects.none()
 
-class EnergySegmentViewSet(viewsets.ReadOnlyModelViewSet):
-    """Lecture seule pour EnergySegment (référentiel)."""
+        qs = EnergySystem.objects.all()
+        if not _staff_include_inactive(self.request):
+            qs = qs.filter(is_active=True)
+        return qs
 
-    queryset = EnergySegment.objects.all()
-    serializer_class = EnergySegmentSerializer
-    filterset_fields = ["energysystem"]
+    def get_serializer_class(self):
+        if (
+            self.request.user.is_authenticated
+            and self.request.user.is_staff
+            and self.action in ("create", "update", "partial_update", "retrieve")
+        ):
+            return EnergySystemAdminSerializer
+        return EnergySystemSerializer
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save(update_fields=["is_active"])
+
+
+class EnergySegmentViewSet(viewsets.ModelViewSet):
+    """CRUD on EnergySegment referential."""
+
+    permission_classes = [AdminWriteAuthRead]
+    filterset_fields = ["is_active", "energysystem"]
     search_fields = ["abv", "description"]
-    ordering_fields = ["id"]
-    ordering = ["pk"]
+    ordering_fields = ["abv", "id"]
+    ordering = ["abv"]
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return EnergySegment.objects.none()
+
+        qs = EnergySegment.objects.select_related("energysystem")
+        if not _staff_include_inactive(self.request):
+            qs = qs.filter(is_active=True)
+        return qs
+
+    def get_serializer_class(self):
+        if (
+            self.request.user.is_authenticated
+            and self.request.user.is_staff
+            and self.action in ("create", "update", "partial_update", "retrieve")
+        ):
+            return EnergySegmentAdminSerializer
+        return EnergySegmentSerializer
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save(update_fields=["is_active"])
 
 
 class ExerciseViewSet(viewsets.ModelViewSet):

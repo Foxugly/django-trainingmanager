@@ -182,12 +182,12 @@ def test_GET_nested_modalities_returns_200(auth_client):
     assert response.status_code == 200
 
 
-def test_POST_nested_modalities_returns_405(auth_client):
+def test_POST_nested_modalities_as_non_staff_returns_403(auth_client):
     sport = SportFactory()
     response = auth_client.post(
         f"/api/v1/sports/{sport.pk}/modalities/", {"name": "Foo"}, format="json"
     )
-    assert response.status_code == 405
+    assert response.status_code == 403
 
 
 def test_GET_energy_systems_returns_200(auth_client):
