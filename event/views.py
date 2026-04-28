@@ -108,7 +108,10 @@ class EventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_409_CONFLICT,
             )
 
-        ai_result = ai_generate_training(event=event)
+        ai_result = ai_generate_training(
+            event=event,
+            user=request.user if request.user.is_authenticated else None,
+        )
 
         created_rounds = 0
         created_exercises = 0

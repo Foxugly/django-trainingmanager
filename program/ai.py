@@ -127,7 +127,7 @@ def _parse_date_strict(s):
         raise AIServiceError(_("AI returned an invalid date format."))
 
 
-def generate_plan(*, program, date_start, date_end, frequency_per_week, description):
+def generate_plan(*, program, date_start, date_end, frequency_per_week, description, user=None):
     sport_name = program.team.sport.name if program.team.sport else "the practiced sport"
     language = program.team.language
 
@@ -145,6 +145,11 @@ def generate_plan(*, program, date_start, date_end, frequency_per_week, descript
         prompt=user_prompt,
         system=system,
         tool=PLAN_TOOL_SCHEMA,
+        track_kwargs={
+            "team": program.team,
+            "user": user,
+            "endpoint": "plan",
+        },
     )
 
     tool_input = result["tool_input"]

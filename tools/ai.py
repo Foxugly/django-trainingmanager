@@ -42,8 +42,14 @@ def call_claude(
     system: str | None = None,
     model: str | None = None,
     max_tokens: int | None = None,
+    track_kwargs: dict | None = None,
 ) -> dict:
-    """Send a single user prompt to Claude and return the response payload."""
+    """Send a single user prompt to Claude and return the response payload.
+
+    If `track_kwargs` is provided (a dict with keys `team`, `user`,
+    `endpoint`), the call is recorded into AIUsage. Tracking failures
+    are logged but never raised.
+    """
     client = _get_client()
 
     kwargs = {
@@ -69,6 +75,11 @@ def call_claude(
         logger.exception("Unexpected error calling Anthropic")
         raise AIServiceError(_("Unexpected AI error."))
 
+    if track_kwargs is not None:
+        from tools.ai_tracking import track_ai_usage
+
+        track_ai_usage(response, model_used=response.model, **track_kwargs)
+
     text_content = ""
     for block in response.content:
         if hasattr(block, "text"):
@@ -90,8 +101,14 @@ def call_claude_with_tool(
     system: str | None = None,
     model: str | None = None,
     max_tokens: int | None = None,
+    track_kwargs: dict | None = None,
 ) -> dict:
-    """Call Claude with a forced tool, guaranteeing a structured JSON payload."""
+    """Call Claude with a forced tool, guaranteeing a structured JSON payload.
+
+    If `track_kwargs` is provided, the call is recorded into AIUsage
+    even when the tool block is missing (the API call still consumed
+    tokens). Tracking is best-effort and never raises.
+    """
     client = _get_client()
 
     kwargs = {
@@ -118,6 +135,11 @@ def call_claude_with_tool(
     except Exception:
         logger.exception("Unexpected error calling Anthropic")
         raise AIServiceError(_("Unexpected AI error."))
+
+    if track_kwargs is not None:
+        from tools.ai_tracking import track_ai_usage
+
+        track_ai_usage(response, model_used=response.model, **track_kwargs)
 
     tool_use_block = None
     for block in response.content:

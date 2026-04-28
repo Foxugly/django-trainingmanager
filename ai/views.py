@@ -61,5 +61,12 @@ class AIPingView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        result = call_claude(prompt)
+        result = call_claude(
+            prompt,
+            track_kwargs={
+                "team": None,
+                "user": request.user if request.user.is_authenticated else None,
+                "endpoint": "ping",
+            },
+        )
         return Response(result, status=status.HTTP_200_OK)

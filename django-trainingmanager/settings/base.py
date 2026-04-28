@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "allauth.headless",
     "sport",
     "ai",
+    "aiusage",
     "program",
     "event",
     "round",

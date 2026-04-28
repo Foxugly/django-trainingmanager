@@ -146,7 +146,7 @@ def build_user_prompt(*, event, modalities_catalog, energysegments_catalog):
     )
 
 
-def generate_training(*, event):
+def generate_training(*, event, user=None):
     from exercise.models import EnergySegment, Modality
 
     sport = (
@@ -177,10 +177,16 @@ def generate_training(*, event):
         energysegments_catalog=energysegments,
     )
 
+    team = event.refer_program.team if event.refer_program and event.refer_program.team else None
     result = call_claude_with_tool(
         prompt=user_prompt,
         system=system,
         tool=tool,
+        track_kwargs={
+            "team": team,
+            "user": user,
+            "endpoint": "training",
+        },
     )
 
     tool_input = result["tool_input"]

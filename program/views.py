@@ -103,6 +103,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
             date_end=data["date_end"],
             frequency_per_week=data["frequency_per_week"],
             description=data["description"],
+            user=request.user if request.user.is_authenticated else None,
         )
 
         with transaction.atomic():

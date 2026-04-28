@@ -17,6 +17,7 @@ urlpatterns = [
     path("api/v1/", include("team.urls")),
     # AI endpoints
     path("api/v1/", include("ai.urls")),
+    path("api/v1/", include("aiusage.urls")),
     # Endpoints métier
     path("api/v1/", include("sport.urls")),
     path("api/v1/", include("program.urls")),
