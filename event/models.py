@@ -3,10 +3,9 @@ from django.utils.translation import gettext as _
 
 from member.models import Member
 from round.models import Round
-from tools.generic_class import GenericClass
 
 
-class Event(GenericClass):
+class Event(models.Model):
     name = models.CharField(max_length=100, verbose_name=_("name"))
     goal = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("goal"))
     color = models.CharField(max_length=10, blank=True, verbose_name=_("color"))

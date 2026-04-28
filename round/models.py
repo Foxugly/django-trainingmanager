@@ -3,10 +3,9 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from exercise.models import Exercise
-from tools.generic_class import GenericClass
 
 
-class Round(GenericClass):
+class Round(models.Model):
     order = models.PositiveIntegerField(default=1)
     count = models.PositiveIntegerField(default=1)
     t_start = models.CharField(

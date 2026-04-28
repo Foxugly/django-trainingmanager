@@ -2,10 +2,8 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext as _
 
-from tools.generic_class import GenericClass
 
-
-class Member(GenericClass):
+class Member(models.Model):
     firstname = models.CharField(
         max_length=100,
         verbose_name=_("Firstname"),

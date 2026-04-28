@@ -3,10 +3,9 @@ from django.utils.translation import gettext as _
 
 from event.models import Event
 from member.models import Member
-from tools.generic_class import GenericClass
 
 
-class Program(GenericClass):
+class Program(models.Model):
     name = models.CharField(max_length=100, verbose_name=_("name"))
     date_start = models.DateField(
         blank=True,

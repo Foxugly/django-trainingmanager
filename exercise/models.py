@@ -2,10 +2,8 @@ from django.conf import settings as django_settings
 from django.db import models
 from django.utils.translation import gettext as _
 
-from tools.generic_class import GenericClass
 
-
-class Modality(GenericClass):
+class Modality(models.Model):
     name = models.CharField(max_length=20, verbose_name=_("name"))
     sport = models.ForeignKey(
         "sport.Sport",
@@ -21,14 +19,14 @@ class Modality(GenericClass):
         return self.name
 
 
-class EnergySystem(GenericClass):
+class EnergySystem(models.Model):
     name = models.CharField(max_length=20, verbose_name=_("name"))
 
     def __str__(self):
         return self.name
 
 
-class EnergySegment(GenericClass):
+class EnergySegment(models.Model):
     abv = models.CharField(max_length=10, verbose_name=_("abv"))
     description = models.CharField(
         max_length=200, null=True, blank=True, verbose_name=_("description")
@@ -39,7 +37,7 @@ class EnergySegment(GenericClass):
         return "%s (%s)" % (self.abv, self.energysystem)
 
 
-class Exercise(GenericClass):
+class Exercise(models.Model):
     order = models.IntegerField(verbose_name=_("order"), default=1)
     t_start = models.CharField(
         max_length=10,
