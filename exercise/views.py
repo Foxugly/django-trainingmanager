@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from team.permissions import IsTrainer
+from tools.openapi import INCLUDE_INACTIVE_PARAM
 from tools.permissions import AdminWriteAuthRead
 
 from .models import EnergySegment, EnergySystem, Exercise, Modality
@@ -32,19 +33,27 @@ def _staff_include_inactive(request):
     list=extend_schema(
         summary="List modalities (public flavor)",
         responses=ModalitySerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     retrieve=extend_schema(
         summary="Retrieve modality (admin flavor for staff)",
         responses=ModalityAdminSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     create=extend_schema(
         summary="Create modality (staff only)",
         request=ModalityAdminSerializer,
         responses=ModalityAdminSerializer,
     ),
-    update=extend_schema(request=ModalityAdminSerializer, responses=ModalityAdminSerializer),
+    update=extend_schema(
+        request=ModalityAdminSerializer,
+        responses=ModalityAdminSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
+    ),
     partial_update=extend_schema(
-        request=ModalityAdminSerializer, responses=ModalityAdminSerializer
+        request=ModalityAdminSerializer,
+        responses=ModalityAdminSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     destroy=extend_schema(summary="Soft delete modality (staff only)"),
 )
@@ -87,10 +96,12 @@ class ModalityViewSet(viewsets.ModelViewSet):
     list=extend_schema(
         summary="List energy systems (public flavor)",
         responses=EnergySystemSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     retrieve=extend_schema(
         summary="Retrieve energy system (admin flavor for staff)",
         responses=EnergySystemAdminSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     create=extend_schema(
         summary="Create energy system (staff only)",
@@ -98,10 +109,14 @@ class ModalityViewSet(viewsets.ModelViewSet):
         responses=EnergySystemAdminSerializer,
     ),
     update=extend_schema(
-        request=EnergySystemAdminSerializer, responses=EnergySystemAdminSerializer
+        request=EnergySystemAdminSerializer,
+        responses=EnergySystemAdminSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     partial_update=extend_schema(
-        request=EnergySystemAdminSerializer, responses=EnergySystemAdminSerializer
+        request=EnergySystemAdminSerializer,
+        responses=EnergySystemAdminSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     destroy=extend_schema(summary="Soft delete energy system (staff only)"),
 )
@@ -141,10 +156,12 @@ class EnergySystemViewSet(viewsets.ModelViewSet):
     list=extend_schema(
         summary="List energy segments (public flavor)",
         responses=EnergySegmentSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     retrieve=extend_schema(
         summary="Retrieve energy segment (admin flavor for staff)",
         responses=EnergySegmentAdminSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     create=extend_schema(
         summary="Create energy segment (staff only)",
@@ -152,10 +169,14 @@ class EnergySystemViewSet(viewsets.ModelViewSet):
         responses=EnergySegmentAdminSerializer,
     ),
     update=extend_schema(
-        request=EnergySegmentAdminSerializer, responses=EnergySegmentAdminSerializer
+        request=EnergySegmentAdminSerializer,
+        responses=EnergySegmentAdminSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     partial_update=extend_schema(
-        request=EnergySegmentAdminSerializer, responses=EnergySegmentAdminSerializer
+        request=EnergySegmentAdminSerializer,
+        responses=EnergySegmentAdminSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     destroy=extend_schema(summary="Soft delete energy segment (staff only)"),
 )

@@ -1,6 +1,7 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets
 
+from tools.openapi import INCLUDE_INACTIVE_PARAM
 from tools.permissions import AdminWriteAuthRead
 
 from .models import Sport
@@ -15,6 +16,7 @@ from .serializers import SportAdminSerializer, SportSerializer
             "Available to all authenticated users."
         ),
         responses=SportSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     retrieve=extend_schema(
         summary="Retrieve sport (admin flavor for staff)",
@@ -23,6 +25,7 @@ from .serializers import SportAdminSerializer, SportSerializer
             "by a staff user, otherwise the public flavor."
         ),
         responses=SportAdminSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
     ),
     create=extend_schema(
         summary="Create sport (staff only)",
@@ -30,8 +33,16 @@ from .serializers import SportAdminSerializer, SportSerializer
         request=SportAdminSerializer,
         responses=SportAdminSerializer,
     ),
-    update=extend_schema(request=SportAdminSerializer, responses=SportAdminSerializer),
-    partial_update=extend_schema(request=SportAdminSerializer, responses=SportAdminSerializer),
+    update=extend_schema(
+        request=SportAdminSerializer,
+        responses=SportAdminSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
+    ),
+    partial_update=extend_schema(
+        request=SportAdminSerializer,
+        responses=SportAdminSerializer,
+        parameters=[INCLUDE_INACTIVE_PARAM],
+    ),
     destroy=extend_schema(
         summary="Soft delete sport (staff only)",
         description="Sets is_active=False; does not hard delete.",
