@@ -1,4 +1,3 @@
-from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from exercise.models import Exercise
@@ -7,6 +6,7 @@ from sport.serializers import SportSerializer
 from tools.exceptions import ResourceLocked
 
 from .models import Round
+from .utils import check_exercise_round_consistency
 
 
 class RoundSerializer(serializers.ModelSerializer):
@@ -40,29 +40,20 @@ class RoundSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         data = super().validate(data)
+        exercises = data.get("exercises", [])
+        if not exercises:
+            return data
+
         sport = data.get("sport") or (self.instance.sport if self.instance else None)
         language = data.get("language") or (self.instance.language if self.instance else None)
-        exercises = data.get("exercises", [])
-        if exercises:
-            for ex in exercises:
-                if sport and ex.modality and ex.modality.sport_id != sport.pk:
-                    raise serializers.ValidationError(
-                        {
-                            "exercises": _(
-                                "An exercise has a modality.sport that doesn't match round.sport."
-                            )
-                        },
-                        code="exercise_sport_mismatch",
-                    )
-                if language and ex.language != language:
-                    raise serializers.ValidationError(
-                        {
-                            "exercises": _(
-                                "An exercise has a language that doesn't match round.language."
-                            )
-                        },
-                        code="exercise_language_mismatch",
-                    )
+        target = self.instance or Round(sport=sport, language=language)
+        if sport is not None:
+            target.sport = sport
+        if language is not None:
+            target.language = language
+
+        for ex in exercises:
+            check_exercise_round_consistency(ex, target)
         return data
 
     def update(self, instance, validated_data):
