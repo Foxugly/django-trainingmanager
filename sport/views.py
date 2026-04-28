@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets
 
 from tools.permissions import AdminWriteAuthRead
@@ -6,6 +7,36 @@ from .models import Sport
 from .serializers import SportAdminSerializer, SportSerializer
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="List sports (public flavor)",
+        description=(
+            "Returns the public Sport serializer with localized 'name'. "
+            "Available to all authenticated users."
+        ),
+        responses=SportSerializer,
+    ),
+    retrieve=extend_schema(
+        summary="Retrieve sport (admin flavor for staff)",
+        description=(
+            "Returns the admin flavor with name_fr/nl/en/it/es when called "
+            "by a staff user, otherwise the public flavor."
+        ),
+        responses=SportAdminSerializer,
+    ),
+    create=extend_schema(
+        summary="Create sport (staff only)",
+        description="Accepts the admin flavor with name_fr/nl/en/it/es.",
+        request=SportAdminSerializer,
+        responses=SportAdminSerializer,
+    ),
+    update=extend_schema(request=SportAdminSerializer, responses=SportAdminSerializer),
+    partial_update=extend_schema(request=SportAdminSerializer, responses=SportAdminSerializer),
+    destroy=extend_schema(
+        summary="Soft delete sport (staff only)",
+        description="Sets is_active=False; does not hard delete.",
+    ),
+)
 class SportViewSet(viewsets.ModelViewSet):
     """CRUD on the Sport referential.
 

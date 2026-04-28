@@ -1,4 +1,4 @@
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -28,6 +28,26 @@ def _staff_include_inactive(request):
     )
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="List modalities (public flavor)",
+        responses=ModalitySerializer,
+    ),
+    retrieve=extend_schema(
+        summary="Retrieve modality (admin flavor for staff)",
+        responses=ModalityAdminSerializer,
+    ),
+    create=extend_schema(
+        summary="Create modality (staff only)",
+        request=ModalityAdminSerializer,
+        responses=ModalityAdminSerializer,
+    ),
+    update=extend_schema(request=ModalityAdminSerializer, responses=ModalityAdminSerializer),
+    partial_update=extend_schema(
+        request=ModalityAdminSerializer, responses=ModalityAdminSerializer
+    ),
+    destroy=extend_schema(summary="Soft delete modality (staff only)"),
+)
 class ModalityViewSet(viewsets.ModelViewSet):
     """CRUD on Modality referential, scoped by sport when nested."""
 
@@ -63,6 +83,28 @@ class ModalityViewSet(viewsets.ModelViewSet):
         instance.save(update_fields=["is_active"])
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="List energy systems (public flavor)",
+        responses=EnergySystemSerializer,
+    ),
+    retrieve=extend_schema(
+        summary="Retrieve energy system (admin flavor for staff)",
+        responses=EnergySystemAdminSerializer,
+    ),
+    create=extend_schema(
+        summary="Create energy system (staff only)",
+        request=EnergySystemAdminSerializer,
+        responses=EnergySystemAdminSerializer,
+    ),
+    update=extend_schema(
+        request=EnergySystemAdminSerializer, responses=EnergySystemAdminSerializer
+    ),
+    partial_update=extend_schema(
+        request=EnergySystemAdminSerializer, responses=EnergySystemAdminSerializer
+    ),
+    destroy=extend_schema(summary="Soft delete energy system (staff only)"),
+)
 class EnergySystemViewSet(viewsets.ModelViewSet):
     """CRUD on EnergySystem referential."""
 
@@ -95,6 +137,28 @@ class EnergySystemViewSet(viewsets.ModelViewSet):
         instance.save(update_fields=["is_active"])
 
 
+@extend_schema_view(
+    list=extend_schema(
+        summary="List energy segments (public flavor)",
+        responses=EnergySegmentSerializer,
+    ),
+    retrieve=extend_schema(
+        summary="Retrieve energy segment (admin flavor for staff)",
+        responses=EnergySegmentAdminSerializer,
+    ),
+    create=extend_schema(
+        summary="Create energy segment (staff only)",
+        request=EnergySegmentAdminSerializer,
+        responses=EnergySegmentAdminSerializer,
+    ),
+    update=extend_schema(
+        request=EnergySegmentAdminSerializer, responses=EnergySegmentAdminSerializer
+    ),
+    partial_update=extend_schema(
+        request=EnergySegmentAdminSerializer, responses=EnergySegmentAdminSerializer
+    ),
+    destroy=extend_schema(summary="Soft delete energy segment (staff only)"),
+)
 class EnergySegmentViewSet(viewsets.ModelViewSet):
     """CRUD on EnergySegment referential."""
 

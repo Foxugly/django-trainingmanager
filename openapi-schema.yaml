@@ -94,6 +94,7 @@ paths:
     get:
       operationId: energy_segments_list
       description: CRUD on EnergySegment referential.
+      summary: List energy segments (public flavor)
       parameters:
       - in: query
         name: energysystem
@@ -135,19 +136,20 @@ paths:
     post:
       operationId: energy_segments_create
       description: CRUD on EnergySegment referential.
+      summary: Create energy segment (staff only)
       tags:
       - energy-segments
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EnergySegment'
+              $ref: '#/components/schemas/EnergySegmentAdmin'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/EnergySegment'
+              $ref: '#/components/schemas/EnergySegmentAdmin'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/EnergySegment'
+              $ref: '#/components/schemas/EnergySegmentAdmin'
         required: true
       security:
       - jwtAuth: []
@@ -156,12 +158,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EnergySegment'
+                $ref: '#/components/schemas/EnergySegmentAdmin'
           description: ''
   /api/v1/energy-segments/{id}/:
     get:
       operationId: energy_segments_retrieve
       description: CRUD on EnergySegment referential.
+      summary: Retrieve energy segment (admin flavor for staff)
       parameters:
       - in: path
         name: id
@@ -178,7 +181,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EnergySegment'
+                $ref: '#/components/schemas/EnergySegmentAdmin'
           description: ''
     put:
       operationId: energy_segments_update
@@ -196,13 +199,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EnergySegment'
+              $ref: '#/components/schemas/EnergySegmentAdmin'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/EnergySegment'
+              $ref: '#/components/schemas/EnergySegmentAdmin'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/EnergySegment'
+              $ref: '#/components/schemas/EnergySegmentAdmin'
         required: true
       security:
       - jwtAuth: []
@@ -211,7 +214,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EnergySegment'
+                $ref: '#/components/schemas/EnergySegmentAdmin'
           description: ''
     patch:
       operationId: energy_segments_partial_update
@@ -229,13 +232,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedEnergySegment'
+              $ref: '#/components/schemas/PatchedEnergySegmentAdmin'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedEnergySegment'
+              $ref: '#/components/schemas/PatchedEnergySegmentAdmin'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedEnergySegment'
+              $ref: '#/components/schemas/PatchedEnergySegmentAdmin'
       security:
       - jwtAuth: []
       responses:
@@ -243,11 +246,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EnergySegment'
+                $ref: '#/components/schemas/EnergySegmentAdmin'
           description: ''
     delete:
       operationId: energy_segments_destroy
       description: CRUD on EnergySegment referential.
+      summary: Soft delete energy segment (staff only)
       parameters:
       - in: path
         name: id
@@ -266,6 +270,7 @@ paths:
     get:
       operationId: energy_systems_list
       description: CRUD on EnergySystem referential.
+      summary: List energy systems (public flavor)
       parameters:
       - in: query
         name: is_active
@@ -307,19 +312,20 @@ paths:
     post:
       operationId: energy_systems_create
       description: CRUD on EnergySystem referential.
+      summary: Create energy system (staff only)
       tags:
       - energy-systems
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EnergySystem'
+              $ref: '#/components/schemas/EnergySystemAdmin'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/EnergySystem'
+              $ref: '#/components/schemas/EnergySystemAdmin'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/EnergySystem'
+              $ref: '#/components/schemas/EnergySystemAdmin'
       security:
       - jwtAuth: []
       responses:
@@ -327,12 +333,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EnergySystem'
+                $ref: '#/components/schemas/EnergySystemAdmin'
           description: ''
   /api/v1/energy-systems/{id}/:
     get:
       operationId: energy_systems_retrieve
       description: CRUD on EnergySystem referential.
+      summary: Retrieve energy system (admin flavor for staff)
       parameters:
       - in: path
         name: id
@@ -349,7 +356,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EnergySystem'
+                $ref: '#/components/schemas/EnergySystemAdmin'
           description: ''
     put:
       operationId: energy_systems_update
@@ -367,13 +374,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EnergySystem'
+              $ref: '#/components/schemas/EnergySystemAdmin'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/EnergySystem'
+              $ref: '#/components/schemas/EnergySystemAdmin'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/EnergySystem'
+              $ref: '#/components/schemas/EnergySystemAdmin'
       security:
       - jwtAuth: []
       responses:
@@ -381,7 +388,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EnergySystem'
+                $ref: '#/components/schemas/EnergySystemAdmin'
           description: ''
     patch:
       operationId: energy_systems_partial_update
@@ -399,13 +406,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedEnergySystem'
+              $ref: '#/components/schemas/PatchedEnergySystemAdmin'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedEnergySystem'
+              $ref: '#/components/schemas/PatchedEnergySystemAdmin'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedEnergySystem'
+              $ref: '#/components/schemas/PatchedEnergySystemAdmin'
       security:
       - jwtAuth: []
       responses:
@@ -413,11 +420,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EnergySystem'
+                $ref: '#/components/schemas/EnergySystemAdmin'
           description: ''
     delete:
       operationId: energy_systems_destroy
       description: CRUD on EnergySystem referential.
+      summary: Soft delete energy system (staff only)
       parameters:
       - in: path
         name: id
@@ -1922,12 +1930,9 @@ paths:
   /api/v1/sports/:
     get:
       operationId: sports_list
-      description: |-
-        CRUD on the Sport referential.
-
-        Read: any authenticated user (default queryset filters is_active=True).
-        Write: staff only. Soft delete via perform_destroy.
-        Staff can pass ?include_inactive=true to see inactive entries.
+      description: Returns the public Sport serializer with localized 'name'. Available
+        to all authenticated users.
+      summary: List sports (public flavor)
       parameters:
       - in: query
         name: is_active
@@ -1964,25 +1969,22 @@ paths:
           description: ''
     post:
       operationId: sports_create
-      description: |-
-        CRUD on the Sport referential.
-
-        Read: any authenticated user (default queryset filters is_active=True).
-        Write: staff only. Soft delete via perform_destroy.
-        Staff can pass ?include_inactive=true to see inactive entries.
+      description: Accepts the admin flavor with name_fr/nl/en/it/es.
+      summary: Create sport (staff only)
       tags:
       - sports
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Sport'
+              $ref: '#/components/schemas/SportAdmin'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Sport'
+              $ref: '#/components/schemas/SportAdmin'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Sport'
+              $ref: '#/components/schemas/SportAdmin'
+        required: true
       security:
       - jwtAuth: []
       responses:
@@ -1990,17 +1992,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Sport'
+                $ref: '#/components/schemas/SportAdmin'
           description: ''
   /api/v1/sports/{id}/:
     get:
       operationId: sports_retrieve
-      description: |-
-        CRUD on the Sport referential.
-
-        Read: any authenticated user (default queryset filters is_active=True).
-        Write: staff only. Soft delete via perform_destroy.
-        Staff can pass ?include_inactive=true to see inactive entries.
+      description: Returns the admin flavor with name_fr/nl/en/it/es when called by
+        a staff user, otherwise the public flavor.
+      summary: Retrieve sport (admin flavor for staff)
       parameters:
       - in: path
         name: id
@@ -2017,7 +2016,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Sport'
+                $ref: '#/components/schemas/SportAdmin'
           description: ''
     put:
       operationId: sports_update
@@ -2040,13 +2039,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Sport'
+              $ref: '#/components/schemas/SportAdmin'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Sport'
+              $ref: '#/components/schemas/SportAdmin'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Sport'
+              $ref: '#/components/schemas/SportAdmin'
+        required: true
       security:
       - jwtAuth: []
       responses:
@@ -2054,7 +2054,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Sport'
+                $ref: '#/components/schemas/SportAdmin'
           description: ''
     patch:
       operationId: sports_partial_update
@@ -2077,13 +2077,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedSport'
+              $ref: '#/components/schemas/PatchedSportAdmin'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedSport'
+              $ref: '#/components/schemas/PatchedSportAdmin'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedSport'
+              $ref: '#/components/schemas/PatchedSportAdmin'
       security:
       - jwtAuth: []
       responses:
@@ -2091,16 +2091,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Sport'
+                $ref: '#/components/schemas/SportAdmin'
           description: ''
     delete:
       operationId: sports_destroy
-      description: |-
-        CRUD on the Sport referential.
-
-        Read: any authenticated user (default queryset filters is_active=True).
-        Write: staff only. Soft delete via perform_destroy.
-        Staff can pass ?include_inactive=true to see inactive entries.
+      description: Sets is_active=False; does not hard delete.
+      summary: Soft delete sport (staff only)
       parameters:
       - in: path
         name: id
@@ -2119,6 +2115,7 @@ paths:
     get:
       operationId: sports_modalities_list
       description: CRUD on Modality referential, scoped by sport when nested.
+      summary: List modalities (public flavor)
       parameters:
       - in: query
         name: is_active
@@ -2169,6 +2166,7 @@ paths:
     post:
       operationId: sports_modalities_create
       description: CRUD on Modality referential, scoped by sport when nested.
+      summary: Create modality (staff only)
       parameters:
       - in: path
         name: sport_pk
@@ -2181,13 +2179,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Modality'
+              $ref: '#/components/schemas/ModalityAdmin'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Modality'
+              $ref: '#/components/schemas/ModalityAdmin'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Modality'
+              $ref: '#/components/schemas/ModalityAdmin'
+        required: true
       security:
       - jwtAuth: []
       responses:
@@ -2195,12 +2194,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Modality'
+                $ref: '#/components/schemas/ModalityAdmin'
           description: ''
   /api/v1/sports/{sport_pk}/modalities/{id}/:
     get:
       operationId: sports_modalities_retrieve
       description: CRUD on Modality referential, scoped by sport when nested.
+      summary: Retrieve modality (admin flavor for staff)
       parameters:
       - in: path
         name: id
@@ -2222,7 +2222,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Modality'
+                $ref: '#/components/schemas/ModalityAdmin'
           description: ''
     put:
       operationId: sports_modalities_update
@@ -2245,13 +2245,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Modality'
+              $ref: '#/components/schemas/ModalityAdmin'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Modality'
+              $ref: '#/components/schemas/ModalityAdmin'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Modality'
+              $ref: '#/components/schemas/ModalityAdmin'
+        required: true
       security:
       - jwtAuth: []
       responses:
@@ -2259,7 +2260,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Modality'
+                $ref: '#/components/schemas/ModalityAdmin'
           description: ''
     patch:
       operationId: sports_modalities_partial_update
@@ -2282,13 +2283,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedModality'
+              $ref: '#/components/schemas/PatchedModalityAdmin'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedModality'
+              $ref: '#/components/schemas/PatchedModalityAdmin'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedModality'
+              $ref: '#/components/schemas/PatchedModalityAdmin'
       security:
       - jwtAuth: []
       responses:
@@ -2296,11 +2297,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Modality'
+                $ref: '#/components/schemas/ModalityAdmin'
           description: ''
     delete:
       operationId: sports_modalities_destroy
       description: CRUD on Modality referential, scoped by sport when nested.
+      summary: Soft delete modality (staff only)
       parameters:
       - in: path
         name: id
@@ -2654,11 +2656,11 @@ components:
           type: string
           nullable: true
           maxLength: 200
-        energysystem:
+        energy_system:
           allOf:
           - $ref: '#/components/schemas/EnergySystem'
           readOnly: true
-        energysystem_id:
+        energy_system_id:
           type: integer
           writeOnly: true
           nullable: true
@@ -2667,9 +2669,52 @@ components:
           readOnly: true
       required:
       - abv
-      - energysystem
+      - energy_system
       - id
       - is_active
+    EnergySegmentAdmin:
+      type: object
+      description: 'Admin flavor: per-language description variants + writable energy_system_id.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        abv:
+          type: string
+          maxLength: 10
+        description_fr:
+          type: string
+          nullable: true
+          title: Description [fr]
+          maxLength: 200
+        description_nl:
+          type: string
+          nullable: true
+          title: Description [nl]
+          maxLength: 200
+        description_en:
+          type: string
+          nullable: true
+          title: Description [en]
+          maxLength: 200
+        description_it:
+          type: string
+          nullable: true
+          title: Description [it]
+          maxLength: 200
+        description_es:
+          type: string
+          nullable: true
+          title: Description [es]
+          maxLength: 200
+        energy_system_id:
+          type: integer
+        is_active:
+          type: boolean
+      required:
+      - abv
+      - energy_system_id
+      - id
     EnergySystem:
       type: object
       properties:
@@ -2686,6 +2731,42 @@ components:
       - id
       - is_active
       - name
+    EnergySystemAdmin:
+      type: object
+      description: 'Admin flavor: per-language name variants.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name_fr:
+          type: string
+          nullable: true
+          title: Name [fr]
+          maxLength: 20
+        name_nl:
+          type: string
+          nullable: true
+          title: Name [nl]
+          maxLength: 20
+        name_en:
+          type: string
+          nullable: true
+          title: Name [en]
+          maxLength: 20
+        name_it:
+          type: string
+          nullable: true
+          title: Name [it]
+          maxLength: 20
+        name_es:
+          type: string
+          nullable: true
+          title: Name [es]
+          maxLength: 20
+        is_active:
+          type: boolean
+      required:
+      - id
     Event:
       type: object
       properties:
@@ -3068,6 +3149,45 @@ components:
       - is_active
       - name
       - sport
+    ModalityAdmin:
+      type: object
+      description: 'Admin flavor: per-language name variants + writable sport FK.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name_fr:
+          type: string
+          nullable: true
+          title: Name [fr]
+          maxLength: 20
+        name_nl:
+          type: string
+          nullable: true
+          title: Name [nl]
+          maxLength: 20
+        name_en:
+          type: string
+          nullable: true
+          title: Name [en]
+          maxLength: 20
+        name_it:
+          type: string
+          nullable: true
+          title: Name [it]
+          maxLength: 20
+        name_es:
+          type: string
+          nullable: true
+          title: Name [es]
+          maxLength: 20
+        sport:
+          type: integer
+        is_active:
+          type: boolean
+      required:
+      - id
+      - sport
     OverlapStrategyEnum:
       enum:
       - add_only
@@ -3354,8 +3474,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Team'
-    PatchedEnergySegment:
+    PatchedEnergySegmentAdmin:
       type: object
+      description: 'Admin flavor: per-language description variants + writable energy_system_id.'
       properties:
         id:
           type: integer
@@ -3363,33 +3484,69 @@ components:
         abv:
           type: string
           maxLength: 10
-        description:
+        description_fr:
           type: string
           nullable: true
+          title: Description [fr]
           maxLength: 200
-        energysystem:
-          allOf:
-          - $ref: '#/components/schemas/EnergySystem'
-          readOnly: true
-        energysystem_id:
-          type: integer
-          writeOnly: true
+        description_nl:
+          type: string
           nullable: true
+          title: Description [nl]
+          maxLength: 200
+        description_en:
+          type: string
+          nullable: true
+          title: Description [en]
+          maxLength: 200
+        description_it:
+          type: string
+          nullable: true
+          title: Description [it]
+          maxLength: 200
+        description_es:
+          type: string
+          nullable: true
+          title: Description [es]
+          maxLength: 200
+        energy_system_id:
+          type: integer
         is_active:
           type: boolean
-          readOnly: true
-    PatchedEnergySystem:
+    PatchedEnergySystemAdmin:
       type: object
+      description: 'Admin flavor: per-language name variants.'
       properties:
         id:
           type: integer
           readOnly: true
-        name:
+        name_fr:
           type: string
-          readOnly: true
+          nullable: true
+          title: Name [fr]
+          maxLength: 20
+        name_nl:
+          type: string
+          nullable: true
+          title: Name [nl]
+          maxLength: 20
+        name_en:
+          type: string
+          nullable: true
+          title: Name [en]
+          maxLength: 20
+        name_it:
+          type: string
+          nullable: true
+          title: Name [it]
+          maxLength: 20
+        name_es:
+          type: string
+          nullable: true
+          title: Name [es]
+          maxLength: 20
         is_active:
           type: boolean
-          readOnly: true
     PatchedEvent:
       type: object
       properties:
@@ -3597,22 +3754,42 @@ components:
           type: string
           format: date-time
           readOnly: true
-    PatchedModality:
+    PatchedModalityAdmin:
       type: object
+      description: 'Admin flavor: per-language name variants + writable sport FK.'
       properties:
         id:
           type: integer
           readOnly: true
-        name:
+        name_fr:
           type: string
-          readOnly: true
+          nullable: true
+          title: Name [fr]
+          maxLength: 20
+        name_nl:
+          type: string
+          nullable: true
+          title: Name [nl]
+          maxLength: 20
+        name_en:
+          type: string
+          nullable: true
+          title: Name [en]
+          maxLength: 20
+        name_it:
+          type: string
+          nullable: true
+          title: Name [it]
+          maxLength: 20
+        name_es:
+          type: string
+          nullable: true
+          title: Name [es]
+          maxLength: 20
         sport:
-          allOf:
-          - $ref: '#/components/schemas/Sport'
-          readOnly: true
+          type: integer
         is_active:
           type: boolean
-          readOnly: true
     PatchedProgram:
       type: object
       properties:
@@ -3722,30 +3899,50 @@ components:
           type: string
           format: date-time
           readOnly: true
-    PatchedSport:
+    PatchedSportAdmin:
       type: object
       description: |-
-        Public read serializer: 'name' is auto-localised by modeltranslation.
-        energy_systems exposed as PK list (frontend joins via /energy-systems/).
+        Admin flavor: exposes per-language name variants and write-capable
+        M2M energy_systems (PK list).
       properties:
         id:
           type: integer
           readOnly: true
-        name:
+        name_fr:
           type: string
-          readOnly: true
+          nullable: true
+          title: Name [fr]
+          maxLength: 100
+        name_nl:
+          type: string
+          nullable: true
+          title: Name [nl]
+          maxLength: 100
+        name_en:
+          type: string
+          nullable: true
+          title: Name [en]
+          maxLength: 100
+        name_it:
+          type: string
+          nullable: true
+          title: Name [it]
+          maxLength: 100
+        name_es:
+          type: string
+          nullable: true
+          title: Name [es]
+          maxLength: 100
         slug:
           type: string
-          readOnly: true
+          maxLength: 100
           pattern: ^[-a-zA-Z0-9_]+$
         is_active:
           type: boolean
-          readOnly: true
         energy_systems:
           type: array
           items:
             type: integer
-          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -3992,6 +4189,58 @@ components:
       - id
       - is_active
       - name
+      - slug
+    SportAdmin:
+      type: object
+      description: |-
+        Admin flavor: exposes per-language name variants and write-capable
+        M2M energy_systems (PK list).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name_fr:
+          type: string
+          nullable: true
+          title: Name [fr]
+          maxLength: 100
+        name_nl:
+          type: string
+          nullable: true
+          title: Name [nl]
+          maxLength: 100
+        name_en:
+          type: string
+          nullable: true
+          title: Name [en]
+          maxLength: 100
+        name_it:
+          type: string
+          nullable: true
+          title: Name [it]
+          maxLength: 100
+        name_es:
+          type: string
+          nullable: true
+          title: Name [es]
+          maxLength: 100
+        slug:
+          type: string
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        is_active:
+          type: boolean
+        energy_systems:
+          type: array
+          items:
+            type: integer
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
       - slug
     Team:
       type: object

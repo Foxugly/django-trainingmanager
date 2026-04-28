@@ -59,8 +59,8 @@ class EnergySystemAdminSerializer(serializers.ModelSerializer):
 
 
 class EnergySegmentSerializer(serializers.ModelSerializer):
-    energysystem = EnergySystemSerializer(read_only=True)
-    energysystem_id = serializers.PrimaryKeyRelatedField(
+    energy_system = EnergySystemSerializer(source="energysystem", read_only=True)
+    energy_system_id = serializers.PrimaryKeyRelatedField(
         source="energysystem",
         queryset=EnergySystem.objects.all(),
         write_only=True,
@@ -70,12 +70,24 @@ class EnergySegmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EnergySegment
-        fields = ["id", "abv", "description", "energysystem", "energysystem_id", "is_active"]
+        fields = [
+            "id",
+            "abv",
+            "description",
+            "energy_system",
+            "energy_system_id",
+            "is_active",
+        ]
         read_only_fields = ["id", "is_active"]
 
 
 class EnergySegmentAdminSerializer(serializers.ModelSerializer):
-    """Admin flavor: per-language description variants + writable energysystem FK."""
+    """Admin flavor: per-language description variants + writable energy_system_id."""
+
+    energy_system_id = serializers.PrimaryKeyRelatedField(
+        source="energysystem",
+        queryset=EnergySystem.objects.all(),
+    )
 
     class Meta:
         model = EnergySegment
@@ -87,7 +99,7 @@ class EnergySegmentAdminSerializer(serializers.ModelSerializer):
             "description_en",
             "description_it",
             "description_es",
-            "energysystem",
+            "energy_system_id",
             "is_active",
         ]
         read_only_fields = ["id"]

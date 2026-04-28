@@ -251,7 +251,7 @@ def test_POST_energysegment_with_invalid_energysystem_returns_400(admin_client):
         {
             "abv": "ZX",
             "description_fr": "test",
-            "energysystem": 999999,
+            "energy_system_id": 999999,
             "is_active": True,
         },
         format="json",
@@ -266,7 +266,7 @@ def test_POST_energysegment_with_valid_energysystem_returns_201(admin_client):
         {
             "abv": "ZTEST",
             "description_fr": "Test segment",
-            "energysystem": es.pk,
+            "energy_system_id": es.pk,
             "is_active": True,
         },
         format="json",
