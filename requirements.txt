@@ -10,4 +10,5 @@ msal==1.36.0
 httpx==0.28.1
 django-filter==25.2
 drf-nested-routers==0.95.0
+django-modeltranslation==0.20.3
 anthropic==0.97.0

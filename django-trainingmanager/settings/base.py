@@ -18,6 +18,7 @@ WEBSITE = env("WEBSITE", default="www.example.com")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
 INSTALLED_APPS = [
+    "modeltranslation",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -117,6 +118,10 @@ LANGUAGES = [
 LOCALE_PATHS = [
     BASE_DIR / "locale",
 ]
+
+MODELTRANSLATION_DEFAULT_LANGUAGE = "fr"
+MODELTRANSLATION_LANGUAGES = ("fr", "nl", "en", "it", "es")
+MODELTRANSLATION_FALLBACK_LANGUAGES = {"default": ("fr",)}
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

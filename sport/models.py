@@ -6,6 +6,11 @@ class Sport(models.Model):
     slug = models.SlugField(max_length=100, unique=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    energy_systems = models.ManyToManyField(
+        "exercise.EnergySystem",
+        related_name="sports",
+        blank=True,
+    )
 
     class Meta:
         ordering = ["name"]
