@@ -26,6 +26,7 @@ class RoundSerializer(serializers.ModelSerializer):
             "id",
             "sport",
             "sport_id",
+            "language",
             "order",
             "count",
             "t_start",
@@ -40,10 +41,11 @@ class RoundSerializer(serializers.ModelSerializer):
     def validate(self, data):
         data = super().validate(data)
         sport = data.get("sport") or (self.instance.sport if self.instance else None)
+        language = data.get("language") or (self.instance.language if self.instance else None)
         exercises = data.get("exercises", [])
-        if sport and exercises:
+        if exercises:
             for ex in exercises:
-                if ex.modality and ex.modality.sport_id != sport.pk:
+                if sport and ex.modality and ex.modality.sport_id != sport.pk:
                     raise serializers.ValidationError(
                         {
                             "exercises": _(
@@ -51,6 +53,15 @@ class RoundSerializer(serializers.ModelSerializer):
                             )
                         },
                         code="exercise_sport_mismatch",
+                    )
+                if language and ex.language != language:
+                    raise serializers.ValidationError(
+                        {
+                            "exercises": _(
+                                "An exercise has a language that doesn't match round.language."
+                            )
+                        },
+                        code="exercise_language_mismatch",
                     )
         return data
 

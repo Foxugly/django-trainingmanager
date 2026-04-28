@@ -1,3 +1,4 @@
+from django.conf import settings as django_settings
 from django.db import models
 from django.utils.translation import gettext as _
 
@@ -68,6 +69,10 @@ class Exercise(GenericClass):
         max_length=200,
         blank=True,
         verbose_name=_("notes"),
+    )
+    language = models.CharField(
+        max_length=2,
+        choices=django_settings.LANGUAGES,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

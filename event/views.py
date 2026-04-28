@@ -115,10 +115,12 @@ class EventViewSet(viewsets.ModelViewSet):
         reused_exercises = 0
 
         team_sport = event.refer_program.team.sport
+        team_language = event.refer_program.team.language
         with transaction.atomic():
             for r_idx, r_data in enumerate(ai_result["rounds"], start=1):
                 round_obj = Round.objects.create(
                     sport=team_sport,
+                    language=team_language,
                     count=r_data.get("count", 1),
                     t_start=r_data.get("t_start", "00:00"),
                     t_break=r_data.get("t_break", "00:00"),
@@ -138,6 +140,7 @@ class EventViewSet(viewsets.ModelViewSet):
                         t_start=ex_data.get("t_start", "00:00"),
                         t_break=ex_data.get("t_break", "00:00"),
                         notes=ex_data.get("notes", ""),
+                        language=team_language,
                         defaults={"order": ex_idx},
                     )
                     if created:

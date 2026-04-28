@@ -132,17 +132,20 @@ pytest
 pytest --tb=short
 ```
 
-## Catalogue partagé par sport
+## Catalogue partagé par sport et langue
 
-`Exercise` et `Round` forment un catalogue **partagé entre toutes les teams du même sport**. Concrètement :
+`Exercise` et `Round` forment un catalogue **partagé entre toutes les teams partageant le même couple (sport, langue)**. Concrètement :
 
-- Un coach Natation voit **tous** les Exercises et Rounds liés au sport Natation, peu importe la team d'origine.
-- Un coach Course à pied ne voit pas les Exercises de Natation, et inversement.
-- L'enrichissement collectif est encouragé : un Exercise créé par un coach bénéficie à tous les coaches du même sport.
-- Le mécanisme **lock + clone** protège l'intégrité : un Exercise utilisé dans 2+ Rounds (ou un Round utilisé dans 2+ Events) devient immutable. Pour modifier, il faut le cloner via `POST /api/v1/exercises/{id}/clone/` ou `POST /api/v1/rounds/{id}/clone/`.
+- Un coach Natation francophone voit **tous** les Exercises et Rounds Natation+français, peu importe la team d'origine.
+- Un coach Natation italophone ne voit pas les Rounds Natation+français (sauf si une de ses teams est aussi en français).
+- Un coach Course à pied ne voit pas les Exercises de Natation, et inversement (peu importe la langue).
+- L'enrichissement collectif est encouragé entre teams compatibles : un Exercise créé par un coach bénéficie à tous les coaches partageant son couple (sport, langue).
+- Le mécanisme **lock + clone** protège l'intégrité : un Exercise utilisé dans 2+ Rounds (ou un Round utilisé dans 2+ Events) devient immutable. Pour modifier, il faut le cloner via `POST /api/v1/exercises/{id}/clone/` ou `POST /api/v1/rounds/{id}/clone/`. Le clone hérite de `(sport, language)` de l'original.
+- Un `Round` ou `Exercise` généré par IA hérite de `(sport, language)` de la team du Program/Event.
+- `get_or_create` sur Exercise (générateur IA) inclut `language` dans la clé d'unicité : un même libellé en FR et en IT sont **deux entrées distinctes** du catalogue.
 - **Permission d'écriture** : owner ou manager d'au moins une team active (permission `IsTrainer`).
-- **Permission de lecture** : tout user authentifié, **scopé par sport** via `team.utils.user_accessible_sport_ids` (l'union des sports des teams où le user est owner, manager, ou athlète).
-- `Round` porte un FK `sport` explicite (PROTECT). La validation refuse qu'un exercise d'un sport différent soit attaché à un Round.
+- **Permission de lecture** : tout user authentifié, **scopé par (sport, langue)** via `team.utils.user_accessible_sport_language_pairs` (l'union des couples des teams où le user est owner, manager, ou athlète).
+- `Round` porte un FK `sport` explicite (PROTECT) et un champ `language` (CharField choices=settings.LANGUAGES). La validation refuse qu'un exercise d'un sport ou d'une langue différente soit attaché à un Round.
 
 ## i18n
 

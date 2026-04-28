@@ -1,8 +1,11 @@
-"""Phase 5 — catalog (Exercise, Round) is scoped by user's sports.
+"""Catalog (Exercise, Round) is scoped by the user's (sport, language)
+pairs of accessible teams.
 
-A user only sees exercises/rounds whose sport matches at least one of
-their active teams' sports (owner, manager, or athlete role).
+A user only sees exercises/rounds whose sport AND language match at
+least one of their active teams' (sport, language) tuples.
 """
+
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -82,3 +85,153 @@ def test_GET_rounds_user_without_team_sees_nothing(api_client):
     response = api_client.get("/api/v1/rounds/")
     assert response.status_code == 200
     assert response.json()["count"] == 0
+
+
+# ----------------------- (sport, language) scoping --------------------
+
+
+def test_GET_exercises_filtered_by_sport_AND_language(api_client):
+    natation = SportFactory(slug="nat-lang", name="Nat Lang")
+    user = UserFactory(language="fr")
+    TeamFactory(owner=user, sport=natation, language="fr", is_active=True)
+
+    modality = ModalityFactory(sport=natation)
+    seg = EnergySegmentFactory()
+    fr_exercise = ExerciseFactory(modality=modality, energysegment=seg, language="fr")
+    it_exercise = ExerciseFactory(modality=modality, energysegment=seg, language="it")
+    es_exercise = ExerciseFactory(modality=modality, energysegment=seg, language="es")
+
+    api_client.force_authenticate(user=user)
+    response = api_client.get("/api/v1/exercises/")
+    assert response.status_code == 200
+    ids = {e["id"] for e in response.json()["results"]}
+    assert fr_exercise.pk in ids
+    assert it_exercise.pk not in ids
+    assert es_exercise.pk not in ids
+
+
+def test_GET_rounds_filtered_by_sport_AND_language(api_client):
+    natation = SportFactory(slug="nat-lang-r", name="Nat Lang R")
+    user = UserFactory(language="fr")
+    TeamFactory(owner=user, sport=natation, language="fr", is_active=True)
+
+    fr_round = RoundFactory(sport=natation, language="fr")
+    it_round = RoundFactory(sport=natation, language="it")
+    es_round = RoundFactory(sport=natation, language="es")
+
+    api_client.force_authenticate(user=user)
+    response = api_client.get("/api/v1/rounds/")
+    assert response.status_code == 200
+    ids = {r["id"] for r in response.json()["results"]}
+    assert fr_round.pk in ids
+    assert it_round.pk not in ids
+    assert es_round.pk not in ids
+
+
+# ----------------------- consistency validation -----------------------
+
+
+def test_PATCH_round_with_mismatching_language_returns_400(
+    api_client, auth_client_trainer, trainer_sport
+):
+    fr_round = RoundFactory(sport=trainer_sport, language="fr")
+    es_modality = ModalityFactory(sport=trainer_sport)
+    es_exercise = ExerciseFactory(
+        modality=es_modality, energysegment=EnergySegmentFactory(), language="es"
+    )
+
+    response = auth_client_trainer.patch(
+        f"/api/v1/rounds/{fr_round.pk}/",
+        {"exercises": [es_exercise.pk]},
+        format="json",
+    )
+    assert response.status_code == 400
+
+
+# ----------------------------- inheritance ----------------------------
+
+
+def test_clone_round_inherits_language(auth_client_trainer, trainer_user, trainer_sport):
+    team = trainer_user.owned_teams.first()
+    team.language = "nl"
+    team.save()
+    nl_round = RoundFactory(sport=trainer_sport, language="nl")
+    response = auth_client_trainer.post(f"/api/v1/rounds/{nl_round.pk}/clone/", {}, format="json")
+    assert response.status_code == 201
+    assert response.json()["language"] == "nl"
+
+
+def test_clone_exercise_inherits_language(auth_client_trainer, trainer_user, trainer_sport):
+    team = trainer_user.owned_teams.first()
+    team.language = "nl"
+    team.save()
+    modality = ModalityFactory(sport=trainer_sport)
+    nl_exercise = ExerciseFactory(
+        modality=modality, energysegment=EnergySegmentFactory(), language="nl"
+    )
+    response = auth_client_trainer.post(
+        f"/api/v1/exercises/{nl_exercise.pk}/clone/", {}, format="json"
+    )
+    assert response.status_code == 201
+    assert response.json()["language"] == "nl"
+
+
+def test_generate_training_uses_team_language(auth_client_trainer, trainer_user, settings):
+    """Generated rounds and exercises adopt the team's language."""
+    from event.models import Event
+    from program.models import Program
+    from round.models import Round
+
+    settings.ANTHROPIC_API_KEY = "sk-ant-fake"
+    team = trainer_user.owned_teams.first()
+    team.language = "nl"
+    team.save()
+    sport = team.sport
+
+    program = Program.objects.create(name="NL prog", team=team)
+    event = Event.objects.create(name="NL event", refer_program=program, total=1000)
+
+    modality = ModalityFactory(sport=sport)
+    segment = EnergySegmentFactory()
+
+    # Build a fake Anthropic tool_use response with one round + one exercise
+    response_obj = MagicMock()
+    tool_block = MagicMock()
+    tool_block.type = "tool_use"
+    tool_block.name = "create_training_session"
+    tool_block.input = {
+        "rounds": [
+            {
+                "count": 1,
+                "t_start": "00:00",
+                "t_break": "00:00",
+                "exercises": [
+                    {
+                        "modality_id": modality.pk,
+                        "energysegment_id": segment.pk,
+                        "distance": 100,
+                        "repetition": 4,
+                        "t_start": "00:00",
+                        "t_break": "00:00",
+                        "notes": "warm-up",
+                    }
+                ],
+            }
+        ],
+        "rationale": "Plan",
+    }
+    response_obj.content = [tool_block]
+    response_obj.model = "claude-haiku-4-5-20251001"
+    response_obj.usage.input_tokens = 10
+    response_obj.usage.output_tokens = 5
+    response_obj.stop_reason = "tool_use"
+
+    with patch("tools.ai.Anthropic") as MockAnthropic:
+        MockAnthropic.return_value.messages.create.return_value = response_obj
+        api_response = auth_client_trainer.post(
+            f"/api/v1/events/{event.pk}/generate-training/", {}, format="json"
+        )
+    assert api_response.status_code == 200, api_response.json()
+    created_round = Round.objects.filter(sport=sport, language="nl").first()
+    assert created_round is not None
+    assert all(ex.language == "nl" for ex in created_round.exercises.all())

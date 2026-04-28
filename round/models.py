@@ -1,3 +1,4 @@
+from django.conf import settings as django_settings
 from django.db import models
 from django.utils.translation import gettext as _
 
@@ -28,6 +29,10 @@ class Round(GenericClass):
         "sport.Sport",
         on_delete=models.PROTECT,
         related_name="rounds",
+    )
+    language = models.CharField(
+        max_length=2,
+        choices=django_settings.LANGUAGES,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

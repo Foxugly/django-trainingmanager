@@ -24,16 +24,21 @@ class RoundViewSet(viewsets.ModelViewSet):
     ordering = ["order"]
 
     def get_queryset(self):
-        from team.utils import user_accessible_sport_ids
+        from django.db.models import Q
 
-        sport_ids = user_accessible_sport_ids(self.request.user)
+        from team.utils import user_accessible_sport_language_pairs
+
+        pairs = user_accessible_sport_language_pairs(self.request.user)
         qs = Round.objects.select_related("sport").prefetch_related(
             "exercises__modality__sport",
             "exercises__energysegment__energysystem",
         )
-        if not sport_ids:
+        if not pairs:
             return qs.none()
-        return qs.filter(sport_id__in=sport_ids)
+        query = Q()
+        for sport_id, lang in pairs:
+            query |= Q(sport_id=sport_id, language=lang)
+        return qs.filter(query)
 
     @extend_schema(
         request=None,
@@ -47,6 +52,7 @@ class RoundViewSet(viewsets.ModelViewSet):
         original = self.get_object()
         clone = Round.objects.create(
             sport=original.sport,
+            language=original.language,
             count=original.count,
             t_start=original.t_start,
             t_break=original.t_break,
@@ -102,6 +108,7 @@ class RoundViewSet(viewsets.ModelViewSet):
             notes=original.notes,
             modality=original.modality,
             energysegment=original.energysegment,
+            language=round_obj.language,
             order=original.order,
         )
         round_obj.exercises.add(cloned_exercise)

@@ -66,16 +66,21 @@ class ExerciseViewSet(viewsets.ModelViewSet):
     ordering = ["order"]
 
     def get_queryset(self):
-        from team.utils import user_accessible_sport_ids
+        from django.db.models import Q
 
-        sport_ids = user_accessible_sport_ids(self.request.user)
+        from team.utils import user_accessible_sport_language_pairs
+
+        pairs = user_accessible_sport_language_pairs(self.request.user)
         qs = Exercise.objects.select_related(
             "modality__sport",
             "energysegment__energysystem",
         )
-        if not sport_ids:
+        if not pairs:
             return qs.none()
-        return qs.filter(modality__sport_id__in=sport_ids)
+        query = Q()
+        for sport_id, lang in pairs:
+            query |= Q(modality__sport_id=sport_id, language=lang)
+        return qs.filter(query)
 
     @extend_schema(
         request=None,
@@ -94,6 +99,7 @@ class ExerciseViewSet(viewsets.ModelViewSet):
             notes=original.notes,
             modality=original.modality,
             energysegment=original.energysegment,
+            language=original.language,
             order=original.order,
         )
         serializer = self.get_serializer(clone)

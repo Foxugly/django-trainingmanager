@@ -70,6 +70,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
             "modality_id",
             "energysegment",
             "energysegment_id",
+            "language",
             "usage_count",
             "created_at",
             "updated_at",

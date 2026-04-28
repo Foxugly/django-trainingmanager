@@ -114,6 +114,7 @@ class RoundFactory(DjangoModelFactory):
     order = 1
     count = 1
     sport = factory.SubFactory(SportFactory)
+    language = "fr"
 
     @factory.post_generation
     def event(obj, create, extracted, **kwargs):
@@ -137,6 +138,7 @@ class ExerciseFactory(DjangoModelFactory):
     order = 1
     repetition = 1
     distance = 100
+    language = "fr"
 
     @factory.post_generation
     def round(obj, create, extracted, **kwargs):

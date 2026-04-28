@@ -236,6 +236,7 @@ def test_POST_generate_training_get_or_create_reuses_exercise(
         t_start=first_ex["t_start"],
         t_break=first_ex["t_break"],
         notes=first_ex["notes"],
+        language=trainer_event.refer_program.team.language,
     )
     exercises_before = Exercise.objects.count()
 
