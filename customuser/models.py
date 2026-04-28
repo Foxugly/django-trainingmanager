@@ -5,20 +5,39 @@ from django.utils.translation import gettext_lazy as _
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, username, email, password):
-        user = self.model(username=username, email=email, password=password)
+    def create_user(self, username, email, password=None, **extra_fields):
+        """Create and save a user with the given username, email and password.
+
+        Accepts any AbstractUser/CustomUser field as keyword argument
+        (first_name, last_name, language, is_staff, ...). Mirrors Django's
+        standard UserManager.create_user contract.
+        """
+        if not username:
+            raise ValueError("Username is required.")
+        if not email:
+            raise ValueError("Email is required.")
+
+        extra_fields.setdefault("is_superuser", False)
+        extra_fields.setdefault("is_staff", False)
+        extra_fields.setdefault("is_active", True)
+
+        email = self.normalize_email(email)
+        user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
-        user.is_superuser = False
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, password):
-        user = self.model(username=username, email=email, password=password)
-        user.set_password(password)
-        user.is_superuser = True
-        user.is_staff = True
-        user.save(using=self._db)
-        return user
+    def create_superuser(self, username, email, password=None, **extra_fields):
+        """Create and save a superuser. is_staff and is_superuser are forced to True."""
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
+
+        return self.create_user(username, email, password, **extra_fields)
 
 
 class CustomUser(AbstractUser):

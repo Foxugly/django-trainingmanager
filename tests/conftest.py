@@ -96,15 +96,12 @@ def auth_client_non_trainer(api_client, non_trainer_user):
 @pytest.fixture
 def admin_user(db):
     User = get_user_model()
-    user = User.objects.create_user(
+    return User.objects.create_user(
         username="adminuser",
         email="adminuser@local.test",
         password="Str0ngP@ssAdmin!",
+        is_staff=True,
     )
-    user.is_staff = True
-    user.is_active = True
-    user.save(update_fields=["is_staff", "is_active"])
-    return user
 
 
 @pytest.fixture

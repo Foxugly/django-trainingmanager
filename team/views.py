@@ -378,11 +378,10 @@ class InvitationLookupView(APIView):
                 username=serializer.validated_data["username"],
                 email=invitation.email,
                 password=serializer.validated_data["password"],
+                first_name=invitation.member.firstname,
+                last_name=invitation.member.lastname,
+                is_active=True,
             )
-            user.first_name = invitation.member.firstname
-            user.last_name = invitation.member.lastname
-            user.is_active = True
-            user.save()
             EmailAddress.objects.create(
                 user=user,
                 email=invitation.email,
