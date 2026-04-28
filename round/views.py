@@ -24,21 +24,13 @@ class RoundViewSet(viewsets.ModelViewSet):
     ordering = ["order"]
 
     def get_queryset(self):
-        from django.db.models import Q
+        from team.utils import scope_by_sport_language
 
-        from team.utils import user_accessible_sport_language_pairs
-
-        pairs = user_accessible_sport_language_pairs(self.request.user)
         qs = Round.objects.select_related("sport").prefetch_related(
             "exercises__modality__sport",
             "exercises__energysegment__energysystem",
         )
-        if not pairs:
-            return qs.none()
-        query = Q()
-        for sport_id, lang in pairs:
-            query |= Q(sport_id=sport_id, language=lang)
-        return qs.filter(query)
+        return scope_by_sport_language(qs, self.request.user, sport_field="sport_id")
 
     @extend_schema(
         request=None,
