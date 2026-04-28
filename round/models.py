@@ -37,12 +37,6 @@ class Round(GenericClass):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def get_total(self):
-        distance = 0
-        for e in self.exercises.all():
-            distance += e.get_total()
-        return self.count * distance
-
     @property
     def usage_count(self):
         return self.event_set.count()

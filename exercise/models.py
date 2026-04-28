@@ -77,9 +77,6 @@ class Exercise(GenericClass):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def get_total(self):
-        return self.repetition * self.distance
-
     @property
     def usage_count(self):
         return self.round_set.count()
