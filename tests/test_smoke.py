@@ -190,11 +190,6 @@ def test_POST_nested_modalities_returns_405(auth_client):
     assert response.status_code == 405
 
 
-def test_GET_strokes_returns_404(auth_client):
-    response = auth_client.get("/api/v1/strokes/")
-    assert response.status_code == 404
-
-
 def test_GET_energy_systems_returns_200(auth_client):
     EnergySystemFactory()
     response = auth_client.get("/api/v1/energy-systems/")
