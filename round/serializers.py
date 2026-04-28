@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from exercise.models import Exercise
@@ -19,6 +20,11 @@ class RoundSerializer(serializers.ModelSerializer):
     exercises = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Exercise.objects.all(), required=False
     )
+    usage_count = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.IntegerField())
+    def get_usage_count(self, obj) -> int:
+        return obj.usage_count
 
     class Meta:
         model = Round

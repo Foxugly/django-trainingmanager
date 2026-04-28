@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from sport.serializers import SportSerializer
@@ -55,6 +56,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True,
     )
+    usage_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Exercise
@@ -76,6 +78,10 @@ class ExerciseSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "usage_count", "created_at", "updated_at"]
+
+    @extend_schema_field(serializers.IntegerField())
+    def get_usage_count(self, obj) -> int:
+        return obj.usage_count
 
     def update(self, instance, validated_data):
         if instance.usage_count > 1:

@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from customuser.serializers import CustomUserPublicSerializer
@@ -37,7 +38,8 @@ class MemberSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "fullname", "created_at", "updated_at"]
 
-    def get_fullname(self, obj):
+    @extend_schema_field(serializers.CharField())
+    def get_fullname(self, obj) -> str:
         parts = [p for p in [obj.firstname, obj.lastname] if p]
         return " ".join(parts) if parts else ""
 

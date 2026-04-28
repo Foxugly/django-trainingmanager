@@ -45,6 +45,8 @@ class TeamViewSet(viewsets.ModelViewSet):
     ordering = ["name"]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Team.objects.none()
         user = self.request.user
         return (
             Team.objects.filter(
@@ -73,6 +75,8 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
         return TeamJoinRequestSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return TeamJoinRequest.objects.none()
         user = self.request.user
         managed = Team.objects.filter(Q(owner=user) | Q(managers=user))
         return TeamJoinRequest.objects.filter(Q(user=user) | Q(team__in=managed)).distinct()
@@ -185,6 +189,8 @@ class TeamInvitationViewSet(viewsets.ModelViewSet):
         return TeamInvitationSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return TeamInvitation.objects.none()
         user = self.request.user
         managed = Team.objects.filter(Q(owner=user) | Q(managers=user))
         return TeamInvitation.objects.filter(team__in=managed).distinct()
