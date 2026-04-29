@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
 
-from team.queries import accessible_teams, managed_teams
+from team.queries import managed_teams, user_visible_teams
 
 from .models import Member
 from .serializers import MemberSerializer
@@ -20,7 +20,7 @@ class MemberViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return (
             Member.objects.filter(
-                memberships__team__in=accessible_teams(self.request.user),
+                memberships__team__in=user_visible_teams(self.request.user),
                 memberships__left_at__isnull=True,
             )
             .select_related("user")

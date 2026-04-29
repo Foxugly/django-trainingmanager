@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from team.queries import accessible_teams, managed_teams
+from team.queries import managed_teams, user_visible_teams
 from tools.throttling import AIPlanGenerationThrottle
 
 from .ai import generate_plan
@@ -28,7 +28,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return (
-            Program.objects.filter(team__in=accessible_teams(self.request.user))
+            Program.objects.filter(team__in=user_visible_teams(self.request.user))
             .select_related("team", "team__sport", "team__owner")
             .prefetch_related("events")
         )

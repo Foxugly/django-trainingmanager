@@ -24,6 +24,7 @@ from .permissions import (
     IsTeamManagerOrReadOnly,
     IsTrainer,
 )
+from .queries import user_visible_teams
 from .serializers import (
     CompleteInvitationSerializer,
     CreateInvitationSerializer,
@@ -51,14 +52,10 @@ class TeamViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Team.objects.none()
-        user = self.request.user
         return (
-            Team.objects.filter(
-                Q(owner=user) | Q(managers=user) | Q(is_public=True, is_active=True)
-            )
+            user_visible_teams(self.request.user)
             .select_related("sport", "owner")
             .prefetch_related("managers")
-            .distinct()
         )
 
     def perform_create(self, serializer):
