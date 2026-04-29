@@ -58,6 +58,15 @@ class Team(models.Model):
             "Default False (notes are coach-only)."
         ),
     )
+    attendance_statuses = models.ManyToManyField(
+        "attendance.AttendanceStatus",
+        related_name="teams",
+        blank=True,
+        help_text=_(
+            "Statuses available for marking attendance in this team's events. "
+            "Default: present, absent, excused."
+        ),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

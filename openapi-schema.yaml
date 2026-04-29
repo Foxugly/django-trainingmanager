@@ -5323,6 +5323,12 @@ components:
           type: boolean
           description: If True, athletes can read their own coach notes. Default False
             (notes are coach-only).
+        attendance_statuses:
+          type: array
+          items:
+            type: integer
+          description: 'Statuses available for marking attendance in this team''s
+            events. Default: present, absent, excused.'
         created_at:
           type: string
           format: date-time
@@ -5666,6 +5672,12 @@ components:
           type: boolean
           description: If True, athletes can read their own coach notes. Default False
             (notes are coach-only).
+        attendance_statuses:
+          type: array
+          items:
+            type: integer
+          description: 'Statuses available for marking attendance in this team''s
+            events. Default: present, absent, excused.'
         created_at:
           type: string
           format: date-time
