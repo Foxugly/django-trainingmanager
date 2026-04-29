@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "customuser",
     "team",
     "note",
+    "chat",
 ]
 
 SITE_ID = 1

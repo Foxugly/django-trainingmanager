@@ -1,6 +1,6 @@
 """Unit tests for the bleach-based HTML sanitizer used on Note.content."""
 
-from note.sanitizer import sanitize_html
+from tools.html_sanitizer import sanitize_html
 
 
 def test_strips_script_tags():

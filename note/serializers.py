@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
+from tools.html_sanitizer import sanitize_html
+
 from .models import Note
-from .sanitizer import sanitize_html
 
 
 class NoteSerializer(serializers.ModelSerializer):
