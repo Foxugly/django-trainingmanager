@@ -49,6 +49,25 @@ class MemberSerializer(serializers.ModelSerializer):
         """Return active team IDs for this member (left_at IS NULL)."""
         return list(obj.memberships.filter(left_at__isnull=True).values_list("team_id", flat=True))
 
+    def validate_user_id(self, user):
+        """Reject upfront if the chosen user already has a Member.
+
+        The DB-level OneToOne unique constraint on Member.user would raise
+        IntegrityError -> 500. Catch the conflict here so the client gets a
+        clean 400 with the unified error format.
+        """
+        if user is None:
+            return user
+        existing = Member.objects.filter(user=user)
+        if self.instance is not None:
+            existing = existing.exclude(pk=self.instance.pk)
+        if existing.exists():
+            raise serializers.ValidationError(
+                _("This user already has a member profile."),
+                code="user_already_has_member",
+            )
+        return user
+
     def validate(self, data):
         data = super().validate(data)
         user = data.get("user")
