@@ -27,6 +27,14 @@ class TeamSerializer(serializers.ModelSerializer):
         write_only=True,
     )
     owner = CustomUserPublicSerializer(read_only=True)
+    managers = CustomUserPublicSerializer(many=True, read_only=True)
+    managers_ids = serializers.PrimaryKeyRelatedField(
+        source="managers",
+        queryset=get_user_model().objects.all(),
+        many=True,
+        write_only=True,
+        required=False,
+    )
 
     class Meta:
         model = Team
@@ -37,6 +45,7 @@ class TeamSerializer(serializers.ModelSerializer):
             "sport_id",
             "owner",
             "managers",
+            "managers_ids",
             "language",
             "is_active",
             "is_public",
@@ -46,7 +55,7 @@ class TeamSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "owner", "created_at", "updated_at"]
+        read_only_fields = ["id", "owner", "managers", "created_at", "updated_at"]
 
 
 class TeamJoinRequestSerializer(serializers.ModelSerializer):
