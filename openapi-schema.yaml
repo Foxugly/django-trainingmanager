@@ -2703,6 +2703,274 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedAIUsageDetailList'
           description: ''
+  /api/v1/teams/{team_pk}/members/{member_pk}/notes/:
+    get:
+      operationId: teams_members_notes_list
+      description: |-
+        CRUD on coach notes within a team-member nested context.
+
+        URL: /api/v1/teams/{team_pk}/members/{member_pk}/notes/
+      summary: List coach notes for a member in a team
+      parameters:
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      - in: path
+        name: member_pk
+        schema:
+          type: integer
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: path
+        name: team_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNoteList'
+          description: ''
+    post:
+      operationId: teams_members_notes_create
+      description: |-
+        CRUD on coach notes within a team-member nested context.
+
+        URL: /api/v1/teams/{team_pk}/members/{member_pk}/notes/
+      parameters:
+      - in: path
+        name: member_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: team_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Note'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Note'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Note'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+          description: ''
+  /api/v1/teams/{team_pk}/members/{member_pk}/notes/{id}/:
+    get:
+      operationId: teams_members_notes_retrieve
+      description: |-
+        CRUD on coach notes within a team-member nested context.
+
+        URL: /api/v1/teams/{team_pk}/members/{member_pk}/notes/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this note.
+        required: true
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      - in: path
+        name: member_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: team_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+          description: ''
+    put:
+      operationId: teams_members_notes_update
+      description: |-
+        CRUD on coach notes within a team-member nested context.
+
+        URL: /api/v1/teams/{team_pk}/members/{member_pk}/notes/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this note.
+        required: true
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      - in: path
+        name: member_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: team_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Note'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Note'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Note'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+          description: ''
+    patch:
+      operationId: teams_members_notes_partial_update
+      description: |-
+        CRUD on coach notes within a team-member nested context.
+
+        URL: /api/v1/teams/{team_pk}/members/{member_pk}/notes/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this note.
+        required: true
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      - in: path
+        name: member_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: team_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedNote'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedNote'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedNote'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+          description: ''
+    delete:
+      operationId: teams_members_notes_destroy
+      description: |-
+        CRUD on coach notes within a team-member nested context.
+
+        URL: /api/v1/teams/{team_pk}/members/{member_pk}/notes/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this note.
+        required: true
+      - in: path
+        name: member_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: team_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
 components:
   schemas:
     AIPingRequest:
@@ -3493,6 +3761,55 @@ components:
       required:
       - id
       - sport
+    Note:
+      type: object
+      description: |-
+        Serializer for Note. team/member/author are derived from the URL
+        and the request user; they are read-only here. The 'content' field
+        is sanitized via bleach on every write.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        team:
+          type: integer
+          readOnly: true
+        member:
+          type: integer
+          readOnly: true
+        author:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: The coach who wrote this note. SET_NULL if the author account
+            is deleted.
+        author_username:
+          type: string
+          readOnly: true
+        content:
+          type: string
+          description: Rich HTML content (sanitized via bleach on save).
+        is_active:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author
+      - author_username
+      - content
+      - created_at
+      - id
+      - is_active
+      - member
+      - team
+      - updated_at
     OverlapStrategyEnum:
       enum:
       - add_only
@@ -3664,6 +3981,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Modality'
+    PaginatedNoteList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Note'
     PaginatedProgramList:
       type: object
       required:
@@ -4129,6 +4469,45 @@ components:
           type: integer
         is_active:
           type: boolean
+    PatchedNote:
+      type: object
+      description: |-
+        Serializer for Note. team/member/author are derived from the URL
+        and the request user; they are read-only here. The 'content' field
+        is sanitized via bleach on every write.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        team:
+          type: integer
+          readOnly: true
+        member:
+          type: integer
+          readOnly: true
+        author:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: The coach who wrote this note. SET_NULL if the author account
+            is deleted.
+        author_username:
+          type: string
+          readOnly: true
+        content:
+          type: string
+          description: Rich HTML content (sanitized via bleach on save).
+        is_active:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
     PatchedProgram:
       type: object
       properties:
