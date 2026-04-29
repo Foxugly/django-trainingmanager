@@ -36,6 +36,224 @@ paths:
           description: AI configuration error
         '502':
           description: AI service error
+  /api/v1/attendance-statuses/:
+    get:
+      operationId: attendance_statuses_list
+      description: Returns the public AttendanceStatus serializer with localized 'label'.
+        Available to all authenticated users. Pass ?include_inactive=true (staff only)
+        to include soft-deleted rows.
+      summary: List attendance statuses (public flavor)
+      parameters:
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: is_default
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - attendance-statuses
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAttendanceStatusList'
+          description: ''
+    post:
+      operationId: attendance_statuses_create
+      description: |-
+        CRUD on the AttendanceStatus referential.
+
+        Read: any authenticated user (default queryset filters is_active=True).
+        Write: staff only. Soft delete via perform_destroy.
+      summary: Create attendance status (staff only)
+      tags:
+      - attendance-statuses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceStatusAdmin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttendanceStatusAdmin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttendanceStatusAdmin'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceStatusAdmin'
+          description: ''
+  /api/v1/attendance-statuses/{id}/:
+    get:
+      operationId: attendance_statuses_retrieve
+      description: |-
+        CRUD on the AttendanceStatus referential.
+
+        Read: any authenticated user (default queryset filters is_active=True).
+        Write: staff only. Soft delete via perform_destroy.
+      summary: Retrieve attendance status (admin flavor for staff)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this attendance status.
+        required: true
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      tags:
+      - attendance-statuses
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceStatusAdmin'
+          description: ''
+    put:
+      operationId: attendance_statuses_update
+      description: |-
+        CRUD on the AttendanceStatus referential.
+
+        Read: any authenticated user (default queryset filters is_active=True).
+        Write: staff only. Soft delete via perform_destroy.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this attendance status.
+        required: true
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      tags:
+      - attendance-statuses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceStatusAdmin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttendanceStatusAdmin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttendanceStatusAdmin'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceStatusAdmin'
+          description: ''
+    patch:
+      operationId: attendance_statuses_partial_update
+      description: |-
+        CRUD on the AttendanceStatus referential.
+
+        Read: any authenticated user (default queryset filters is_active=True).
+        Write: staff only. Soft delete via perform_destroy.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this attendance status.
+        required: true
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      tags:
+      - attendance-statuses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAttendanceStatusAdmin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAttendanceStatusAdmin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAttendanceStatusAdmin'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceStatusAdmin'
+          description: ''
+    delete:
+      operationId: attendance_statuses_destroy
+      description: Sets is_active=False; does not hard delete.
+      summary: Soft delete attendance status (staff only)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this attendance status.
+        required: true
+      tags:
+      - attendance-statuses
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/auth/token/:
     post:
       operationId: auth_token_create
@@ -561,6 +779,262 @@ paths:
               schema:
                 $ref: '#/components/schemas/Event'
           description: ''
+  /api/v1/events/{event_pk}/attendance/:
+    get:
+      operationId: events_attendance_list
+      description: Returns all attendance rows. Coaches see everyone; athletes see
+        only their own row.
+      summary: List attendance for an event
+      parameters:
+      - in: path
+        name: event_pk
+        schema:
+          type: integer
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAttendanceList'
+          description: ''
+    post:
+      operationId: events_attendance_create
+      description: Member must be in the team via an active TeamMembership. Returns
+        400 if a row already exists for (event, member) — use PATCH.
+      summary: Create an attendance row (coach only)
+      parameters:
+      - in: path
+        name: event_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attendance'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Attendance'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Attendance'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+  /api/v1/events/{event_pk}/attendance/{id}/:
+    get:
+      operationId: events_attendance_retrieve
+      description: |-
+        CRUD on event attendance.
+
+        URL: /api/v1/events/{event_pk}/attendance/
+      summary: Retrieve a single attendance row
+      parameters:
+      - in: path
+        name: event_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this attendance.
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+    put:
+      operationId: events_attendance_update
+      description: |-
+        CRUD on event attendance.
+
+        URL: /api/v1/events/{event_pk}/attendance/
+      summary: Replace attendance row (coach only)
+      parameters:
+      - in: path
+        name: event_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this attendance.
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attendance'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Attendance'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Attendance'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+    patch:
+      operationId: events_attendance_partial_update
+      description: |-
+        CRUD on event attendance.
+
+        URL: /api/v1/events/{event_pk}/attendance/
+      summary: Update attendance status (coach only)
+      parameters:
+      - in: path
+        name: event_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this attendance.
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAttendance'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAttendance'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAttendance'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attendance'
+          description: ''
+    delete:
+      operationId: events_attendance_destroy
+      description: |-
+        CRUD on event attendance.
+
+        URL: /api/v1/events/{event_pk}/attendance/
+      summary: Delete an attendance row (coach only)
+      parameters:
+      - in: path
+        name: event_pk
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this attendance.
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/events/{event_pk}/attendance/bulk/:
+    post:
+      operationId: events_attendance_bulk_create
+      description: 'Creates or updates multiple attendance rows in a single atomic
+        call. For each item: if (event, member) exists, update status; otherwise,
+        create new. Members not in the payload are NOT touched. All-or-nothing: any
+        validation error rolls back the entire batch.'
+      summary: Bulk set attendances for an event
+      parameters:
+      - in: path
+        name: event_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttendanceBulk'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AttendanceBulk'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttendanceBulk'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAttendanceList'
+          description: Returns counts and full attendance list of the event.
+        '400':
+          description: Validation error (member or status)
+        '403':
+          description: Not a team manager
   /api/v1/events/{id}/:
     get:
       operationId: events_retrieve
@@ -3616,6 +4090,159 @@ components:
       - output_tokens
       - total_tokens
       - username
+    Attendance:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        event:
+          type: integer
+          readOnly: true
+        member:
+          type: integer
+        member_fullname:
+          type: string
+          readOnly: true
+        status:
+          type: integer
+        status_code:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - event
+      - id
+      - member
+      - member_fullname
+      - status
+      - status_code
+      - updated_at
+    AttendanceBulk:
+      type: object
+      properties:
+        attendances:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceBulkItem'
+      required:
+      - attendances
+    AttendanceBulkItem:
+      type: object
+      properties:
+        member_id:
+          type: integer
+        status_code:
+          type: string
+          maxLength: 30
+      required:
+      - member_id
+      - status_code
+    AttendanceStatus:
+      type: object
+      description: 'Public flavor: ''label'' is auto-localized by modeltranslation.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          readOnly: true
+          description: Snake_case identifier (e.g. 'present', 'absent', 'excused')
+        label:
+          type: string
+          readOnly: true
+          description: Display label, translated via modeltranslation.
+        is_default:
+          type: boolean
+          readOnly: true
+          description: If True, pre-selected as default in the frontend UI.
+        order:
+          type: integer
+          readOnly: true
+          description: Display order for buttons in the frontend.
+        color:
+          type: string
+          readOnly: true
+          description: Hex color (#xxxxxx) for the frontend, optional.
+        is_active:
+          type: boolean
+          readOnly: true
+      required:
+      - code
+      - color
+      - id
+      - is_active
+      - is_default
+      - label
+      - order
+    AttendanceStatusAdmin:
+      type: object
+      description: 'Admin flavor: exposes per-language label variants.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          description: Snake_case identifier (e.g. 'present', 'absent', 'excused')
+          maxLength: 30
+        label_fr:
+          type: string
+          nullable: true
+          title: Label [fr]
+          description: Display label, translated via modeltranslation.
+          maxLength: 100
+        label_nl:
+          type: string
+          nullable: true
+          title: Label [nl]
+          description: Display label, translated via modeltranslation.
+          maxLength: 100
+        label_en:
+          type: string
+          nullable: true
+          title: Label [en]
+          description: Display label, translated via modeltranslation.
+          maxLength: 100
+        label_it:
+          type: string
+          nullable: true
+          title: Label [it]
+          description: Display label, translated via modeltranslation.
+          maxLength: 100
+        label_es:
+          type: string
+          nullable: true
+          title: Label [es]
+          description: Display label, translated via modeltranslation.
+          maxLength: 100
+        is_default:
+          type: boolean
+          description: If True, pre-selected as default in the frontend UI.
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          description: Display order for buttons in the frontend.
+        color:
+          type: string
+          description: Hex color (#xxxxxx) for the frontend, optional.
+          maxLength: 20
+        is_active:
+          type: boolean
+      required:
+      - code
+      - id
     ChatModeEnum:
       enum:
       - all
@@ -4424,6 +5051,52 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AIUsageDetail'
+    PaginatedAttendanceList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attendance'
+    PaginatedAttendanceStatusList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceStatus'
     PaginatedEnergySegmentList:
       type: object
       required:
@@ -4723,6 +5396,89 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Team'
+    PatchedAttendance:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        event:
+          type: integer
+          readOnly: true
+        member:
+          type: integer
+        member_fullname:
+          type: string
+          readOnly: true
+        status:
+          type: integer
+        status_code:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedAttendanceStatusAdmin:
+      type: object
+      description: 'Admin flavor: exposes per-language label variants.'
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          description: Snake_case identifier (e.g. 'present', 'absent', 'excused')
+          maxLength: 30
+        label_fr:
+          type: string
+          nullable: true
+          title: Label [fr]
+          description: Display label, translated via modeltranslation.
+          maxLength: 100
+        label_nl:
+          type: string
+          nullable: true
+          title: Label [nl]
+          description: Display label, translated via modeltranslation.
+          maxLength: 100
+        label_en:
+          type: string
+          nullable: true
+          title: Label [en]
+          description: Display label, translated via modeltranslation.
+          maxLength: 100
+        label_it:
+          type: string
+          nullable: true
+          title: Label [it]
+          description: Display label, translated via modeltranslation.
+          maxLength: 100
+        label_es:
+          type: string
+          nullable: true
+          title: Label [es]
+          description: Display label, translated via modeltranslation.
+          maxLength: 100
+        is_default:
+          type: boolean
+          description: If True, pre-selected as default in the frontend UI.
+        order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          description: Display order for buttons in the frontend.
+        color:
+          type: string
+          description: Hex color (#xxxxxx) for the frontend, optional.
+          maxLength: 20
+        is_active:
+          type: boolean
     PatchedEnergySegmentAdmin:
       type: object
       description: 'Admin flavor: per-language description variants + writable energy_system_id.'
