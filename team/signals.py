@@ -19,7 +19,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from .models import TeamMembership
+from .models import Team, TeamMembership
 
 logger = logging.getLogger(__name__)
 
@@ -57,4 +57,30 @@ def sync_event_members_on_membership_change(sender, instance, created, **kwargs)
             future_events.count(),
             team.pk,
             instance.left_at,
+        )
+
+
+@receiver(post_save, sender=Team)
+def attach_default_attendance_statuses_on_create(sender, instance, created, **kwargs):
+    """Auto-attach default AttendanceStatuses to a newly created team.
+
+    Only fires on creation. Skips if the team already has any
+    attendance_statuses (e.g. attached pre-save by a fixture or
+    serializer) to avoid clobbering caller intent.
+    """
+    if not created:
+        return
+
+    if instance.attendance_statuses.exists():
+        return
+
+    from attendance.models import AttendanceStatus
+
+    defaults = AttendanceStatus.objects.filter(is_default=True, is_active=True)
+    if defaults.exists():
+        instance.attendance_statuses.set(defaults)
+        logger.info(
+            "Auto-attached %d default attendance status(es) to new team %s",
+            defaults.count(),
+            instance.pk,
         )
