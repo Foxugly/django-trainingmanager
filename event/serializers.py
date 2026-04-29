@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from member.models import Member
 from program.models import Program
 from program.serializers import ProgramMinimalSerializer
 from round.models import Round
@@ -20,9 +19,7 @@ class EventSerializer(serializers.ModelSerializer):
     rounds = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Round.objects.all(), required=False
     )
-    members = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Member.objects.all(), required=False
-    )
+    members = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Event

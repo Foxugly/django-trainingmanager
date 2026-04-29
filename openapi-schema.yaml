@@ -3906,6 +3906,7 @@ components:
           type: array
           items:
             type: integer
+          readOnly: true
         generated_by_ai:
           type: boolean
           readOnly: true
@@ -3931,6 +3932,7 @@ components:
       - created_at
       - generated_by_ai
       - id
+      - members
       - name
       - refer_program
       - refer_program_id
@@ -4842,6 +4844,7 @@ components:
           type: array
           items:
             type: integer
+          readOnly: true
         generated_by_ai:
           type: boolean
           readOnly: true
