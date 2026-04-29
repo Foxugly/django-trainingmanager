@@ -2817,6 +2817,14 @@ components:
       - output_tokens
       - total_tokens
       - username
+    ChatModeEnum:
+      enum:
+      - all
+      - coaches_only
+      type: string
+      description: |-
+        * `all` - All members can post
+        * `coaches_only` - Only coaches can post
     CloneExerciseRequest:
       type: object
       properties:
@@ -4308,6 +4316,18 @@ components:
           type: boolean
         is_public:
           type: boolean
+        chat_mode:
+          allOf:
+          - $ref: '#/components/schemas/ChatModeEnum'
+          description: |-
+            Defines who can post messages in the team chat.
+
+            * `all` - All members can post
+            * `coaches_only` - Only coaches can post
+        athlete_can_read_notes:
+          type: boolean
+          description: If True, athletes can read their own coach notes. Default False
+            (notes are coach-only).
         created_at:
           type: string
           format: date-time
@@ -4603,6 +4623,18 @@ components:
           type: boolean
         is_public:
           type: boolean
+        chat_mode:
+          allOf:
+          - $ref: '#/components/schemas/ChatModeEnum'
+          description: |-
+            Defines who can post messages in the team chat.
+
+            * `all` - All members can post
+            * `coaches_only` - Only coaches can post
+        athlete_can_read_notes:
+          type: boolean
+          description: If True, athletes can read their own coach notes. Default False
+            (notes are coach-only).
         created_at:
           type: string
           format: date-time

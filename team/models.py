@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 def generate_invitation_token():
@@ -15,6 +16,10 @@ def default_invitation_expiration():
 
 
 class Team(models.Model):
+    class ChatMode(models.TextChoices):
+        ALL = "all", _("All members can post")
+        COACHES_ONLY = "coaches_only", _("Only coaches can post")
+
     name = models.CharField(max_length=200, unique=True)
     sport = models.ForeignKey(
         "sport.Sport",
@@ -40,6 +45,19 @@ class Team(models.Model):
     )
     is_active = models.BooleanField(default=True)
     is_public = models.BooleanField(default=False)
+    chat_mode = models.CharField(
+        max_length=20,
+        choices=ChatMode.choices,
+        default=ChatMode.ALL,
+        help_text=_("Defines who can post messages in the team chat."),
+    )
+    athlete_can_read_notes = models.BooleanField(
+        default=False,
+        help_text=_(
+            "If True, athletes can read their own coach notes. "
+            "Default False (notes are coach-only)."
+        ),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

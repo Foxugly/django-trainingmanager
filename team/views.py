@@ -18,7 +18,7 @@ from rest_framework.views import APIView
 from .models import Team, TeamInvitation, TeamJoinRequest
 from .permissions import (
     IsJoinRequestParticipant,
-    IsTeamOwnerOrReadOnly,
+    IsTeamManagerOrReadOnly,
     IsTrainer,
 )
 from .serializers import (
@@ -38,7 +38,7 @@ class TeamViewSet(viewsets.ModelViewSet):
     """CRUD sur Teams. Liste = teams gérées par l'user + teams publiques actives."""
 
     serializer_class = TeamSerializer
-    permission_classes = [IsAuthenticated, IsTeamOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, IsTeamManagerOrReadOnly]
     filterset_fields = ["is_active", "is_public", "language"]
     search_fields = ["name"]
     ordering_fields = ["name", "created_at"]

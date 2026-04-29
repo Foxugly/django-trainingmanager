@@ -39,6 +39,8 @@ class TeamSerializer(serializers.ModelSerializer):
             "language",
             "is_active",
             "is_public",
+            "chat_mode",
+            "athlete_can_read_notes",
             "created_at",
             "updated_at",
         ]
