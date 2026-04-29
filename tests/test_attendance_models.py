@@ -135,6 +135,8 @@ def test_attendance_status_ordering(db):
     assert codes.index("present") < codes.index("absent") < codes.index("excused")
 
 
-def test_only_present_is_default(db):
-    defaults = list(AttendanceStatus.objects.filter(is_default=True).values_list("code", flat=True))
-    assert defaults == ["present"]
+def test_default_statuses_count_3(db):
+    """All three seeded statuses are flagged is_default=True so the
+    post_save Team signal pre-attaches them on team creation."""
+    defaults = set(AttendanceStatus.objects.filter(is_default=True).values_list("code", flat=True))
+    assert {"present", "absent", "excused"}.issubset(defaults)
