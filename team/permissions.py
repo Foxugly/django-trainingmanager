@@ -1,6 +1,18 @@
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import SAFE_METHODS, BasePermission
+
+
+class OwnerOnlyDeleteDenied(PermissionDenied):
+    """Raised when a non-owner (e.g. a manager) tries to DELETE a team.
+
+    The dedicated default_code lets the frontend match this case
+    distinctly from a generic 'permission_denied'.
+    """
+
+    default_detail = _("Only the team owner can delete the team.")
+    default_code = "owner_only_delete"
 
 
 class IsTeamOwnerOrReadOnly(BasePermission):
@@ -16,11 +28,16 @@ class IsTeamOwnerOrReadOnly(BasePermission):
 
 class IsTeamManagerOrReadOnly(BasePermission):
     """
-    SAFE_METHODS for any authenticated user; mutations for owner or managers.
+    SAFE_METHODS for any authenticated user; mutations for owner or
+    managers — except DELETE which is reserved to the owner.
     """
 
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
+            return True
+        if request.method == "DELETE":
+            if obj.owner_id != request.user.pk:
+                raise OwnerOnlyDeleteDenied()
             return True
         return obj.is_managed_by(request.user)
 

@@ -99,3 +99,45 @@ def test_team_invalid_chat_mode_returns_400(auth_client_trainer, trainer_user):
     body = response.json()
     assert body["code"] == "validation_error"
     assert "chat_mode" in body.get("fields", {})
+
+
+# ----------------------------- DELETE owner-only --------------------
+
+
+def test_team_owner_can_delete_team(auth_client_trainer, trainer_user):
+    from team.models import Team
+
+    team = trainer_user.owned_teams.first()
+    response = auth_client_trainer.delete(f"/api/v1/teams/{team.pk}/")
+    assert response.status_code == 204
+    assert not Team.objects.filter(pk=team.pk).exists()
+
+
+def test_team_manager_cannot_delete_team(api_client, trainer_user, authenticated_user):
+    """A manager (non-owner) cannot DELETE the team."""
+    from team.models import Team
+
+    team = trainer_user.owned_teams.first()
+    team.managers.add(authenticated_user)
+    api_client.force_authenticate(user=authenticated_user)
+    response = api_client.delete(f"/api/v1/teams/{team.pk}/")
+    assert response.status_code == 403
+    body = response.json()
+    assert body["code"] == "owner_only_delete"
+    # Team still exists
+    assert Team.objects.filter(pk=team.pk).exists()
+
+
+def test_team_manager_can_still_patch_team(api_client, trainer_user, authenticated_user):
+    """Manager keeps PATCH access (only DELETE is owner-restricted)."""
+    team = trainer_user.owned_teams.first()
+    team.managers.add(authenticated_user)
+    api_client.force_authenticate(user=authenticated_user)
+    response = api_client.patch(
+        f"/api/v1/teams/{team.pk}/",
+        {"name": "Renamed by manager"},
+        format="json",
+    )
+    assert response.status_code == 200
+    team.refresh_from_db()
+    assert team.name == "Renamed by manager"
