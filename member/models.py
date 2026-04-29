@@ -24,11 +24,6 @@ class Member(models.Model):
         null=True,
         verbose_name=_("Email"),
     )
-    teams = models.ManyToManyField(
-        "team.Team",
-        related_name="members",
-        blank=True,
-    )
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -44,6 +39,14 @@ class Member(models.Model):
 
     def __str__(self):
         return self.get_fullname()
+
+    @property
+    def teams_active(self):
+        """Team queryset for currently active memberships (left_at IS NULL)."""
+        from team.models import Team
+
+        team_ids = self.memberships.filter(left_at__isnull=True).values_list("team_id", flat=True)
+        return Team.objects.filter(pk__in=team_ids)
 
     class Meta:
         verbose_name = _("Member")

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Team, TeamInvitation, TeamJoinRequest
+from .models import Team, TeamInvitation, TeamJoinRequest, TeamMembership
 
 
 @admin.register(Team)
@@ -24,3 +24,16 @@ class TeamInvitationAdmin(admin.ModelAdmin):
     list_filter = ("status", "team")
     search_fields = ("email",)
     readonly_fields = ("token", "created_at", "completed_at")
+
+
+@admin.register(TeamMembership)
+class TeamMembershipAdmin(admin.ModelAdmin):
+    list_display = ("team", "member", "joined_at", "left_at", "active")
+    list_filter = ("team", "left_at")
+    search_fields = ("team__name", "member__firstname", "member__lastname")
+    readonly_fields = ("created_at", "updated_at")
+    raw_id_fields = ("team", "member")
+
+    @admin.display(boolean=True, description="Active")
+    def active(self, obj):
+        return obj.left_at is None

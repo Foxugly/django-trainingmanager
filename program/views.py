@@ -30,7 +30,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
         return (
             Program.objects.filter(team__in=accessible_teams(self.request.user))
             .select_related("team", "team__sport", "team__owner")
-            .prefetch_related("events", "members")
+            .prefetch_related("events")
         )
 
     def _check_team_write(self, team):

@@ -246,13 +246,16 @@ def test_GET_members_returns_200(auth_client):
 
 
 def test_POST_members_with_owned_team_returns_201(auth_client, user_team):
+    """user_team makes auth_user a manager => Member create allowed.
+
+    Membership attachment is now done via /teams/{team_pk}/memberships/.
+    """
     response = auth_client.post(
         "/api/v1/members/",
         {
             "firstname": "Smoke",
             "lastname": "Tester",
             "email": "smoke.tester@local.test",
-            "teams": [user_team.pk],
         },
         format="json",
     )

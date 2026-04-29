@@ -2,7 +2,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from event.models import Event
-from member.models import Member
 from team.models import Team
 from team.serializers import TeamMinimalSerializer
 
@@ -29,9 +28,6 @@ class ProgramSerializer(serializers.ModelSerializer):
     events = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Event.objects.all(), required=False
     )
-    members = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Member.objects.all(), required=False
-    )
 
     class Meta:
         model = Program
@@ -43,7 +39,6 @@ class ProgramSerializer(serializers.ModelSerializer):
             "team",
             "team_id",
             "events",
-            "members",
             "frequency_per_week",
             "description",
             "generated_by_ai",

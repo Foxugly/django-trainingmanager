@@ -12,7 +12,9 @@ def user_accessible_sport_language_pairs(user):
     if not user.is_authenticated:
         return []
     teams = Team.objects.filter(
-        Q(owner=user) | Q(managers=user) | Q(members__user=user),
+        Q(owner=user)
+        | Q(managers=user)
+        | Q(memberships__member__user=user, memberships__left_at__isnull=True),
         is_active=True,
     ).distinct()
     return list(teams.values_list("sport_id", "language").distinct())

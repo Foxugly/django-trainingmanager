@@ -14,6 +14,7 @@ from django.contrib.auth import get_user_model
 
 from member.models import Member
 from note.models import Note
+from team.models import TeamMembership
 from tests.factories import TeamFactory
 
 pytestmark = pytest.mark.django_db
@@ -49,7 +50,7 @@ def member_in_team(athlete_user, coach_team):
         email="alex@local.test",
         user=athlete_user,
     )
-    member.teams.add(coach_team)
+    TeamMembership.objects.create(team=coach_team, member=member)
     return member
 
 
@@ -239,7 +240,7 @@ def test_athlete_cannot_read_other_member_notes_even_when_flag_true(
     coach_team.athlete_can_read_notes = True
     coach_team.save(update_fields=["athlete_can_read_notes"])
     other = Member.objects.create(firstname="Other", lastname="Person", email="other@local.test")
-    other.teams.add(coach_team)
+    TeamMembership.objects.create(team=coach_team, member=other)
     Note.objects.create(team=coach_team, member=other, author=coach_user, content="secret")
     response = athlete_client.get(_url(coach_team.pk, other.pk))
     assert response.status_code == 403

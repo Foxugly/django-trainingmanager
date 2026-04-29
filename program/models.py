@@ -2,7 +2,6 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from event.models import Event
-from member.models import Member
 
 
 class Program(models.Model):
@@ -17,10 +16,6 @@ class Program(models.Model):
     )
     events = models.ManyToManyField(
         Event,
-        blank=True,
-    )
-    members = models.ManyToManyField(
-        Member,
         blank=True,
     )
     team = models.ForeignKey(

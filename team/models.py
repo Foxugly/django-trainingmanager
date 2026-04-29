@@ -72,6 +72,62 @@ class Team(models.Model):
             return False
         return user == self.owner or self.managers.filter(pk=user.pk).exists()
 
+    @property
+    def active_members(self):
+        """Member queryset of currently active memberships (left_at IS NULL)."""
+        from member.models import Member
+
+        member_ids = self.memberships.filter(left_at__isnull=True).values_list(
+            "member_id", flat=True
+        )
+        return Member.objects.filter(pk__in=member_ids)
+
+
+class TeamMembership(models.Model):
+    """Tracks athlete membership in a team over time.
+
+    Multiple rows can exist for the same (team, member) pair: each row
+    represents a distinct membership period. Re-joining creates a new row
+    rather than reopening the previous one — this preserves history.
+    """
+
+    team = models.ForeignKey(
+        "team.Team",
+        on_delete=models.CASCADE,
+        related_name="memberships",
+    )
+    member = models.ForeignKey(
+        "member.Member",
+        on_delete=models.CASCADE,
+        related_name="memberships",
+    )
+    joined_at = models.DateTimeField(
+        default=timezone.now,
+        help_text=_("When this athlete joined the team."),
+    )
+    left_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=_("When this athlete left the team. NULL = currently active."),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-joined_at"]
+        indexes = [
+            models.Index(fields=["team", "left_at"], name="membership_team_left_idx"),
+            models.Index(fields=["member", "left_at"], name="membership_member_left_idx"),
+        ]
+
+    def __str__(self):
+        status = "active" if self.left_at is None else f"left {self.left_at:%Y-%m-%d}"
+        return f"{self.member} in {self.team} ({status})"
+
+    @property
+    def is_active(self):
+        return self.left_at is None
+
 
 class TeamJoinRequest(models.Model):
     STATUS_CHOICES = [

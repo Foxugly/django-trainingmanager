@@ -30,7 +30,9 @@ class IsTeamMemberAndChatPolicy(BasePermission):
 
         user = request.user
         is_coach = team.is_managed_by(user)
-        is_athlete_member = team.members.filter(user_id=user.pk).exists()
+        is_athlete_member = team.memberships.filter(
+            member__user_id=user.pk, left_at__isnull=True
+        ).exists()
         if not (is_coach or is_athlete_member):
             return False
 

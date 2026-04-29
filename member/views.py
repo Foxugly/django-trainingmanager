@@ -19,26 +19,23 @@ class MemberViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return (
-            Member.objects.filter(teams__in=accessible_teams(self.request.user))
+            Member.objects.filter(
+                memberships__team__in=accessible_teams(self.request.user),
+                memberships__left_at__isnull=True,
+            )
             .select_related("user")
-            .prefetch_related("teams__sport")
+            .prefetch_related("memberships__team__sport")
             .distinct()
         )
 
-    def _check_teams_write(self, teams):
-        if not teams:
-            raise PermissionDenied(_("At least one team is required."))
-        manageable = managed_teams(self.request.user)
-        for t in teams:
-            if not manageable.filter(pk=t.pk).exists():
-                raise PermissionDenied(_("You do not manage one of the requested teams."))
+    def _check_user_manages_a_team(self):
+        if not managed_teams(self.request.user).exists():
+            raise PermissionDenied(_("You must manage at least one team to create members."))
 
     def perform_create(self, serializer):
-        self._check_teams_write(serializer.validated_data.get("teams", []))
+        self._check_user_manages_a_team()
         serializer.save()
 
     def perform_update(self, serializer):
-        teams = serializer.validated_data.get("teams")
-        if teams is not None:
-            self._check_teams_write(teams)
+        self._check_user_manages_a_team()
         serializer.save()

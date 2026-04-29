@@ -11,11 +11,14 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers as drf_serializers
 from rest_framework import status, viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Team, TeamInvitation, TeamJoinRequest
+from tools.openapi import INCLUDE_INACTIVE_PARAM
+
+from .models import Team, TeamInvitation, TeamJoinRequest, TeamMembership
 from .permissions import (
     IsJoinRequestParticipant,
     IsTeamManagerOrReadOnly,
@@ -27,6 +30,7 @@ from .serializers import (
     CreateJoinRequestSerializer,
     TeamInvitationSerializer,
     TeamJoinRequestSerializer,
+    TeamMembershipSerializer,
     TeamSerializer,
     ValidateInvitationSerializer,
 )
@@ -161,7 +165,10 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
 
         existing_member = getattr(user, "member_profile", None)
         if existing_member is not None:
-            existing_member.teams.add(team)
+            if not TeamMembership.objects.filter(
+                team=team, member=existing_member, left_at__isnull=True
+            ).exists():
+                TeamMembership.objects.create(team=team, member=existing_member)
             return
 
         member = Member.objects.create(
@@ -171,7 +178,7 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
             phonenumber="",
             user=user,
         )
-        member.teams.add(team)
+        TeamMembership.objects.create(team=team, member=member)
 
 
 class TeamInvitationViewSet(viewsets.ModelViewSet):
@@ -223,7 +230,7 @@ class TeamInvitationViewSet(viewsets.ModelViewSet):
             phonenumber=data.get("phonenumber", ""),
             user=existing_user,
         )
-        member.teams.add(data["team"])
+        TeamMembership.objects.create(team=data["team"], member=member)
 
         if existing_user is not None:
             self._send_existing_user_notification(existing_user, data["team"])
@@ -405,3 +412,86 @@ class InvitationLookupView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+@extend_schema(parameters=[INCLUDE_INACTIVE_PARAM])
+class TeamMembershipViewSet(viewsets.ModelViewSet):
+    """Manage team memberships.
+
+    URL: /api/v1/teams/{team_pk}/memberships/
+
+    - GET (list): active memberships of the team. Pass ?include_inactive=true
+      to also see historical (left_at IS NOT NULL) rows.
+    - POST: add a member to the team (manager-only). Idempotent: rejects with
+      400 already_member if an active membership already exists for the same
+      (team, member) pair.
+    - DELETE /{id}/: end a membership (sets left_at = now). Allowed for the
+      member herself or a team manager. The team owner cannot leave their own
+      team via this endpoint.
+    """
+
+    serializer_class = TeamMembershipSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
+
+    def get_team(self):
+        team_pk = self.kwargs.get("team_pk")
+        if not team_pk:
+            return None
+        return get_object_or_404(Team, pk=team_pk)
+
+    def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return TeamMembership.objects.none()
+
+        team = self.get_team()
+        if team is None:
+            return TeamMembership.objects.none()
+
+        user = self.request.user
+        is_team_member = (
+            team.is_managed_by(user)
+            or team.memberships.filter(member__user_id=user.pk, left_at__isnull=True).exists()
+        )
+        if not is_team_member:
+            return TeamMembership.objects.none()
+
+        qs = TeamMembership.objects.filter(team=team).select_related("member", "member__user")
+
+        if self.action == "list":
+            include_inactive = self.request.query_params.get("include_inactive") == "true"
+            if not include_inactive:
+                qs = qs.filter(left_at__isnull=True)
+        return qs
+
+    def perform_create(self, serializer):
+        team = self.get_team()
+        if team is None or not team.is_managed_by(self.request.user):
+            raise PermissionDenied(_("Only owner and managers can add members to a team."))
+
+        member = serializer.validated_data["member"]
+        if TeamMembership.objects.filter(team=team, member=member, left_at__isnull=True).exists():
+            raise drf_serializers.ValidationError(
+                {"member": _("This member is already in the team.")},
+                code="already_member",
+            )
+        serializer.save(team=team)
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        team = instance.team
+        is_self = instance.member.user_id == user.pk
+        is_team_manager = team.is_managed_by(user)
+
+        if not (is_self or is_team_manager):
+            raise PermissionDenied(_("You can only remove yourself or you must be a team manager."))
+        if is_self and team.owner_id == user.pk:
+            raise PermissionDenied(
+                _(
+                    "Team owner cannot leave their own team. "
+                    "Transfer ownership first or delete the team."
+                )
+            )
+        if instance.left_at is None:
+            instance.left_at = timezone.now()
+            instance.save(update_fields=["left_at", "updated_at"])

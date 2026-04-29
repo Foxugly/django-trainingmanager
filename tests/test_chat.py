@@ -18,6 +18,7 @@ from django.utils import timezone
 
 from chat.models import Message
 from member.models import Member
+from team.models import TeamMembership
 from tests.factories import TeamFactory
 
 pytestmark = pytest.mark.django_db
@@ -68,7 +69,7 @@ def chat_team(coach_user, manager_user, athlete_user):
         email=athlete_user.email,
         user=athlete_user,
     )
-    member.teams.add(team)
+    TeamMembership.objects.create(team=team, member=member)
     return team
 
 

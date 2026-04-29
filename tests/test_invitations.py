@@ -5,7 +5,7 @@ from django.core import mail
 from django.utils import timezone
 
 from member.models import Member
-from team.models import TeamInvitation
+from team.models import TeamInvitation, TeamMembership
 from tests.factories import TeamFactory, UserFactory
 
 pytestmark = pytest.mark.django_db
@@ -71,7 +71,7 @@ def test_POST_create_invitation_existing_user_links_member(auth_client_trainer, 
     assert response.status_code == 201
     assert response.json().get("member_id") is not None
     member = Member.objects.get(user=existing)
-    assert team in member.teams.all()
+    assert member.memberships.filter(team=team, left_at__isnull=True).exists()
     assert not TeamInvitation.objects.filter(email="existing@local.test").exists()
     assert len(mail.outbox) == 1
     assert mail.outbox[0].to == ["existing@local.test"]
@@ -112,7 +112,7 @@ def test_POST_create_invitation_unmanaged_team_returns_400(auth_client_trainer):
 def test_invitation_token_not_exposed_in_list(auth_client_trainer, trainer_user):
     team = trainer_user.owned_teams.first()
     member = Member.objects.create(firstname="F", lastname="L", email="f@local.test")
-    member.teams.add(team)
+    TeamMembership.objects.create(team=team, member=member)
     TeamInvitation.objects.create(team=team, member=member, email="f@local.test")
     response = auth_client_trainer.get("/api/v1/invitations/")
     assert response.status_code == 200
@@ -128,7 +128,7 @@ def test_invitation_token_not_exposed_in_list(auth_client_trainer, trainer_user)
 def test_GET_invitation_lookup_valid_token_returns_200(api_client, trainer_user):
     team = trainer_user.owned_teams.first()
     member = Member.objects.create(firstname="Lu", lastname="Up", email="lu@local.test")
-    member.teams.add(team)
+    TeamMembership.objects.create(team=team, member=member)
     inv = TeamInvitation.objects.create(team=team, member=member, email="lu@local.test")
     response = api_client.get(f"/api/v1/invitations/lookup/{inv.token}/")
     assert response.status_code == 200
@@ -146,7 +146,7 @@ def test_GET_invitation_lookup_invalid_token_returns_404(api_client):
 def test_GET_invitation_lookup_expired_returns_410(api_client, trainer_user):
     team = trainer_user.owned_teams.first()
     member = Member.objects.create(firstname="Ex", lastname="Pired", email="ex@local.test")
-    member.teams.add(team)
+    TeamMembership.objects.create(team=team, member=member)
     inv = TeamInvitation.objects.create(
         team=team,
         member=member,
@@ -165,7 +165,7 @@ def test_GET_invitation_lookup_expired_returns_410(api_client, trainer_user):
 def test_POST_complete_invitation_creates_user_and_jwt(api_client, trainer_user):
     team = trainer_user.owned_teams.first()
     member = Member.objects.create(firstname="Co", lastname="Mplete", email="co@local.test")
-    member.teams.add(team)
+    TeamMembership.objects.create(team=team, member=member)
     inv = TeamInvitation.objects.create(team=team, member=member, email="co@local.test")
 
     response = api_client.post(
@@ -198,7 +198,7 @@ def test_POST_complete_invitation_invalid_username_returns_400(api_client, train
     UserFactory(username="taken")
     team = trainer_user.owned_teams.first()
     member = Member.objects.create(firstname="F", lastname="L", email="dup@local.test")
-    member.teams.add(team)
+    TeamMembership.objects.create(team=team, member=member)
     inv = TeamInvitation.objects.create(team=team, member=member, email="dup@local.test")
 
     response = api_client.post(
@@ -212,7 +212,7 @@ def test_POST_complete_invitation_invalid_username_returns_400(api_client, train
 def test_POST_complete_invitation_weak_password_returns_400(api_client, trainer_user):
     team = trainer_user.owned_teams.first()
     member = Member.objects.create(firstname="F", lastname="L", email="weak@local.test")
-    member.teams.add(team)
+    TeamMembership.objects.create(team=team, member=member)
     inv = TeamInvitation.objects.create(team=team, member=member, email="weak@local.test")
 
     response = api_client.post(
@@ -226,7 +226,7 @@ def test_POST_complete_invitation_weak_password_returns_400(api_client, trainer_
 def test_POST_complete_invitation_already_used_returns_400(api_client, trainer_user):
     team = trainer_user.owned_teams.first()
     member = Member.objects.create(firstname="F", lastname="L", email="used@local.test")
-    member.teams.add(team)
+    TeamMembership.objects.create(team=team, member=member)
     inv = TeamInvitation.objects.create(
         team=team,
         member=member,
@@ -248,7 +248,7 @@ def test_POST_complete_invitation_already_used_returns_400(api_client, trainer_u
 def test_DELETE_invitation_cancels_it(auth_client_trainer, trainer_user):
     team = trainer_user.owned_teams.first()
     member = Member.objects.create(firstname="D", lastname="El", email="del@local.test")
-    member.teams.add(team)
+    TeamMembership.objects.create(team=team, member=member)
     inv = TeamInvitation.objects.create(team=team, member=member, email="del@local.test")
 
     response = auth_client_trainer.delete(f"/api/v1/invitations/{inv.pk}/")

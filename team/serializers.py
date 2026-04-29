@@ -1,12 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from customuser.serializers import CustomUserPublicSerializer
 from sport.models import Sport
 from sport.serializers import SportSerializer
 
-from .models import Team, TeamInvitation, TeamJoinRequest
+from .models import Team, TeamInvitation, TeamJoinRequest, TeamMembership
 
 
 class TeamMinimalSerializer(serializers.ModelSerializer):
@@ -80,7 +81,10 @@ class CreateJoinRequestSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         team = data["team"]
         member_profile = getattr(user, "member_profile", None)
-        if member_profile is not None and member_profile.teams.filter(pk=team.pk).exists():
+        if (
+            member_profile is not None
+            and member_profile.memberships.filter(team=team, left_at__isnull=True).exists()
+        ):
             raise serializers.ValidationError(
                 {"team": _("You are already a member of this team.")},
                 code="already_member",
@@ -171,6 +175,50 @@ class ValidateInvitationSerializer(serializers.ModelSerializer):
         model = TeamInvitation
         fields = ["email", "team_name", "status", "expires_at"]
         read_only_fields = fields
+
+
+class TeamMembershipSerializer(serializers.ModelSerializer):
+    """Read/write serializer for TeamMembership.
+
+    `team` is set by the view from URL kwargs; only `member` is accepted on POST.
+    """
+
+    member_username = serializers.CharField(
+        source="member.user.username",
+        read_only=True,
+        default=None,
+    )
+    member_fullname = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TeamMembership
+        fields = [
+            "id",
+            "team",
+            "member",
+            "member_username",
+            "member_fullname",
+            "joined_at",
+            "left_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "team",
+            "joined_at",
+            "left_at",
+            "created_at",
+            "updated_at",
+            "member_username",
+            "member_fullname",
+        ]
+
+    @extend_schema_field(serializers.CharField())
+    def get_member_fullname(self, obj) -> str:
+        m = obj.member
+        parts = [p for p in [m.firstname, m.lastname] if p]
+        return " ".join(parts) if parts else ""
 
 
 class CompleteInvitationSerializer(serializers.Serializer):

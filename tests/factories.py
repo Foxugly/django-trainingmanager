@@ -81,8 +81,10 @@ class MemberFactory(DjangoModelFactory):
     def teams(self, create, extracted, **kwargs):
         if not create or not extracted:
             return
+        from team.models import TeamMembership
+
         for team in extracted:
-            self.teams.add(team)
+            TeamMembership.objects.create(team=team, member=self)
 
 
 class ProgramFactory(DjangoModelFactory):

@@ -2971,6 +2971,305 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/teams/{team_pk}/memberships/:
+    get:
+      operationId: teams_memberships_list
+      description: |-
+        Manage team memberships.
+
+        URL: /api/v1/teams/{team_pk}/memberships/
+
+        - GET (list): active memberships of the team. Pass ?include_inactive=true
+          to also see historical (left_at IS NOT NULL) rows.
+        - POST: add a member to the team (manager-only). Idempotent: rejects with
+          400 already_member if an active membership already exists for the same
+          (team, member) pair.
+        - DELETE /{id}/: end a membership (sets left_at = now). Allowed for the
+          member herself or a team manager. The team owner cannot leave their own
+          team via this endpoint.
+      parameters:
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: path
+        name: team_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamMembership'
+          description: ''
+    post:
+      operationId: teams_memberships_create
+      description: |-
+        Manage team memberships.
+
+        URL: /api/v1/teams/{team_pk}/memberships/
+
+        - GET (list): active memberships of the team. Pass ?include_inactive=true
+          to also see historical (left_at IS NOT NULL) rows.
+        - POST: add a member to the team (manager-only). Idempotent: rejects with
+          400 already_member if an active membership already exists for the same
+          (team, member) pair.
+        - DELETE /{id}/: end a membership (sets left_at = now). Allowed for the
+          member herself or a team manager. The team owner cannot leave their own
+          team via this endpoint.
+      parameters:
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      - in: path
+        name: team_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamMembership'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeamMembership'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeamMembership'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+          description: ''
+  /api/v1/teams/{team_pk}/memberships/{id}/:
+    get:
+      operationId: teams_memberships_retrieve
+      description: |-
+        Manage team memberships.
+
+        URL: /api/v1/teams/{team_pk}/memberships/
+
+        - GET (list): active memberships of the team. Pass ?include_inactive=true
+          to also see historical (left_at IS NOT NULL) rows.
+        - POST: add a member to the team (manager-only). Idempotent: rejects with
+          400 already_member if an active membership already exists for the same
+          (team, member) pair.
+        - DELETE /{id}/: end a membership (sets left_at = now). Allowed for the
+          member herself or a team manager. The team owner cannot leave their own
+          team via this endpoint.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team membership.
+        required: true
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      - in: path
+        name: team_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+          description: ''
+    put:
+      operationId: teams_memberships_update
+      description: |-
+        Manage team memberships.
+
+        URL: /api/v1/teams/{team_pk}/memberships/
+
+        - GET (list): active memberships of the team. Pass ?include_inactive=true
+          to also see historical (left_at IS NOT NULL) rows.
+        - POST: add a member to the team (manager-only). Idempotent: rejects with
+          400 already_member if an active membership already exists for the same
+          (team, member) pair.
+        - DELETE /{id}/: end a membership (sets left_at = now). Allowed for the
+          member herself or a team manager. The team owner cannot leave their own
+          team via this endpoint.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team membership.
+        required: true
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      - in: path
+        name: team_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamMembership'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeamMembership'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeamMembership'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+          description: ''
+    patch:
+      operationId: teams_memberships_partial_update
+      description: |-
+        Manage team memberships.
+
+        URL: /api/v1/teams/{team_pk}/memberships/
+
+        - GET (list): active memberships of the team. Pass ?include_inactive=true
+          to also see historical (left_at IS NOT NULL) rows.
+        - POST: add a member to the team (manager-only). Idempotent: rejects with
+          400 already_member if an active membership already exists for the same
+          (team, member) pair.
+        - DELETE /{id}/: end a membership (sets left_at = now). Allowed for the
+          member herself or a team manager. The team owner cannot leave their own
+          team via this endpoint.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team membership.
+        required: true
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      - in: path
+        name: team_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamMembership'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamMembership'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamMembership'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMembership'
+          description: ''
+    delete:
+      operationId: teams_memberships_destroy
+      description: |-
+        Manage team memberships.
+
+        URL: /api/v1/teams/{team_pk}/memberships/
+
+        - GET (list): active memberships of the team. Pass ?include_inactive=true
+          to also see historical (left_at IS NOT NULL) rows.
+        - POST: add a member to the team (manager-only). Idempotent: rejects with
+          400 already_member if an active membership already exists for the same
+          (team, member) pair.
+        - DELETE /{id}/: end a membership (sets left_at = now). Allowed for the
+          member herself or a team manager. The team owner cannot leave their own
+          team via this endpoint.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this team membership.
+        required: true
+      - in: query
+        name: include_inactive
+        schema:
+          type: boolean
+        description: If true and the user is staff, include soft-deleted (is_active=False)
+          records in the result. Silently ignored for non-staff users.
+      - in: path
+        name: team_pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/teams/{team_pk}/messages/:
     get:
       operationId: teams_messages_list
@@ -3909,6 +4208,7 @@ components:
           type: array
           items:
             type: integer
+          readOnly: true
         user:
           allOf:
           - $ref: '#/components/schemas/CustomUserPublic'
@@ -3931,6 +4231,7 @@ components:
       - fullname
       - id
       - lastname
+      - teams
       - updated_at
       - user
     Message:
@@ -4695,6 +4996,7 @@ components:
           type: array
           items:
             type: integer
+          readOnly: true
         user:
           allOf:
           - $ref: '#/components/schemas/CustomUserPublic'
@@ -4848,10 +5150,6 @@ components:
           type: integer
           writeOnly: true
         events:
-          type: array
-          items:
-            type: integer
-        members:
           type: array
           items:
             type: integer
@@ -5060,6 +5358,46 @@ components:
           type: integer
           readOnly: true
           nullable: true
+    PatchedTeamMembership:
+      type: object
+      description: |-
+        Read/write serializer for TeamMembership.
+
+        `team` is set by the view from URL kwargs; only `member` is accepted on POST.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        team:
+          type: integer
+          readOnly: true
+        member:
+          type: integer
+        member_username:
+          type: string
+          readOnly: true
+        member_fullname:
+          type: string
+          readOnly: true
+        joined_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: When this athlete joined the team.
+        left_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          description: When this athlete left the team. NULL = currently active.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
     Program:
       type: object
       properties:
@@ -5085,10 +5423,6 @@ components:
           type: integer
           writeOnly: true
         events:
-          type: array
-          items:
-            type: integer
-        members:
           type: array
           items:
             type: integer
@@ -5429,6 +5763,56 @@ components:
       - responded_by
       - team
       - user
+    TeamMembership:
+      type: object
+      description: |-
+        Read/write serializer for TeamMembership.
+
+        `team` is set by the view from URL kwargs; only `member` is accepted on POST.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        team:
+          type: integer
+          readOnly: true
+        member:
+          type: integer
+        member_username:
+          type: string
+          readOnly: true
+        member_fullname:
+          type: string
+          readOnly: true
+        joined_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: When this athlete joined the team.
+        left_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          description: When this athlete left the team. NULL = currently active.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - joined_at
+      - left_at
+      - member
+      - member_fullname
+      - member_username
+      - team
+      - updated_at
     TeamMinimal:
       type: object
       description: Compact team payload for nested read contexts.

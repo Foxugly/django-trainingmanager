@@ -2,7 +2,7 @@ import pytest
 from django.core import mail
 
 from member.models import Member
-from team.models import TeamJoinRequest
+from team.models import TeamJoinRequest, TeamMembership
 from tests.factories import TeamFactory, UserFactory
 
 pytestmark = pytest.mark.django_db
@@ -51,7 +51,7 @@ def test_POST_join_request_already_member_returns_400(auth_client, authenticated
         email="already@local.test",
         user=authenticated_user,
     )
-    member.teams.add(team)
+    TeamMembership.objects.create(team=team, member=member)
     response = auth_client.post(
         "/api/v1/join-requests/",
         {"team": team.pk},
@@ -109,7 +109,11 @@ def test_PATCH_accept_join_request_creates_member(auth_client_trainer, trainer_u
     assert jr.status == "accepted"
     assert jr.responded_by_id == trainer_user.pk
     assert jr.responded_at is not None
-    assert Member.objects.filter(user=requester, teams=team).exists()
+    assert Member.objects.filter(
+        user=requester,
+        memberships__team=team,
+        memberships__left_at__isnull=True,
+    ).exists()
 
 
 def test_PATCH_accept_existing_member_just_adds_team(auth_client_trainer, trainer_user):
@@ -121,7 +125,7 @@ def test_PATCH_accept_existing_member_just_adds_team(auth_client_trainer, traine
         email=requester.email,
         user=requester,
     )
-    member.teams.add(other_team)
+    TeamMembership.objects.create(team=other_team, member=member)
 
     team = trainer_user.owned_teams.first()
     jr = TeamJoinRequest.objects.create(user=requester, team=team, status="pending")
@@ -131,9 +135,11 @@ def test_PATCH_accept_existing_member_just_adds_team(auth_client_trainer, traine
         format="json",
     )
     assert response.status_code == 200
-    member.refresh_from_db()
-    assert team in member.teams.all()
-    assert other_team in member.teams.all()
+    active_team_ids = set(
+        member.memberships.filter(left_at__isnull=True).values_list("team_id", flat=True)
+    )
+    assert team.pk in active_team_ids
+    assert other_team.pk in active_team_ids
     assert Member.objects.filter(user=requester).count() == 1
 
 

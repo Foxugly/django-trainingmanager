@@ -64,7 +64,7 @@ class NoteViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         team = self.get_team()
         member = self.get_member_or_none()
-        if not member.teams.filter(pk=team.pk).exists():
+        if not member.memberships.filter(team=team, left_at__isnull=True).exists():
             raise PermissionDenied(_("This member does not belong to this team."))
         serializer.save(team=team, member=member, author=self.request.user)
 

@@ -12,6 +12,7 @@ User = get_user_model()
 
 class MemberSerializer(serializers.ModelSerializer):
     fullname = serializers.SerializerMethodField()
+    teams = serializers.SerializerMethodField()
     user = CustomUserPublicSerializer(read_only=True)
     user_id = serializers.PrimaryKeyRelatedField(
         source="user",
@@ -36,32 +37,46 @@ class MemberSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "fullname", "created_at", "updated_at"]
+        read_only_fields = ["id", "fullname", "teams", "created_at", "updated_at"]
 
     @extend_schema_field(serializers.CharField())
     def get_fullname(self, obj) -> str:
         parts = [p for p in [obj.firstname, obj.lastname] if p]
         return " ".join(parts) if parts else ""
 
+    @extend_schema_field(serializers.ListField(child=serializers.IntegerField()))
+    def get_teams(self, obj) -> list[int]:
+        """Return active team IDs for this member (left_at IS NULL)."""
+        return list(obj.memberships.filter(left_at__isnull=True).values_list("team_id", flat=True))
+
     def validate(self, data):
         data = super().validate(data)
         user = data.get("user")
-        teams = data.get("teams") or (list(self.instance.teams.all()) if self.instance else [])
-        if user is not None and teams:
-            user_team_ids = set(user.owned_teams.values_list("pk", flat=True)) | set(
-                user.managed_teams.values_list("pk", flat=True)
-            )
-            member_profile = getattr(user, "member_profile", None)
-            if member_profile is not None:
-                user_team_ids |= set(member_profile.teams.values_list("pk", flat=True))
-            requested_team_ids = {t.pk for t in teams}
-            if user_team_ids.isdisjoint(requested_team_ids):
-                raise serializers.ValidationError(
-                    {
-                        "user_id": _(
-                            "The user must already belong to at least one of the member's teams."
-                        )
-                    },
-                    code="user_team_mismatch",
+        if user is not None and self.instance is not None:
+            active_team_ids = set(
+                self.instance.memberships.filter(left_at__isnull=True).values_list(
+                    "team_id", flat=True
                 )
+            )
+            if active_team_ids:
+                user_team_ids = set(user.owned_teams.values_list("pk", flat=True)) | set(
+                    user.managed_teams.values_list("pk", flat=True)
+                )
+                member_profile = getattr(user, "member_profile", None)
+                if member_profile is not None:
+                    user_team_ids |= set(
+                        member_profile.memberships.filter(left_at__isnull=True).values_list(
+                            "team_id", flat=True
+                        )
+                    )
+                if user_team_ids.isdisjoint(active_team_ids):
+                    raise serializers.ValidationError(
+                        {
+                            "user_id": _(
+                                "The user must already belong to at least one "
+                                "of the member's teams."
+                            )
+                        },
+                        code="user_team_mismatch",
+                    )
         return data
