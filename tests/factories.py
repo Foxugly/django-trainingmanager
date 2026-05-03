@@ -93,6 +93,7 @@ class ProgramFactory(DjangoModelFactory):
 
     name = factory.Sequence(lambda n: f"Program {n}")
     team = factory.SubFactory(TeamFactory)
+    is_active = True
 
 
 class EventFactory(DjangoModelFactory):

@@ -1,15 +1,22 @@
 from datetime import date as _date
 
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
+from drf_spectacular.utils import (
+    OpenApiResponse,
+    extend_schema,
+    extend_schema_view,
+    inline_serializer,
+)
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from team.queries import managed_teams, user_visible_teams
+from tools.openapi import INCLUDE_INACTIVE_PARAM
 from tools.throttling import AIPlanGenerationThrottle
 
 from .ai import generate_plan
@@ -17,21 +24,44 @@ from .models import Program
 from .serializers import GeneratePlanRequestSerializer, ProgramSerializer
 
 
+@extend_schema_view(
+    list=extend_schema(parameters=[INCLUDE_INACTIVE_PARAM]),
+    retrieve=extend_schema(parameters=[INCLUDE_INACTIVE_PARAM]),
+    update=extend_schema(parameters=[INCLUDE_INACTIVE_PARAM]),
+    partial_update=extend_schema(parameters=[INCLUDE_INACTIVE_PARAM]),
+    destroy=extend_schema(
+        summary="Soft delete program (manager of team only)",
+        description="Sets is_active=False; does not hard delete.",
+    ),
+)
 class ProgramViewSet(viewsets.ModelViewSet):
-    """CRUD complet pour Program, scopé par team."""
+    """CRUD complet pour Program, scopé par team.
+
+    Soft-delete convention: DELETE flips is_active=False (no hard delete).
+    Default queryset hides is_active=False. ?include_inactive=true is honored
+    for staff (sees all inactives across visible teams) and for managers
+    (sees inactives of teams they manage).
+    """
 
     serializer_class = ProgramSerializer
-    filterset_fields = ["name", "date_start", "date_end", "team"]
+    filterset_fields = ["name", "date_start", "date_end", "team", "is_active"]
     search_fields = ["name"]
     ordering_fields = ["name", "date_start", "date_end"]
     ordering = ["name"]
 
     def get_queryset(self):
-        return (
-            Program.objects.filter(team__in=user_visible_teams(self.request.user))
+        user = self.request.user
+        base = (
+            Program.objects.filter(team__in=user_visible_teams(user))
             .select_related("team", "team__sport", "team__owner")
             .prefetch_related("events")
         )
+        include_inactive = self.request.query_params.get("include_inactive") == "true"
+        if include_inactive and user.is_authenticated and user.is_staff:
+            return base
+        if include_inactive and user.is_authenticated:
+            return base.filter(Q(is_active=True) | Q(team__in=managed_teams(user)))
+        return base.filter(is_active=True)
 
     def _check_team_write(self, team):
         if team is None or not managed_teams(self.request.user).filter(pk=team.pk).exists():
@@ -44,6 +74,11 @@ class ProgramViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         self._check_team_write(serializer.validated_data.get("team", serializer.instance.team))
         serializer.save()
+
+    def perform_destroy(self, instance):
+        self._check_team_write(instance.team)
+        instance.is_active = False
+        instance.save(update_fields=["is_active"])
 
     @extend_schema(
         request=GeneratePlanRequestSerializer,

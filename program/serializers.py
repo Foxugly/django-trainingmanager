@@ -44,6 +44,7 @@ class ProgramSerializer(serializers.ModelSerializer):
             "generated_by_ai",
             "ai_response",
             "ai_generated_at",
+            "is_active",
             "created_at",
             "updated_at",
         ]
