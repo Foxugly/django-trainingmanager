@@ -1,7 +1,7 @@
 import logging
 
 from django.utils.translation import gettext_lazy as _
-from drf_spectacular.utils import OpenApiResponse, extend_schema
+from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers as drf_serializers
 from rest_framework import status
 from rest_framework.generics import RetrieveUpdateAPIView
@@ -238,11 +238,43 @@ class ResendEmailView(APIView):
         )
 
 
+@extend_schema(
+    responses={
+        200: OpenApiResponse(
+            response=inline_serializer(
+                name="TokenObtainPairResponse",
+                fields={
+                    "access": drf_serializers.CharField(),
+                    "refresh": drf_serializers.CharField(),
+                },
+            ),
+            description=(
+                "JWT pair. Use `access` as a Bearer token; obtain a fresh "
+                "`access` via /auth/token/refresh/ when it expires."
+            ),
+        ),
+        400: OpenApiResponse(
+            description=(
+                "Email not verified (code=email_not_verified) — the frontend "
+                "should expose a 'Resend confirmation email' affordance — or "
+                "any other validation error normalized by the custom "
+                "exception handler."
+            ),
+        ),
+        401: OpenApiResponse(description="Invalid username/email or password."),
+    },
+)
 class VerifiedTokenObtainPairView(TokenObtainPairView):
     """Drop-in replacement for SimpleJWT's TokenObtainPairView that refuses
     login when the user's primary email is unverified.
 
     Rate-limited to 10 requests per minute per IP (anti-bruteforce).
+
+    The @extend_schema(responses=...) above is required because SimpleJWT's
+    TokenObtainPairSerializer describes the *input* shape ({username, password})
+    and drf-spectacular would otherwise reuse it for the response — leading
+    to a wrong codegen on the frontend (Observable<{username, password}>
+    instead of Observable<{access, refresh}>).
     """
 
     serializer_class = VerifiedTokenObtainPairSerializer
