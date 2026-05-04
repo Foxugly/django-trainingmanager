@@ -182,8 +182,13 @@ class ProgramViewSet(viewsets.ModelViewSet):
                 date__gte=date_start,
                 date__lte=date_end,
             )
-            deleted_count = existing.count()
-            existing.delete()
+            # I4: single-pass delete that returns an exact count, instead of
+            # count() + delete() which could mismatch under concurrent inserts.
+            # We pick the per-model count rather than the cascade total so the
+            # response reflects "Events replaced", not "rows deleted total"
+            # (Attendance.event is CASCADE and would inflate the number).
+            _total, per_model = existing.delete()
+            deleted_count = per_model.get("event.Event", 0)
 
         created_count = 0
         for ev_data in new_events_data:
