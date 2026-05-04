@@ -220,7 +220,28 @@ def test_GET_team_ai_usage_invalid_period_returns_400(auth_client_trainer, train
     team = trainer_user.owned_teams.first()
     response = auth_client_trainer.get(f"/api/v1/teams/{team.pk}/ai-usage/?period=hour")
     assert response.status_code == 400
-    assert response.json()["code"] == "invalid_period"
+    body = response.json()
+    # Now goes through the standard DRF ChoiceField validation +
+    # custom_exception_handler normalisation. The field-level code
+    # remains identifiable via fields.period[0].code.
+    assert body["code"] == "validation_error"
+    assert body["fields"]["period"][0]["code"] == "invalid_choice"
+
+
+def test_GET_team_ai_usage_invalid_start_date_returns_400(auth_client_trainer, trainer_user):
+    """Replication of I5 fix on aiusage: malformed ?start used to bubble up
+    as 500 from the ORM."""
+    team = trainer_user.owned_teams.first()
+    response = auth_client_trainer.get(f"/api/v1/teams/{team.pk}/ai-usage/?start=foo")
+    assert response.status_code == 400
+
+
+def test_GET_team_ai_usage_details_invalid_since_returns_400(auth_client_trainer, trainer_user):
+    team = trainer_user.owned_teams.first()
+    response = auth_client_trainer.get(
+        f"/api/v1/teams/{team.pk}/ai-usage/details/?since=not-a-date"
+    )
+    assert response.status_code == 400
 
 
 # =====================================================================

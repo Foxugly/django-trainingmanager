@@ -12,7 +12,12 @@ from rest_framework.response import Response
 from team.models import Team
 
 from .models import AIUsage
-from .serializers import AIUsageAggregateResponseSerializer, AIUsageDetailSerializer
+from .serializers import (
+    AIUsageAggregateResponseSerializer,
+    AIUsageByTeamDetailsQuerySerializer,
+    AIUsageByTeamQuerySerializer,
+    AIUsageDetailSerializer,
+)
 
 PERIOD_TRUNC_MAP = {
     "day": TruncDay,
@@ -67,24 +72,21 @@ class TeamAIUsageViewSet(viewsets.GenericViewSet):
         team = get_object_or_404(Team, pk=team_id)
         _check_team_access(request.user, team)
 
-        period = request.query_params.get("period", "month")
-        if period not in PERIOD_TRUNC_MAP:
-            return Response(
-                {
-                    "code": "invalid_period",
-                    "detail": _("period must be one of: day, week, month, year."),
-                },
-                status=400,
-            )
+        # Validate query params (period/start/end/exclude_ping). Malformed
+        # dates used to bubble up as 500 from the ORM; now they return a
+        # consistent 400.
+        query_serializer = AIUsageByTeamQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+        qp = query_serializer.validated_data
 
-        exclude_ping = request.query_params.get("exclude_ping", "true").lower() == "true"
+        period = qp["period"]
+        exclude_ping = qp["exclude_ping"]
+        start = qp.get("start")
+        end = qp.get("end")
 
         qs = AIUsage.objects.filter(team=team)
         if exclude_ping:
             qs = qs.exclude(endpoint=AIUsage.Endpoint.PING)
-
-        start = request.query_params.get("start")
-        end = request.query_params.get("end")
         if start:
             qs = qs.filter(created_at__gte=start)
         if end:
@@ -137,10 +139,14 @@ class TeamAIUsageViewSet(viewsets.GenericViewSet):
         team = get_object_or_404(Team, pk=team_id)
         _check_team_access(request.user, team)
 
+        query_serializer = AIUsageByTeamDetailsQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+        qp = query_serializer.validated_data
+
         qs = AIUsage.objects.filter(team=team).select_related("user")
 
-        since = request.query_params.get("since")
-        endpoint = request.query_params.get("endpoint")
+        since = qp.get("since")
+        endpoint = qp.get("endpoint")
         if since:
             qs = qs.filter(created_at__gte=since)
         if endpoint:

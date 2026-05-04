@@ -42,3 +42,29 @@ class AIUsageAggregateResponseSerializer(serializers.Serializer):
     period = serializers.CharField()
     exclude_ping = serializers.BooleanField()
     data = AIUsageAggregateRowSerializer(many=True)
+
+
+class AIUsageByTeamQuerySerializer(serializers.Serializer):
+    """Validates ?period/?start/?end/?exclude_ping on /teams/{id}/ai-usage/.
+
+    Replaces the previous hand-rolled parsing that let malformed dates
+    bubble up as 500 from the ORM (mirror of I5 fix on chat)."""
+
+    period = serializers.ChoiceField(
+        choices=["day", "week", "month", "year"],
+        required=False,
+        default="month",
+    )
+    start = serializers.DateField(required=False)
+    end = serializers.DateField(required=False)
+    exclude_ping = serializers.BooleanField(required=False, default=True)
+
+
+class AIUsageByTeamDetailsQuerySerializer(serializers.Serializer):
+    """Validates ?since/?endpoint on /teams/{id}/ai-usage/details/."""
+
+    since = serializers.DateTimeField(required=False)
+    endpoint = serializers.ChoiceField(
+        choices=[("ping", "ping"), ("plan", "plan"), ("training", "training")],
+        required=False,
+    )
