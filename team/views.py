@@ -89,10 +89,11 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
 
     def _notify_managers(self, join_request):
         team = join_request.team
-        recipients = list(team.managers.values_list("email", flat=True))
-        if team.owner.email:
-            recipients.append(team.owner.email)
-        recipients = [r for r in recipients if r]
+        # Owner can also be a manager — dedupe so they don't get the email twice.
+        recipients = sorted(
+            {e for e in team.managers.values_list("email", flat=True) if e}
+            | ({team.owner.email} if team.owner.email else set())
+        )
         if not recipients:
             return
         subject = f"[TrainingManager] Nouvelle demande de {join_request.user.username}"
