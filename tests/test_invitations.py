@@ -54,8 +54,16 @@ def test_POST_create_invitation_as_non_trainer_returns_403(auth_client_non_train
     assert response.status_code == 403
 
 
-def test_POST_create_invitation_existing_user_links_member(auth_client_trainer, trainer_user):
-    existing = UserFactory(email="existing@local.test")
+def test_POST_create_invitation_existing_user_returns_400_no_db_changes(
+    auth_client_trainer, trainer_user
+):
+    """C1 fix: refuse direct invitation when the email matches an existing user.
+
+    Auto-creating Member + TeamMembership for an existing user without their
+    consent was a hijack vector — any trainer could enrol any registered user
+    in their team simply by knowing the email. We now require the trainer to
+    use an alternate flow (e.g. ask the user to file a TeamJoinRequest)."""
+    UserFactory(email="existing@local.test")
     team = trainer_user.owned_teams.first()
     mail.outbox = []
     response = auth_client_trainer.post(
@@ -68,14 +76,43 @@ def test_POST_create_invitation_existing_user_links_member(auth_client_trainer, 
         },
         format="json",
     )
-    assert response.status_code == 201
-    assert response.json().get("member_id") is not None
-    member = Member.objects.get(user=existing)
-    assert member.memberships.filter(team=team, left_at__isnull=True).exists()
+    assert response.status_code == 400
+    body = response.json()
+    assert body.get("code") == "user_already_registered", body
+    # No DB side effects on this branch: no Member, no TeamMembership, no Invitation.
+    assert not Member.objects.filter(email="existing@local.test").exists()
+    assert not TeamMembership.objects.filter(member__email="existing@local.test").exists()
     assert not TeamInvitation.objects.filter(email="existing@local.test").exists()
+    # No email sent either (neither the signup link nor the legacy "you were
+    # added" notification, which has been removed).
+    assert mail.outbox == []
+
+
+def test_POST_create_invitation_new_email_still_creates_invitation(
+    auth_client_trainer, trainer_user
+):
+    """C1 fix non-regression: the new-email branch keeps working unchanged."""
+    team = trainer_user.owned_teams.first()
+    mail.outbox = []
+    response = auth_client_trainer.post(
+        "/api/v1/invitations/",
+        {
+            "team": team.pk,
+            "email": "fresh@local.test",
+            "firstname": "Fresh",
+            "lastname": "User",
+        },
+        format="json",
+    )
+    assert response.status_code == 201
+    assert TeamInvitation.objects.filter(
+        email="fresh@local.test", team=team, status="pending"
+    ).exists()
+    # Member created (without user link, since no User exists for this email yet).
+    member = Member.objects.get(email="fresh@local.test")
+    assert member.user is None
     assert len(mail.outbox) == 1
-    assert mail.outbox[0].to == ["existing@local.test"]
-    assert "/invitation/" not in mail.outbox[0].body
+    assert "/invitation/" in mail.outbox[0].body
 
 
 def test_POST_create_invitation_duplicate_pending_returns_400(auth_client_trainer, trainer_user):

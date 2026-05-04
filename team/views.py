@@ -203,11 +203,21 @@ class TeamInvitationViewSet(viewsets.ModelViewSet):
         request=CreateInvitationSerializer,
         responses={
             201: TeamInvitationSerializer,
+            400: OpenApiResponse(
+                description=(
+                    "Validation error. Possible codes include: "
+                    "`user_already_registered` when the email matches an existing "
+                    "user account (direct enrolment is refused for existing users); "
+                    "`email_already_invited`, `not_a_manager`, `team_not_active`."
+                ),
+            ),
         },
         description=(
-            "Trainer pre-registers an athlete on a managed team. "
-            "If the email matches an existing user, the response payload "
-            "is {detail, member_id} instead of a TeamInvitation."
+            "Trainer pre-registers an athlete on a managed team by sending an "
+            "invitation email. Refused with code=user_already_registered if the "
+            "email matches an existing user account; the trainer must use a "
+            "different flow (e.g. ask the user to issue a TeamJoinRequest) for "
+            "registered users."
         ),
     )
     def create(self, request, *args, **kwargs):
@@ -218,28 +228,23 @@ class TeamInvitationViewSet(viewsets.ModelViewSet):
         data = serializer.validated_data
 
         User = get_user_model()
-        existing_user = User.objects.filter(email=data["email"]).first()
+        if User.objects.filter(email=data["email"]).exists():
+            raise drf_serializers.ValidationError(
+                {
+                    "detail": _(
+                        "Cet utilisateur est déjà enregistré. Une invitation "
+                        "directe n'est pas possible pour les comptes existants."
+                    ),
+                },
+                code="user_already_registered",
+            )
 
         member = Member.objects.create(
             firstname=data["firstname"],
             lastname=data["lastname"],
             email=data["email"],
             phonenumber=data.get("phonenumber", ""),
-            user=existing_user,
         )
-        TeamMembership.objects.create(team=data["team"], member=member)
-
-        if existing_user is not None:
-            self._send_existing_user_notification(existing_user, data["team"])
-            return Response(
-                {
-                    "code": "user_already_exists",
-                    "detail": _("User already exists; Member created and linked."),
-                    "member_id": member.id,
-                },
-                status=status.HTTP_201_CREATED,
-            )
-
         invitation = TeamInvitation.objects.create(
             team=data["team"],
             invited_by=request.user,
@@ -274,24 +279,6 @@ class TeamInvitationViewSet(viewsets.ModelViewSet):
             )
         except Exception:
             logger.exception("Failed to send invitation email")
-
-    def _send_existing_user_notification(self, user, team):
-        subject = f"[TrainingManager] Vous avez ete ajoute a {team.name}"
-        body = (
-            f"Bonjour {user.first_name or user.username},\n\n"
-            f'Vous avez ete ajoute a la team "{team.name}". '
-            f"Vous pouvez vous y connecter depuis votre compte existant.\n"
-        )
-        try:
-            send_mail(
-                subject=subject,
-                message=body,
-                from_email=dj_settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
-        except Exception:
-            logger.exception("Failed to send existing-user notification")
 
     def perform_destroy(self, instance):
         if instance.status != "pending":
