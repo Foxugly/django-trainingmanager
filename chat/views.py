@@ -121,10 +121,13 @@ class MessageViewSet(viewsets.ModelViewSet):
         serializer.save(team=team, author=self.request.user)
 
     def perform_update(self, serializer):
-        instance = serializer.save()
-        if not instance.edited_at:
-            instance.edited_at = timezone.now()
-            instance.save(update_fields=["edited_at"])
+        # Set edited_at the first time a message is updated, in the same
+        # SQL UPDATE as the user-facing change (instead of save() + a
+        # second save(update_fields=["edited_at"])).
+        kwargs = {}
+        if not serializer.instance.edited_at:
+            kwargs["edited_at"] = timezone.now()
+        serializer.save(**kwargs)
 
     def perform_destroy(self, instance):
         if not instance.deleted_at:
