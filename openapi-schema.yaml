@@ -1433,9 +1433,10 @@ paths:
           description: ''
     post:
       operationId: invitations_create
-      description: Trainer pre-registers an athlete on a managed team. If the email
-        matches an existing user, the response payload is {detail, member_id} instead
-        of a TeamInvitation.
+      description: Trainer pre-registers an athlete on a managed team by sending an
+        invitation email. Refused with code=user_already_registered if the email matches
+        an existing user account; the trainer must use a different flow (e.g. ask
+        the user to issue a TeamJoinRequest) for registered users.
       tags:
       - invitations
       requestBody:
@@ -1459,6 +1460,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/TeamInvitation'
           description: ''
+        '400':
+          description: 'Validation error. Possible codes include: `user_already_registered`
+            when the email matches an existing user account (direct enrolment is refused
+            for existing users); `email_already_invited`, `not_a_manager`, `team_not_active`.'
   /api/v1/invitations/{id}/:
     get:
       operationId: invitations_retrieve
