@@ -2,14 +2,23 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView
+
+from customuser.views import VerifiedTokenObtainPairView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # Allauth headless (register, login, email confirmation, password reset)
+    # Allauth headless (alternate session-based flow, kept for completeness;
+    # the project's primary auth surface is the JWT endpoints below + the
+    # custom register/email/resend endpoints in customuser.urls).
     path("api/v1/auth/", include("allauth.headless.urls")),
-    # Auth API (JWT)
-    path("api/v1/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    # Auth API (JWT). VerifiedTokenObtainPairView refuses login for users
+    # whose primary email is not yet verified — see customuser/serializers.py.
+    path(
+        "api/v1/auth/token/",
+        VerifiedTokenObtainPairView.as_view(),
+        name="token_obtain_pair",
+    ),
     path("api/v1/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # CustomUser (/me/)
     path("api/v1/", include("customuser.urls")),

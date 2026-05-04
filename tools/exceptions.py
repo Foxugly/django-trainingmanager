@@ -11,6 +11,19 @@ class ResourceLocked(APIException):
     default_code = "resource_locked"
 
 
+class EmailNotVerified(APIException):
+    """JWT login refused because the user's primary email is unverified.
+
+    Frontend matches on `code == "email_not_verified"` to expose the
+    'Resend confirmation email' affordance."""
+
+    status_code = 400
+    default_detail = _(
+        "Email not verified. Please check your inbox or request a new confirmation link."
+    )
+    default_code = "email_not_verified"
+
+
 def custom_exception_handler(exc, context):
     """Normalise every 4xx error to {code, detail, fields?}.
 
