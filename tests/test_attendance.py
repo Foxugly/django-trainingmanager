@@ -237,6 +237,86 @@ def test_owner_can_delete(coach_client, future_event, athlete_member, present_st
 
 
 # =====================================================================
+# C3 — member is read-only after create (no cross-team repointing)
+# =====================================================================
+
+
+def test_PATCH_attendance_cannot_repoint_member_to_other_team(
+    coach_client, future_event, athlete_member, present_status, absent_status
+):
+    """C3 fix: a coach must not be able to PATCH `member` to a Member of
+    another team. The pre-fix viewset only validated team-membership in
+    perform_create — a PATCH could swap `member` to any Member id without
+    re-validation, breaking the team-scoped boundary."""
+    att = Attendance.objects.create(
+        event=future_event, member=athlete_member, status=present_status
+    )
+
+    # Member that belongs to a completely separate team.
+    other_team = TeamFactory()
+    foreign_member = Member.objects.create(
+        firstname="For", lastname="Eign", email="foreign@local.test"
+    )
+    TeamMembership.objects.create(team=other_team, member=foreign_member)
+
+    response = coach_client.patch(
+        _url(future_event.pk, att.pk),
+        {"member": foreign_member.pk, "status": absent_status.pk},
+        format="json",
+    )
+    # Silent ignore on member (read-only post-create); status still applies.
+    assert response.status_code == 200, response.json()
+    att.refresh_from_db()
+    assert att.member_id == athlete_member.pk
+    assert att.status_id == absent_status.pk
+
+
+def test_PATCH_attendance_cannot_repoint_member_even_within_same_team(
+    coach_client, future_event, athlete_member, present_status
+):
+    """member is read-only post-create regardless of legitimacy. An
+    Attendance row represents 'this specific person was at this event
+    with this status' — not a reassignable slot. To reassign, delete and
+    re-create."""
+    att = Attendance.objects.create(
+        event=future_event, member=athlete_member, status=present_status
+    )
+
+    # Another legit member of the SAME team.
+    team_mate = Member.objects.create(firstname="T", lastname="M", email="tm@local.test")
+    TeamMembership.objects.create(team=future_event.refer_program.team, member=team_mate)
+
+    response = coach_client.patch(
+        _url(future_event.pk, att.pk),
+        {"member": team_mate.pk},
+        format="json",
+    )
+    assert response.status_code == 200
+    att.refresh_from_db()
+    assert att.member_id == athlete_member.pk
+
+
+def test_PATCH_attendance_status_only_still_works(
+    coach_client, future_event, athlete_member, present_status, absent_status
+):
+    """Non-regression: PATCH with status only behaves as before (already
+    covered by test_owner_can_patch_status above; this duplicates the
+    intent in the C3 cluster for clarity)."""
+    att = Attendance.objects.create(
+        event=future_event, member=athlete_member, status=present_status
+    )
+    response = coach_client.patch(
+        _url(future_event.pk, att.pk),
+        {"status": absent_status.pk},
+        format="json",
+    )
+    assert response.status_code == 200
+    att.refresh_from_db()
+    assert att.status_id == absent_status.pk
+    assert att.member_id == athlete_member.pk
+
+
+# =====================================================================
 # BULK
 # =====================================================================
 

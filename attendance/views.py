@@ -169,8 +169,22 @@ class IsTeamCoachOrReadOwnAttendance(BasePermission):
             "Returns 400 if a row already exists for (event, member) — use PATCH."
         ),
     ),
-    update=extend_schema(summary="Replace attendance row (coach only)"),
-    partial_update=extend_schema(summary="Update attendance status (coach only)"),
+    update=extend_schema(
+        summary="Replace attendance row (coach only)",
+        description=(
+            "Replace an attendance row. `member` is read-only after create "
+            "and is silently ignored on update — to reassign attendance, "
+            "DELETE the row and create a new one."
+        ),
+    ),
+    partial_update=extend_schema(
+        summary="Update attendance status (coach only)",
+        description=(
+            "Update one or more fields of an attendance row. `member` is "
+            "read-only after create and is silently ignored — to reassign "
+            "attendance, DELETE the row and create a new one."
+        ),
+    ),
     destroy=extend_schema(summary="Delete an attendance row (coach only)"),
 )
 class AttendanceViewSet(viewsets.ModelViewSet):
