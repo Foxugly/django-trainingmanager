@@ -30,10 +30,6 @@ def user_visible_teams(user):
     ).distinct()
 
 
-# Backward-compat alias. Prefer user_visible_teams in new code.
-accessible_teams = user_visible_teams
-
-
 def managed_teams(user):
     """Teams the user can write to: owned + managed."""
     if not user.is_authenticated:
