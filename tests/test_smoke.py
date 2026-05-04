@@ -68,6 +68,46 @@ def test_PATCH_me_cannot_promote_to_staff(auth_client, authenticated_user):
     assert authenticated_user.is_superuser is False
 
 
+def test_PATCH_me_cannot_change_email(auth_client, authenticated_user):
+    """C2 fix: email is read-only on /me/. Silently ignored on PATCH.
+
+    Allowing direct email mutation without verification was a takeover
+    vector — combined with C1 (existing-user invitations), an attacker
+    could swap their email to receive invitations destined for someone
+    else. Until a verified change-email flow lands (v2, deferred),
+    email changes go through admin only.
+    """
+    original_email = authenticated_user.email
+    response = auth_client.patch(
+        "/api/v1/me/",
+        {"email": "attacker@evil.test", "first_name": "StillUpdated"},
+        format="json",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    # email in response reflects the unchanged stored value
+    assert body["email"] == original_email
+    # other writable fields are still updatable in the same request
+    assert body["first_name"] == "StillUpdated"
+
+    authenticated_user.refresh_from_db()
+    assert authenticated_user.email == original_email
+
+
+def test_PUT_me_returns_405(auth_client):
+    """C2 fix: PUT is disabled on /me/. PATCH only.
+
+    PUT with a partial body would have reset unspecified writable fields
+    (first_name, last_name, language) to their model defaults — a footgun
+    for any client that thinks PUT is "the same as PATCH but full body"."""
+    response = auth_client.put(
+        "/api/v1/me/",
+        {"first_name": "ShouldNotApply"},
+        format="json",
+    )
+    assert response.status_code == 405
+
+
 # ------------------------------ /teams/ ------------------------------
 
 
