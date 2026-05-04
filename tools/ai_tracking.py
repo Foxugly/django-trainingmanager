@@ -41,5 +41,10 @@ def track_ai_usage(response, *, team=None, user=None, endpoint, model_used):
             cache_read_tokens=int(getattr(usage, "cache_read_input_tokens", 0) or 0),
         )
     except Exception:
-        logger.warning("Failed to track AI usage", exc_info=True)
+        # I8: billing failure is a monetisation blocker, not a warning.
+        # An AIUsage row that never gets recorded means the tokens were
+        # consumed (and paid for) without an audit trail or cost cap
+        # signal. Surface as ERROR so monitoring (and any future Sentry
+        # / alerting) treats it as actionable.
+        logger.error("Failed to track AI usage", exc_info=True)
         return None
