@@ -199,3 +199,60 @@ def test_DELETE_program_by_athlete_returns_403(api_client):
     assert response.status_code == 403
     program.refresh_from_db()
     assert program.is_active is True
+
+
+# =====================================================================
+# C4 — Program.events queryset scoped to managed teams
+# =====================================================================
+
+
+def test_PATCH_program_cannot_attach_event_of_other_team(api_client):
+    """C4 fix: a manager of team A cannot PATCH their Program to attach
+    Events that belong to team B. The pre-fix ProgramSerializer used
+    Event.objects.all() as the queryset for the `events` M2M field —
+    breaking the team-scoped boundary."""
+    from event.models import Event
+
+    manager_a = _make_user("c4_mgr_a")
+    team_a = TeamFactory(owner=manager_a)
+    program_a = ProgramFactory(team=team_a, is_active=True)
+
+    other_owner = _make_user("c4_other")
+    team_b = TeamFactory(owner=other_owner)
+    program_b = ProgramFactory(team=team_b, is_active=True)
+    foreign_event = Event.objects.create(refer_program=program_b, name="foreign")
+
+    api_client.force_authenticate(user=manager_a)
+    response = api_client.patch(
+        f"/api/v1/programs/{program_a.pk}/",
+        {"events": [foreign_event.pk]},
+        format="json",
+    )
+    assert response.status_code == 400
+    body = response.json()
+    # Field-level validation error: foreign_event.pk is no longer in the
+    # scoped queryset, DRF reports it as an invalid PK.
+    assert "fields" in body or body.get("code") == "validation_error", body
+    program_a.refresh_from_db()
+    assert not program_a.events.filter(pk=foreign_event.pk).exists()
+
+
+def test_PATCH_program_can_attach_event_of_own_team(api_client):
+    """Non-regression: attaching an Event of a team the user manages still
+    works."""
+    from event.models import Event
+
+    manager = _make_user("c4_legit")
+    team = TeamFactory(owner=manager)
+    program = ProgramFactory(team=team, is_active=True)
+    own_event = Event.objects.create(refer_program=program, name="own")
+
+    api_client.force_authenticate(user=manager)
+    response = api_client.patch(
+        f"/api/v1/programs/{program.pk}/",
+        {"events": [own_event.pk]},
+        format="json",
+    )
+    assert response.status_code == 200
+    program.refresh_from_db()
+    assert program.events.filter(pk=own_event.pk).exists()

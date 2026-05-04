@@ -29,6 +29,21 @@ class ProgramSerializer(serializers.ModelSerializer):
         many=True, queryset=Event.objects.all(), required=False
     )
 
+    def __init__(self, *args, **kwargs):
+        # C4 fix: scope the writable `events` queryset to events of teams the
+        # requesting user manages. Without this, a manager of team A could
+        # PATCH a Program of team A to attach Events belonging to team B,
+        # crossing the team-scoped boundary.
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        if request is None or not getattr(request.user, "is_authenticated", False):
+            return
+        from team.queries import managed_teams
+
+        self.fields["events"].child_relation.queryset = Event.objects.filter(
+            refer_program__team__in=managed_teams(request.user)
+        )
+
     class Meta:
         model = Program
         fields = [
