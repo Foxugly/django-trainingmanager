@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from team.permissions import IsTrainer
+from team.utils import scope_by_sport_language
 from tools.openapi import INCLUDE_INACTIVE_PARAM
 from tools.permissions import AdminWriteAuthRead
 
@@ -223,8 +224,6 @@ class ExerciseViewSet(viewsets.ModelViewSet):
     ordering = ["order"]
 
     def get_queryset(self):
-        from team.utils import scope_by_sport_language
-
         qs = Exercise.objects.select_related(
             "modality__sport",
             "energysegment__energysystem",

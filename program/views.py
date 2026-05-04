@@ -15,6 +15,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
+from event.models import Event
 from team.queries import managed_teams, user_visible_teams
 from tools.openapi import INCLUDE_INACTIVE_PARAM
 from tools.throttling import AIPlanGenerationThrottle
@@ -173,8 +174,6 @@ class ProgramViewSet(viewsets.ModelViewSet):
         )
 
     def _apply_overlap_strategy(self, *, program, new_events_data, strategy, date_start, date_end):
-        from event.models import Event
-
         deleted_count = 0
         if strategy == "replace":
             existing = Event.objects.filter(

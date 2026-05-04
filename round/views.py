@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from exercise.models import Exercise
 from exercise.serializers import ExerciseSerializer
 from team.permissions import IsTrainer
+from team.utils import scope_by_sport_language
 
 from .models import Round
 from .serializers import RoundSerializer
@@ -24,8 +25,6 @@ class RoundViewSet(viewsets.ModelViewSet):
     ordering = ["order"]
 
     def get_queryset(self):
-        from team.utils import scope_by_sport_language
-
         qs = Round.objects.select_related("sport").prefetch_related(
             "exercises__modality__sport",
             "exercises__energysegment__energysystem",
