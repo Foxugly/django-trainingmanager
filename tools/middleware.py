@@ -13,7 +13,11 @@ class UserLanguageMiddleware:
 
     def __call__(self, request):
         if hasattr(request, "user") and request.user.is_authenticated:
-            user_lang = getattr(request.user, "language", None)
+            # I6: CustomUser.language is a guaranteed model field; no need
+            # for a defensive getattr that would silently mask a future
+            # rename or drop. AnonymousUser is excluded by is_authenticated
+            # just above.
+            user_lang = request.user.language
             if user_lang:
                 translation.activate(user_lang)
                 request.LANGUAGE_CODE = user_lang
