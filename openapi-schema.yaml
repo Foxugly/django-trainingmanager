@@ -887,10 +887,9 @@ paths:
           description: ''
     put:
       operationId: events_attendance_update
-      description: |-
-        CRUD on event attendance.
-
-        URL: /api/v1/events/{event_pk}/attendance/
+      description: Replace an attendance row. `member` is read-only after create and
+        is silently ignored on update — to reassign attendance, DELETE the row and
+        create a new one.
       summary: Replace attendance row (coach only)
       parameters:
       - in: path
@@ -929,10 +928,9 @@ paths:
           description: ''
     patch:
       operationId: events_attendance_partial_update
-      description: |-
-        CRUD on event attendance.
-
-        URL: /api/v1/events/{event_pk}/attendance/
+      description: Update one or more fields of an attendance row. `member` is read-only
+        after create and is silently ignored — to reassign attendance, DELETE the
+        row and create a new one.
       summary: Update attendance status (coach only)
       parameters:
       - in: path
