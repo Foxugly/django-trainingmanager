@@ -10,11 +10,16 @@ env = environ.Env()
 environ.Env.read_env(BASE_DIR / ".env", overwrite=True)
 SECRET_KEY = env("SECRET_KEY")
 
-DEBUG = env.bool("DEBUG", default=True)
+# C5: no defaults for DEBUG / ALLOWED_HOSTS — same fail-loud pattern as
+# SECRET_KEY. A missing env var raises ImproperlyConfigured at import time
+# instead of silently falling into a permissive prod-unsafe value
+# (DEBUG=True, ALLOWED_HOSTS=['*']). dev.py / dev fixtures override these
+# explicitly for local convenience; prod.py expects them in the .env.
+DEBUG = env.bool("DEBUG")
 STATE = env("STATE", default="INT")
 WEBSITE = env("WEBSITE", default="www.example.com")
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
 INSTALLED_APPS = [
     "modeltranslation",
