@@ -1,86 +1,125 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with code in this repository.
 
 ## Project
 
-Django 4.2+ training manager (originally for swim training). Domain: an `Agenda` schedules `Event`s, each made up of ordered `Round`s, each containing `Exercise`s with a `Stroke` and `EnergySegment`/`EnergySystem`. `Member`s are attached to agendas/events for attendance. Auth uses a custom user model (`customuser.CustomUser`) with `language` + `is_foo_admin` fields and django-hijack for impersonation.
+Django **6.0.4 + DRF 3.17 API-only** training manager (originally for swim training, sport-agnostic now). The branch `refactor/api-only` is the working trunk; `master` is the legacy template-based version.
+
+Domain hierarchy: `Team` (the top-level scope) owns `Program`s, each schedules `Event`s, each made of ordered `Round`s, each containing `Exercise`s with a `Modality` (a sport-specific stroke / discipline) and `EnergySegment`/`EnergySystem`. `Member`s are attached to teams via `TeamMembership`; their attendance to events is tracked via `Attendance` rows pointing at an `AttendanceStatus` (referential).
+
+Auth uses a custom user model `customuser.CustomUser` with `language` + `is_staff` and a few `is_*_admin` fields. JWT (simplejwt) for the API; allauth (headless) for signup/email confirmation/password reset.
 
 ## Common commands
 
-The Django project package is literally named `django-trainingmanager` (with a hyphen). Settings are split into `django-trainingmanager/settings/{base,dev,prod}.py`; `manage.py` and `wsgi.py` default to `django-trainingmanager.settings.dev` via `os.environ.setdefault('DJANGO_SETTINGS_MODULE', ...)`. Override with `DJANGO_SETTINGS_MODULE=django-trainingmanager.settings.prod` (env var) or `--settings=django-trainingmanager.settings.prod` (CLI flag) when targeting prod settings. **Do not** rename or `import` the package as a Python module; only `manage.py` and `wsgi.py` reach it.
+The Django project package is literally named `django-trainingmanager` (with a hyphen). Settings are split into `django-trainingmanager/settings/{base,dev,prod}.py`; `manage.py` and `wsgi.py` default to `django-trainingmanager.settings.dev` via `os.environ.setdefault('DJANGO_SETTINGS_MODULE', ...)`. The package's `settings/__init__.py` also delegates `from .dev import *` so any of `…settings`, `…settings.dev`, `…settings.prod` resolves correctly (PyCharm tends to auto-set the bare `…settings`). **Do not** rename or `import` the package as a Python module from app code; only `manage.py` and `wsgi.py` reach it.
 
 ```bash
 python manage.py runserver
 python manage.py migrate
 python manage.py makemigrations <app>
-python manage.py loaddata db.json          # seed/restore from checked-in fixture
+python manage.py loaddata db.json                    # seed/restore from checked-in fixture
 python manage.py createsuperuser
 python manage.py collectstatic
-python manage.py test                      # run all tests
-python manage.py test agenda.tests         # run a single app's tests
-python manage.py test agenda.tests.SomeTestCase.test_method
-django-admin makemessages -l fr -l nl      # extract translations (locale/ has fr, nl)
+python manage.py spectacular --file openapi-schema.yaml --validate   # regenerate API contract
+django-admin makemessages -l fr -l nl -l en -l it -l es              # 5 languages active
 django-admin compilemessages
+
+pytest                                               # full test suite
+pytest tests/test_team_membership.py                 # one file
+pytest tests/test_smoke.py::test_PATCH_me_updates_first_name   # one test
+pytest -k "me and PATCH"                             # by expression
 ```
 
-Migrations are not currently checked in (see `git status`); the first migrate after clone will create them, or `loaddata db.json` after migrating reseeds the bundled SQLite fixture.
+Migrations **are** committed under each app's `migrations/` directory.
 
-## Architecture: generic CRUD scaffolding
+## Environment / settings
 
-The non-obvious heart of this codebase is a convention-based scaffold in `tools/` that wires up CRUD views and URLs automatically. Understanding it is required to make sense of why each app's `urls.py` is two lines.
+`.env` (root, gitignored) is the single source of truth for environment-driven settings. `base.py` calls `environ.Env.read_env(BASE_DIR / ".env", overwrite=True)` — the `overwrite=True` is non-standard but intentional: it ensures `.env` wins over any variable already in `os.environ` (PyCharm Run Config, system env, parent shell). `.env.example` lists the required keys.
 
-### `tools/generic_class.py:GenericClass`
-Abstract model base. In `__init__` it derives URL-name strings from `_meta.app_label` / `_meta.model_name` (`<app>:<model>_change`, `_add`, `_detail`, `_delete`, `_list`) and exposes `get_change_url()`, `get_add_url()`, `get_detail_url()`, `get_delete_url()`, `get_list_url()`, `get_full_url()` (prefixes `settings.WEBSITE`). Templates rely on these methods being present — every domain model inherits from `GenericClass`.
+`base.py` has **no defaults** for `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS` — a missing value raises `ImproperlyConfigured` at import time (fail-loud). `dev.py` overrides `DEBUG=True` and `ALLOWED_HOSTS=["*"]` for local convenience; `prod.py` enforces `DEBUG=False` and reads `ALLOWED_HOSTS` from the environment.
 
-### `tools/generic_views.py`
-`GenericCreateView`, `GenericListView`, `GenericUpdateView`, `GenericDetailView`, `GenericDeleteView`. Each derives `app_name` / `model_name` / `success_url` from `self.model._meta` in `__init__`. Default templates: `update.html`, `list.html`, `detail.html` (in `templates/`). App views typically subclass these and only set `model = X`.
+## Architecture: API-only DRF
 
-### `tools/generic_urls.py:add_url_from_generic_views(app_views_module)`
-Introspects the named views module and auto-registers URL patterns **by class-name suffix**:
+Each app exposes a `ViewSet` (under `<app>/views.py`) registered in `<app>/urls.py` then included in `django-trainingmanager/urls.py` under `/api/v1/...`. Serializers live in `<app>/serializers.py`. Permissions in `<app>/permissions.py` (or `tools/permissions.py` for cross-app helpers).
 
-| Class suffix  | Path                       | URL name           |
-|---------------|----------------------------|--------------------|
-| `CreateView`  | `<model>/add/`             | `<model>_add`      |
-| `ListView`    | `<model>/`                 | `<model>_list`     |
-| `UpdateView`  | `<model>/<int:pk>/change/` | `<model>_change`   |
-| `DetailView`  | `<model>/<int:pk>/`        | `<model>_detail`   |
-| `DeleteView`  | `<model>/<int:pk>/delete`  | `<model>_delete`   |
+OpenAPI is generated by **drf-spectacular** and the schema is **committed** at `openapi-schema.yaml`. Convention: **0 spectacular warnings** is maintained in permanence — every PR that changes the API surface regenerates the yaml in the same commit (or a paired `chore(openapi): …` commit). The yaml is the contract the frontend reads.
 
-So an app's `urls.py` is just:
+### Two archetypes of viewsets
+
+The codebase has a strict dichotomy. Mixing them up is the most common source of bugs (cf. code review C1-C4).
+
+**Referentials (staff-managed)** — Sport, Modality, EnergySystem, EnergySegment, AttendanceStatus.
+- Read: any authenticated user; write: staff only (`tools/permissions.AdminWriteAuthRead`).
+- Soft-delete via `tools/mixins.SoftDeleteIncludeInactiveModelViewSet` (sets `is_active=False` on DELETE; `?include_inactive=true` lifts the filter for staff).
+- Two serializer flavours: a public one with localised label, and an `Admin` one exposing per-language variants (`name_fr`/`name_nl`/…). Switched in `get_serializer_class` based on `request.user.is_staff` + action.
+
+**Team-scoped resources** — Program, Event, Member, Note, Chat, Attendance, …
+- Read scoped to `team.queries.user_visible_teams(user)`; write gated by `team.queries.managed_teams(user)` (or `team.is_managed_by(user)` for object-level checks).
+- `Program` and `Note` also use the soft-delete + `?include_inactive=true` pattern but with a **team-manager** policy (not staff-only). Note uses the mixin with an overridden `_include_inactive_allowed`. Program has a custom destroy (calls `_check_team_write` first) and is **not** a candidate for the mixin.
+
+### Permissions cheat-sheet
+
+- `tools/permissions.AdminWriteAuthRead` — read by any authenticated user, write by staff. For referentials.
+- `team.permissions.IsTeamOwnerOrReadOnly` — owner-only writes.
+- `team.permissions.IsTeamManagerOrReadOnly` — owner/manager writes; DELETE owner-only with a dedicated `OwnerOnlyDeleteDenied` (code `owner_only_delete`).
+- `team.permissions.IsTrainer` — write requires being owner or manager of at least one active team. Used for catalog mutations (Exercise).
+- `team.permissions.IsJoinRequestParticipant` — for `TeamJoinRequest`.
+- `attendance.views.IsTeamCoachOrReadOwnAttendance`, `note.permissions.IsTeamCoachOrReadOwnNotes`, `chat.permissions.IsTeamMemberAndChatPolicy` — nested-resource specific.
+
+### Helpers — single source of truth
+
+- `team/queries.py:user_visible_teams(user)` — every team the user can read (owner / manager / active member / public+active).
+- `team/queries.py:managed_teams(user)` — owned + managed.
+- `team/models.py:Team.is_managed_by(user)` — convenience for object-level checks.
+
+If you find yourself writing `Team.objects.filter(Q(owner=user) | Q(managers=user))`, replace with `managed_teams(user)`.
+
+## Error responses
+
+`tools/exceptions.custom_exception_handler` is wired in `REST_FRAMEWORK['EXCEPTION_HANDLER']`. It normalises every 4xx to `{code, detail}` (single-error) or `{code, detail, fields}` (validation with per-field errors). To raise a top-level coded error in a viewset:
+
 ```python
-app_name = 'agenda'
-urlpatterns = add_url_from_generic_views('agenda.views')
-urlpatterns.append(path(...))   # extra non-CRUD routes
+raise drf_serializers.ValidationError(
+    {"detail": _("...")},                  # ← dict with only "detail" key
+    code="my_specific_code",
+)
 ```
-**Implication**: to add a new model, define `<Model>{Create,List,Update,Detail,Delete}View` classes in `<app>/views.py` with `model = <Model>` — URLs and reverse names are wired automatically. Don't invent a different naming convention; the introspection relies on the suffix exactly.
 
-### `tools/buildclass.py`
-Standalone code generator (run as `python tools/buildclass.py`) that prints starter `views.py` / `urls.py` / `models.py` for a new `(app, label, ClassName)`. Output references `view_breadcrumbs`, which is **not** in `requirements.txt` — treat it as boilerplate to copy and edit, not a complete recipe.
+The dict-with-only-`detail` form is what triggers the top-level code branch (see `tools/exceptions._normalize_validation_error` line 53). Field-level errors (`{"field_name": _("...")}`) end up under `body.fields.<field>[0].code`.
 
-## Modal forms convention
+## Modeltranslation
 
-CRUD that opens in a Bootstrap modal uses `bootstrap_modal_forms.generic.BSModal{Create,Update,Delete}View` with `template_name = 'modal.html'` (or `'modal_round.html'` for nested formsets) — see `agenda/views.py`, `round/views.py`. Plain (non-modal) CRUD uses the `Generic*View` base classes. Both styles coexist in the same app; pick by whether the UX wants a modal.
+`django-modeltranslation` is active for 5 languages (`fr`, `nl`, `en`, `it`, `es`; default `fr` with fallback to `fr`). Models with translatable fields declare them in `<app>/translation.py`. The frontend gets the localised value automatically (LocaleMiddleware + `tools/middleware.UserLanguageMiddleware` resolves order: `user.language` > `Accept-Language` > `LANGUAGE_CODE`).
 
-`round/views.py` additionally manages a nested `RoundExerciseFormSet` inside `form_valid` under `transaction.atomic()` — that's the pattern for any "object with inline children" form here.
+## i18n for new strings
 
-## URL namespacing
+Wrap with `gettext_lazy as _` (or `gettext`); run `django-admin makemessages -l fr -l nl -l en -l it -l es` then `compilemessages`. DRF stock errors (e.g. `"A valid integer is required."`) are already i18n via Django — prefer leveraging DRF validation than rolling custom messages.
 
-Root URLs (`django-trainingmanager/urls.py`) include each app under its own namespace: `agenda:`, `event:`, `member:`, `round:`, `exercise:`. `GenericClass.get_*_url()` methods build names like `agenda:agenda_change` — keep `app_name` set in each app's `urls.py` or reverse lookups break.
+## AI integration
 
-## Templates
+`tools/ai.py` wraps the Anthropic SDK. Tracking via `tools/ai_tracking.track_ai_usage` writes an `AIUsage` row per call (team + user nullable for `/ai/ping/`). Failures are logged at `ERROR` level (cost auditing is monetisation-critical) but do not break the user-facing call. Throttling is per-endpoint (`AIPingThrottle`, `AIPlanGenerationThrottle`, `AITrainingGenerationThrottle` in `tools/throttling.py`).
 
-Generic CRUD templates live in the project-level `templates/` dir (`list.html`, `update.html`, `detail.html`, `delete.html`, `modal.html`, `modal_round.html`, `base.html`, `_header.html`, `_footer.html`, `index.html`). Per-model overrides go in app templates (e.g. `AgendaDetailView.template_name = 'agenda.html'`). The `common_tags` template library (root `common_tags.py`) provides `hash`, `verbose_name`, `app_name` filters and is registered in `TEMPLATES.OPTIONS.libraries`.
+Two AI-driven endpoints: `POST /api/v1/programs/{id}/generate-events/` (Claude generates a session list for a Program) and `POST /api/v1/events/{id}/generate-training/` (Claude fills a single Event with Rounds + Exercises).
 
-## i18n
+## Tests
 
-`gettext`/`gettext_lazy` is used throughout models, forms, and views. Languages: `en`, `fr`, `nl`. `set_lang` view in root `urls.py` switches via `?lang=` and persists in cookie. When adding user-visible strings, wrap with `_(...)` and run `makemessages`.
+- pytest + pytest-django + factory-boy.
+- All tests live in the root `tests/` directory (not per-app). Fixtures in `tests/conftest.py`, factories in `tests/factories.py`.
+- `pytest.ini`: `--reuse-db --no-cov-on-fail`, settings `django-trainingmanager.settings.dev`.
+- Available client fixtures: `auth_client`, `auth_client_trainer`, `auth_client_non_trainer`, `admin_client`, `api_client`. Defined in `conftest.py`.
+- Throttle counters are reset between tests by the autouse `reset_throttle_cache` fixture (DRF throttles persist in the local-memory cache otherwise).
+- `EMAIL_BACKEND` is forced to `locmem` by an autouse fixture (no real Graph sends in tests).
 
-## Known issues / gotchas
+## Pre-commit
 
-- `agenda/views.py:create_events` uses `request.is_ajax()`, which was **removed in Django 3.1**. Under Django 4.2 (per `requirements.txt`) this raises `AttributeError`. If you touch this view, replace with `request.headers.get('x-requested-with') == 'XMLHttpRequest'`.
-- `settings.py` has `DEBUG = True`, a hardcoded `SECRET_KEY`, and `ALLOWED_HOSTS = ['*']` checked into the repo. Treat it as dev-only; production deploys need a `local_settings.py` (already in `.gitignore`).
-- `WKHTMLTOPDF_CMD = 'xvfb-run /usr/bin/wkhtmltopdf'` is Linux-specific. On Windows dev, override in local settings or expect PDF views to fail.
-- `requirements.txt` pins `selenium==3.14.0` and `pytz==2018.5` — quite old; do not assume modern Selenium 4 APIs.
-- `STATIC_ROOT` and `STATICFILES_DIRS` both point at `static/` via mutually exclusive comment toggles in `settings.py` (lines 117–120). Switching between dev and prod requires uncommenting the right one — there is no `DEBUG`-aware branch.
-- The default SQLite DB is checked in (`db.sqlite3`) along with a JSON fixture (`db.json`). Migrations directories are currently untracked; run `makemigrations` before `migrate` on a fresh clone if needed.
+`ruff` (with `--fix`), `ruff-format`, and `black` run on every commit. Target line-length 100, target Python 3.12 (despite Python 3.14 being installed locally — `pyproject.toml` defines the linter targets).
+
+## Known gotchas
+
+- **CRLF / LF on `openapi-schema.yaml`**: regenerating on Windows produces LF, while `git autocrlf` stores CRLF. `git status` shows `M` after a regen even when the content is unchanged. Verify semantic equality with `diff <(tr -d '\r' < a) <(tr -d '\r' < b)` before assuming a real delta. Use `git checkout openapi-schema.yaml` to discard CRLF-only "diffs".
+- **`Program.events` (M2M) vs `Event.refer_program` (FK)** — both relations exist between Program and Event. `Event.refer_program` is the canonical FK; the M2M is redundant and can drift. C4 fix scoped the M2M's writability to managed teams, but the duplicate relation is a known data-model issue (deferred for a dedicated cleanup).
+- **`Member.email max_length=50`** — too short for RFC 5321 (254). Migration data + frontend impact, deferred.
+- **Backup convention**: snapshot SQLite before any structural batch with `cp db.sqlite3 db.sqlite3.before-<topic>`. There are ~30 such files at the repo root (gitignored).
+- **OpenAPI runtime constraints**: `get_extra_kwargs` / `__init__` overrides that conditionally rebind serializer fields (e.g. C3 attendance.member, C4 program.events) are **not inferable** by drf-spectacular's static analysis. The yaml may show fields as writable when the runtime contract restricts them — compensate by enriching the operation `description` so the contract documentation reflects reality.
+- **i18n on new error codes**: error code strings (e.g. `"user_already_registered"`) are stable identifiers, not user-facing text — no translation needed for the code itself. The `detail` message DOES need `gettext_lazy as _`.
