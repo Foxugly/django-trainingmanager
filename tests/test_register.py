@@ -33,9 +33,19 @@ def _valid_payload(**overrides):
         "first_name": "New",
         "last_name": "Comer",
         "language": "en",
+        "turnstile_token": "test-mock-token",
     }
     base.update(overrides)
     return base
+
+
+@pytest.fixture(autouse=True)
+def turnstile_pass(monkeypatch):
+    """Default: Turnstile verification succeeds. Override per-test by
+    patching tools.turnstile.verify_turnstile_token directly."""
+    monkeypatch.setattr(
+        "customuser.views.verify_turnstile_token", lambda token, remote_ip=None: True
+    )
 
 
 # =====================================================================
@@ -140,3 +150,31 @@ def test_email_resend_unknown_email_returns_200_no_mail(api_client):
     assert response.status_code == 200
     assert response.json()["code"] == "resend_processed"
     assert mail.outbox == []
+
+
+# =====================================================================
+# Turnstile captcha (Batch 2)
+# =====================================================================
+
+
+def test_register_turnstile_invalid_returns_400_no_user_created(api_client, monkeypatch):
+    """Fail-closed: a rejected Turnstile token blocks registration before
+    any DB write."""
+    monkeypatch.setattr(
+        "customuser.views.verify_turnstile_token", lambda token, remote_ip=None: False
+    )
+    mail.outbox = []
+    response = api_client.post(REGISTER_URL, _valid_payload(), format="json")
+    assert response.status_code == 400
+    assert response.json()["code"] == "captcha_failed"
+    assert not User.objects.filter(username="newcomer").exists()
+    assert mail.outbox == []
+
+
+def test_register_missing_turnstile_token_returns_400(api_client):
+    payload = _valid_payload()
+    del payload["turnstile_token"]
+    response = api_client.post(REGISTER_URL, payload, format="json")
+    assert response.status_code == 400
+    body = response.json()
+    assert "turnstile_token" in body.get("fields", {})

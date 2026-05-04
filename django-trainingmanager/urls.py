@@ -8,10 +8,6 @@ from customuser.views import VerifiedTokenObtainPairView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # Allauth headless (alternate session-based flow, kept for completeness;
-    # the project's primary auth surface is the JWT endpoints below + the
-    # custom register/email/resend endpoints in customuser.urls).
-    path("api/v1/auth/", include("allauth.headless.urls")),
     # Auth API (JWT). VerifiedTokenObtainPairView refuses login for users
     # whose primary email is not yet verified — see customuser/serializers.py.
     path(

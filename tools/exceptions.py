@@ -24,6 +24,16 @@ class EmailNotVerified(APIException):
     default_code = "email_not_verified"
 
 
+class CaptchaFailed(APIException):
+    """Cloudflare Turnstile token was missing, invalid, expired, or the
+    siteverify call failed (fail-closed). Frontend should surface a
+    "please retry the captcha" message and re-render the widget."""
+
+    status_code = 400
+    default_detail = _("Captcha verification failed. Please try again.")
+    default_code = "captcha_failed"
+
+
 def custom_exception_handler(exc, context):
     """Normalise every 4xx error to {code, detail, fields?}.
 

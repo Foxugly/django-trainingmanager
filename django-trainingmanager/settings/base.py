@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
-    "allauth.headless",
     "sport",
     "ai",
     "aiusage",
@@ -160,6 +159,10 @@ REST_FRAMEWORK = {
         "ai_ping": "30/hour",
         "ai_plan_generation": "10/hour",
         "ai_training_generation": "10/hour",
+        # Anonymous auth-flow throttles (per IP)
+        "auth_register": "5/hour",
+        "auth_resend_email": "3/hour",
+        "auth_login": "10/min",
     },
     "EXCEPTION_HANDLER": "tools.exceptions.custom_exception_handler",
 }
@@ -196,12 +199,12 @@ ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
 ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
 
-HEADLESS_ONLY = True
+# Custom adapter routes the email confirmation link to the frontend
+# (replaces the role HEADLESS_FRONTEND_URLS used to play before we
+# disabled allauth.headless).
+ACCOUNT_ADAPTER = "customuser.adapter.FrontendAccountAdapter"
+
 FRONTEND_URL = env("FRONTEND_URL")
-HEADLESS_FRONTEND_URLS = {
-    "account_confirm_email": FRONTEND_URL + "/auth/confirm-email/{key}",
-    "account_reset_password_from_key": FRONTEND_URL + "/auth/reset-password/{key}",
-}
 
 GRAPH_TENANT_ID = env("GRAPH_TENANT_ID")
 GRAPH_CLIENT_ID = env("GRAPH_CLIENT_ID")
@@ -210,6 +213,13 @@ GRAPH_SENDER = env("GRAPH_SENDER")
 
 EMAIL_BACKEND = "tools.email.GraphEmailBackend"
 DEFAULT_FROM_EMAIL = env("GRAPH_SENDER")
+
+# Cloudflare Turnstile (captcha on /auth/register/).
+# TURNSTILE_SITE_KEY is the public widget key, safe to commit and expose
+# to the frontend. TURNSTILE_SECRET_KEY is the server-side verification
+# secret and MUST stay in .env (never committed).
+TURNSTILE_SITE_KEY = env("TURNSTILE_SITE_KEY", default="0x4AAAAAADI-0tcntdflxEqO")
+TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default="")
 
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 ANTHROPIC_MODEL_DEFAULT = env("ANTHROPIC_MODEL_DEFAULT", default="claude-haiku-4-5-20251001")

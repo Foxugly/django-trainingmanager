@@ -1,4 +1,4 @@
-from rest_framework.throttling import UserRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 
 class AIPingThrottle(UserRateThrottle):
@@ -11,3 +11,28 @@ class AIPlanGenerationThrottle(UserRateThrottle):
 
 class AITrainingGenerationThrottle(UserRateThrottle):
     scope = "ai_training_generation"
+
+
+# ---------------------------------------------------------------------
+# Anonymous auth-flow throttles (per-IP). Rates configured in
+# REST_FRAMEWORK.DEFAULT_THROTTLE_RATES in settings.
+# ---------------------------------------------------------------------
+
+
+class RegisterThrottle(AnonRateThrottle):
+    """Anti-bot signup. Per-IP."""
+
+    scope = "auth_register"
+
+
+class ResendEmailThrottle(AnonRateThrottle):
+    """Anti-enumeration + anti-mail-spam on /auth/email/resend/. Per-IP."""
+
+    scope = "auth_resend_email"
+
+
+class LoginThrottle(AnonRateThrottle):
+    """Anti-bruteforce on /auth/token/. Per-IP, generous to avoid locking
+    legit users on a typo storm."""
+
+    scope = "auth_login"

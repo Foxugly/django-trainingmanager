@@ -292,8 +292,8 @@ paths:
         email is sent for unknown addresses must remain invisible to the
         client.
 
-        TODO Batch 2: rate-limit this endpoint to prevent timing-based
-        enumeration and email-spam abuse.
+        Rate-limited to 3 requests per hour per IP (anti-enumeration +
+        anti-mail-spam).
       tags:
       - auth
       requestBody:
@@ -326,6 +326,8 @@ paths:
         Creates a CustomUser (is_active=True) plus an unverified EmailAddress
         via allauth, then sends a confirmation email. No JWT is returned —
         the caller must verify their email before obtaining tokens.
+
+        Rate-limited to 5 requests per hour per IP (anti-bot signup).
       tags:
       - auth
       requestBody:
@@ -356,6 +358,8 @@ paths:
       description: |-
         Drop-in replacement for SimpleJWT's TokenObtainPairView that refuses
         login when the user's primary email is unverified.
+
+        Rate-limited to 10 requests per minute per IP (anti-bruteforce).
       tags:
       - auth
       requestBody:
@@ -6424,6 +6428,10 @@ components:
 
         Validates uniqueness against both CustomUser AND allauth.EmailAddress
         (allauth allows two unverified entries for the same email otherwise).
+
+        `turnstile_token` is required: server-side verification with Cloudflare
+        happens in the view (not here, because we need the request to extract
+        the remote IP). The serializer just enforces presence.
       properties:
         username:
           type: string
@@ -6445,11 +6453,15 @@ components:
           allOf:
           - $ref: '#/components/schemas/LanguageEnum'
           default: en
+        turnstile_token:
+          type: string
+          writeOnly: true
       required:
       - email
       - first_name
       - last_name
       - password
+      - turnstile_token
       - username
     Round:
       type: object

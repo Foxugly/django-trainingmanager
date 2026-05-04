@@ -11,13 +11,16 @@ pytestmark = pytest.mark.django_db
 
 @pytest.fixture
 def set_throttle_rate(monkeypatch):
-    """Override DRF UserRateThrottle.THROTTLE_RATES for the duration of a test.
+    """Override DRF Throttle.THROTTLE_RATES for the duration of a test.
 
     Direct monkey-patching is required because SimpleRateThrottle.THROTTLE_RATES
     is captured as a class attribute at import time; pytest-django's settings
     fixture only replaces the live settings dict and does not propagate.
-    """
-    from rest_framework.throttling import UserRateThrottle
+
+    Both UserRateThrottle (AI endpoints, JWT-authenticated) and
+    AnonRateThrottle (auth flow endpoints, anonymous) read from this dict,
+    so we patch both class attributes."""
+    from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
     new_rates = dict(UserRateThrottle.THROTTLE_RATES)
 
@@ -25,6 +28,7 @@ def set_throttle_rate(monkeypatch):
         new_rates[scope] = rate
 
     monkeypatch.setattr(UserRateThrottle, "THROTTLE_RATES", new_rates)
+    monkeypatch.setattr(AnonRateThrottle, "THROTTLE_RATES", new_rates)
     return _set
 
 
@@ -230,3 +234,59 @@ def test_throttle_scopes_are_independent(
             f"/api/v1/programs/{program.pk}/generate-events/", payload, format="json"
         )
     assert r_g.status_code == 200
+
+
+# =====================================================================
+# Auth flow throttles (Batch 2): register / email/resend / token
+# =====================================================================
+
+
+def _register_payload(suffix):
+    return {
+        "username": f"thr_user_{suffix}",
+        "email": f"thr_user_{suffix}@local.test",
+        "password": "Sup3rS@fePass!",
+        "first_name": "Thr",
+        "last_name": "User",
+        "language": "en",
+        "turnstile_token": "mock-token",
+    }
+
+
+def test_register_throttle_returns_429_after_limit(api_client, monkeypatch, set_throttle_rate):
+    """Anti-bot signup: 5 hits/h is the prod default; reduce here to 2 to
+    fit the test budget."""
+    set_throttle_rate("auth_register", "2/min")
+    monkeypatch.setattr(
+        "customuser.views.verify_turnstile_token", lambda token, remote_ip=None: True
+    )
+
+    r1 = api_client.post("/api/v1/auth/register/", _register_payload("a"), format="json")
+    r2 = api_client.post("/api/v1/auth/register/", _register_payload("b"), format="json")
+    r3 = api_client.post("/api/v1/auth/register/", _register_payload("c"), format="json")
+    assert r1.status_code == 201
+    assert r2.status_code == 201
+    assert r3.status_code == 429
+
+
+def test_resend_email_throttle_returns_429_after_limit(api_client, set_throttle_rate):
+    set_throttle_rate("auth_resend_email", "2/min")
+    r1 = api_client.post("/api/v1/auth/email/resend/", {"email": "a@local.test"}, format="json")
+    r2 = api_client.post("/api/v1/auth/email/resend/", {"email": "b@local.test"}, format="json")
+    r3 = api_client.post("/api/v1/auth/email/resend/", {"email": "c@local.test"}, format="json")
+    assert r1.status_code == 200
+    assert r2.status_code == 200
+    assert r3.status_code == 429
+
+
+def test_login_throttle_returns_429_after_limit(api_client, set_throttle_rate):
+    """Anti-bruteforce. Bad creds also count toward the throttle (DRF
+    increments on the request, not the response)."""
+    set_throttle_rate("auth_login", "3/min")
+    payload = {"username": "ghost", "password": "wrong"}
+    statuses = [
+        api_client.post("/api/v1/auth/token/", payload, format="json").status_code for _ in range(4)
+    ]
+    # First 3 attempts get a normal 401 (creds rejected); the 4th hits 429.
+    assert statuses[:3] == [401, 401, 401]
+    assert statuses[3] == 429

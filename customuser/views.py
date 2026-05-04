@@ -11,6 +11,10 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from tools.exceptions import CaptchaFailed
+from tools.throttling import LoginThrottle, RegisterThrottle, ResendEmailThrottle
+from tools.turnstile import get_remote_ip, verify_turnstile_token
+
 from .models import CustomUser
 from .serializers import (
     EmailConfirmSerializer,
@@ -64,10 +68,13 @@ class RegisterView(APIView):
     Creates a CustomUser (is_active=True) plus an unverified EmailAddress
     via allauth, then sends a confirmation email. No JWT is returned —
     the caller must verify their email before obtaining tokens.
+
+    Rate-limited to 5 requests per hour per IP (anti-bot signup).
     """
 
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [RegisterThrottle]
 
     @extend_schema(
         request=RegisterSerializer,
@@ -94,6 +101,11 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+
+        # Server-side Turnstile check before any DB write. Fail-closed:
+        # any network/auth failure raises CaptchaFailed -> 400.
+        if not verify_turnstile_token(data["turnstile_token"], remote_ip=get_remote_ip(request)):
+            raise CaptchaFailed()
 
         user = CustomUser.objects.create_user(
             username=data["username"],
@@ -181,12 +193,13 @@ class ResendEmailView(APIView):
     email is sent for unknown addresses must remain invisible to the
     client.
 
-    TODO Batch 2: rate-limit this endpoint to prevent timing-based
-    enumeration and email-spam abuse.
+    Rate-limited to 3 requests per hour per IP (anti-enumeration +
+    anti-mail-spam).
     """
 
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [ResendEmailThrottle]
 
     @extend_schema(
         request=EmailResendSerializer,
@@ -227,6 +240,10 @@ class ResendEmailView(APIView):
 
 class VerifiedTokenObtainPairView(TokenObtainPairView):
     """Drop-in replacement for SimpleJWT's TokenObtainPairView that refuses
-    login when the user's primary email is unverified."""
+    login when the user's primary email is unverified.
+
+    Rate-limited to 10 requests per minute per IP (anti-bruteforce).
+    """
 
     serializer_class = VerifiedTokenObtainPairSerializer
+    throttle_classes = [LoginThrottle]

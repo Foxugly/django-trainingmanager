@@ -53,7 +53,11 @@ class RegisterSerializer(serializers.Serializer):
     """Public registration payload for POST /api/v1/auth/register/.
 
     Validates uniqueness against both CustomUser AND allauth.EmailAddress
-    (allauth allows two unverified entries for the same email otherwise)."""
+    (allauth allows two unverified entries for the same email otherwise).
+
+    `turnstile_token` is required: server-side verification with Cloudflare
+    happens in the view (not here, because we need the request to extract
+    the remote IP). The serializer just enforces presence."""
 
     username = serializers.CharField(max_length=150)
     email = serializers.EmailField()
@@ -68,6 +72,7 @@ class RegisterSerializer(serializers.Serializer):
         required=False,
         default="en",
     )
+    turnstile_token = serializers.CharField(write_only=True)
 
     def validate_username(self, value):
         if CustomUser.objects.filter(username__iexact=value).exists():
