@@ -51,3 +51,15 @@ class MessageSerializer(serializers.ModelSerializer):
                 code="empty_content",
             )
         return cleaned
+
+
+class MessageListQuerySerializer(serializers.Serializer):
+    """I5: validate ?since / ?before / ?limit cursor params on GET /messages/.
+
+    Default DRF error messages (already localised via Django) translate
+    "A valid integer is required." / "Datetime has wrong format" to a
+    consistent 400 instead of bubbling up as a 500 from the ORM."""
+
+    since = serializers.DateTimeField(required=False)
+    before = serializers.DateTimeField(required=False)
+    limit = serializers.IntegerField(required=False, min_value=1, max_value=200)

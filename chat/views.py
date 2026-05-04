@@ -8,7 +8,7 @@ from team.models import Team
 
 from .models import Message
 from .permissions import IsTeamMemberAndChatPolicy
-from .serializers import MessageSerializer
+from .serializers import MessageListQuerySerializer, MessageSerializer
 
 SINCE_PARAM = OpenApiParameter(
     name="since",
@@ -96,8 +96,16 @@ class MessageViewSet(viewsets.ModelViewSet):
         if self.action != "list":
             return qs
 
-        since = self.request.query_params.get("since")
-        before = self.request.query_params.get("before")
+        # I5: validate ?since/?before/?limit via a dedicated serializer so
+        # malformed input returns a consistent 400 instead of a 500 from
+        # the ORM (?since=foo) or a silent fallback (?limit=abc → 50).
+        query_serializer = MessageListQuerySerializer(data=self.request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+        qp = query_serializer.validated_data
+
+        since = qp.get("since")
+        before = qp.get("before")
+        limit = qp.get("limit", self.DEFAULT_LIMIT)
 
         if since:
             qs = qs.filter(created_at__gt=since).order_by("created_at")
@@ -105,12 +113,6 @@ class MessageViewSet(viewsets.ModelViewSet):
             qs = qs.filter(created_at__lt=before).order_by("-created_at")
         else:
             qs = qs.order_by("-created_at")
-
-        try:
-            limit = int(self.request.query_params.get("limit") or self.DEFAULT_LIMIT)
-        except (TypeError, ValueError):
-            limit = self.DEFAULT_LIMIT
-        limit = min(max(1, limit), self.MAX_LIMIT)
 
         return qs[:limit]
 

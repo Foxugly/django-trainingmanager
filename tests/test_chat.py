@@ -322,12 +322,36 @@ def test_initial_load_with_limit_param(coach_client, chat_team, coach_user):
     assert len(response.json()) == 5
 
 
-def test_limit_capped_at_max_200(coach_client, chat_team, coach_user):
+def test_limit_above_max_returns_400(coach_client, chat_team, coach_user):
+    """I5: ?limit=999 used to be silently capped at 200; now it's a 400.
+    A client passing an out-of-range limit should learn about it instead
+    of receiving a different result than asked."""
     for i in range(250):
         Message.objects.create(team=chat_team, author=coach_user, content=f"msg{i}")
     response = coach_client.get(_url(chat_team.pk) + "?limit=999")
+    assert response.status_code == 400
+
+
+def test_limit_non_integer_returns_400(coach_client, chat_team):
+    """I5: ?limit=abc used to silently fall back to default 50; now 400."""
+    response = coach_client.get(_url(chat_team.pk) + "?limit=abc")
+    assert response.status_code == 400
+
+
+def test_since_invalid_format_returns_400(coach_client, chat_team):
+    """I5: ?since=foo used to bubble up as 500 from the ORM; now 400."""
+    response = coach_client.get(_url(chat_team.pk) + "?since=foo")
+    assert response.status_code == 400
+
+
+def test_valid_limit_and_since_combo_returns_200(coach_client, chat_team, coach_user):
+    """I5: non-regression — well-formed params still work."""
+    Message.objects.create(team=chat_team, author=coach_user, content="hello")
+    response = coach_client.get(
+        _url(chat_team.pk),
+        {"limit": 10, "since": "2026-01-01T00:00:00Z"},
+    )
     assert response.status_code == 200
-    assert len(response.json()) == 200
 
 
 def test_polling_with_since_returns_only_newer(coach_client, chat_team, coach_user):
