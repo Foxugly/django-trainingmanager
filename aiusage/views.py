@@ -31,8 +31,7 @@ PERIOD_FORMAT_MAP = {
 
 def _check_team_access(user, team):
     """Allow access only to the team's owner and managers."""
-    is_authorized = team.owner_id == user.pk or team.managers.filter(pk=user.pk).exists()
-    if not is_authorized:
+    if not team.is_managed_by(user):
         raise PermissionDenied(_("Only the owner and managers of this team can view AI usage."))
 
 

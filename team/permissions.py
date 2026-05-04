@@ -1,7 +1,8 @@
-from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import SAFE_METHODS, BasePermission
+
+from .queries import managed_teams
 
 
 class OwnerOnlyDeleteDenied(PermissionDenied):
@@ -55,12 +56,7 @@ class IsTrainer(BasePermission):
             return False
         if request.method in SAFE_METHODS:
             return True
-        from team.models import Team
-
-        return Team.objects.filter(
-            Q(owner=request.user) | Q(managers=request.user),
-            is_active=True,
-        ).exists()
+        return managed_teams(request.user).filter(is_active=True).exists()
 
 
 class IsJoinRequestParticipant(BasePermission):

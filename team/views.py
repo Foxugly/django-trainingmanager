@@ -24,7 +24,7 @@ from .permissions import (
     IsTeamManagerOrReadOnly,
     IsTrainer,
 )
-from .queries import user_visible_teams
+from .queries import managed_teams, user_visible_teams
 from .serializers import (
     CompleteInvitationSerializer,
     CreateInvitationSerializer,
@@ -79,8 +79,9 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
         if getattr(self, "swagger_fake_view", False):
             return TeamJoinRequest.objects.none()
         user = self.request.user
-        managed = Team.objects.filter(Q(owner=user) | Q(managers=user))
-        return TeamJoinRequest.objects.filter(Q(user=user) | Q(team__in=managed)).distinct()
+        return TeamJoinRequest.objects.filter(
+            Q(user=user) | Q(team__in=managed_teams(user))
+        ).distinct()
 
     def perform_create(self, serializer):
         instance = serializer.save(user=self.request.user)
@@ -196,8 +197,7 @@ class TeamInvitationViewSet(viewsets.ModelViewSet):
         if getattr(self, "swagger_fake_view", False):
             return TeamInvitation.objects.none()
         user = self.request.user
-        managed = Team.objects.filter(Q(owner=user) | Q(managers=user))
-        return TeamInvitation.objects.filter(team__in=managed).distinct()
+        return TeamInvitation.objects.filter(team__in=managed_teams(user)).distinct()
 
     @extend_schema(
         request=CreateInvitationSerializer,
