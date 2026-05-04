@@ -1751,34 +1751,17 @@ paths:
   /api/v1/me/:
     get:
       operationId: me_retrieve
-      description: GET/PATCH du profil de l'utilisateur connecté.
+      description: |-
+        GET/PATCH du profil de l'utilisateur connecté.
+
+        PUT is intentionally disabled to prevent partial bodies from resetting
+        unspecified writable fields (first_name, last_name, language) to their
+        defaults. Use PATCH for any update.
+
+        `email` is read-only here; changing the email requires admin intervention
+        in v1 (a verified change-email flow is deferred to v2).
       tags:
       - me
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Me'
-          description: ''
-    put:
-      operationId: me_update
-      description: GET/PATCH du profil de l'utilisateur connecté.
-      tags:
-      - me
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Me'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Me'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Me'
       security:
       - jwtAuth: []
       responses:
@@ -1790,7 +1773,15 @@ paths:
           description: ''
     patch:
       operationId: me_partial_update
-      description: GET/PATCH du profil de l'utilisateur connecté.
+      description: |-
+        GET/PATCH du profil de l'utilisateur connecté.
+
+        PUT is intentionally disabled to prevent partial bodies from resetting
+        unspecified writable fields (first_name, last_name, language) to their
+        defaults. Use PATCH for any update.
+
+        `email` is read-only here; changing the email requires admin intervention
+        in v1 (a verified change-email flow is deferred to v2).
       tags:
       - me
       requestBody:
@@ -4836,8 +4827,8 @@ components:
         email:
           type: string
           format: email
+          readOnly: true
           title: Email address
-          maxLength: 254
         first_name:
           type: string
           maxLength: 150
@@ -4868,6 +4859,7 @@ components:
             assigning them.
       required:
       - date_joined
+      - email
       - id
       - is_staff
       - is_superuser
@@ -5761,8 +5753,8 @@ components:
         email:
           type: string
           format: email
+          readOnly: true
           title: Email address
-          maxLength: 254
         first_name:
           type: string
           maxLength: 150
