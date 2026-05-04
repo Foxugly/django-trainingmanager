@@ -1,6 +1,6 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import viewsets
 
+from tools.mixins import SoftDeleteIncludeInactiveModelViewSet
 from tools.openapi import INCLUDE_INACTIVE_PARAM
 from tools.permissions import AdminWriteAuthRead
 
@@ -48,12 +48,11 @@ from .serializers import SportAdminSerializer, SportSerializer
         description="Sets is_active=False; does not hard delete.",
     ),
 )
-class SportViewSet(viewsets.ModelViewSet):
+class SportViewSet(SoftDeleteIncludeInactiveModelViewSet):
     """CRUD on the Sport referential.
 
     Read: any authenticated user (default queryset filters is_active=True).
-    Write: staff only. Soft delete via perform_destroy.
-    Staff can pass ?include_inactive=true to see inactive entries.
+    Write: staff only. Soft delete + ?include_inactive=true via mixins.
     """
 
     permission_classes = [AdminWriteAuthRead]
@@ -65,12 +64,8 @@ class SportViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Sport.objects.none()
-
         qs = Sport.objects.all().prefetch_related("energy_systems")
-        include_inactive = self.request.query_params.get("include_inactive") == "true"
-        if not (include_inactive and self.request.user.is_staff):
-            qs = qs.filter(is_active=True)
-        return qs
+        return self._apply_include_inactive_filter(qs)
 
     def get_serializer_class(self):
         if (
@@ -80,7 +75,3 @@ class SportViewSet(viewsets.ModelViewSet):
         ):
             return SportAdminSerializer
         return SportSerializer
-
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save(update_fields=["is_active"])

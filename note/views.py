@@ -1,11 +1,11 @@
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
 
 from member.models import Member
 from team.models import Team
+from tools.mixins import SoftDeleteIncludeInactiveModelViewSet
 from tools.openapi import INCLUDE_INACTIVE_PARAM
 
 from .models import Note
@@ -22,7 +22,7 @@ from .serializers import NoteSerializer
     update=extend_schema(parameters=[INCLUDE_INACTIVE_PARAM]),
     partial_update=extend_schema(parameters=[INCLUDE_INACTIVE_PARAM]),
 )
-class NoteViewSet(viewsets.ModelViewSet):
+class NoteViewSet(SoftDeleteIncludeInactiveModelViewSet):
     """CRUD on coach notes within a team-member nested context.
 
     URL: /api/v1/teams/{team_pk}/members/{member_pk}/notes/
@@ -30,6 +30,7 @@ class NoteViewSet(viewsets.ModelViewSet):
 
     serializer_class = NoteSerializer
     permission_classes = [IsTeamCoachOrReadOwnNotes]
+    soft_delete_fields = ("is_active", "updated_at")
 
     def get_team(self):
         team_pk = self.kwargs.get("team_pk")
@@ -43,6 +44,14 @@ class NoteViewSet(viewsets.ModelViewSet):
             return None
         return get_object_or_404(Member, pk=member_pk)
 
+    def _include_inactive_allowed(self, request):
+        # Notes are team-scoped: managers (not staff) decide who sees the
+        # archive. Override the default staff-only policy from the mixin.
+        if request.query_params.get("include_inactive") != "true":
+            return False
+        team = self.get_team()
+        return team is not None and team.is_managed_by(request.user)
+
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Note.objects.none()
@@ -55,11 +64,7 @@ class NoteViewSet(viewsets.ModelViewSet):
         qs = Note.objects.filter(team=team, member=member).select_related(
             "author", "team", "member"
         )
-
-        include_inactive = self.request.query_params.get("include_inactive") == "true"
-        if not (include_inactive and team.is_managed_by(self.request.user)):
-            qs = qs.filter(is_active=True)
-        return qs
+        return self._apply_include_inactive_filter(qs)
 
     def perform_create(self, serializer):
         team = self.get_team()
@@ -67,7 +72,3 @@ class NoteViewSet(viewsets.ModelViewSet):
         if not member.memberships.filter(team=team, left_at__isnull=True).exists():
             raise PermissionDenied(_("This member does not belong to this team."))
         serializer.save(team=team, member=member, author=self.request.user)
-
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save(update_fields=["is_active", "updated_at"])

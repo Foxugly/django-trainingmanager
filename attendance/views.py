@@ -15,6 +15,7 @@ from rest_framework.permissions import SAFE_METHODS, BasePermission, IsAuthentic
 from rest_framework.response import Response
 
 from event.models import Event
+from tools.mixins import SoftDeleteIncludeInactiveModelViewSet
 from tools.openapi import INCLUDE_INACTIVE_PARAM
 from tools.permissions import AdminWriteAuthRead
 
@@ -65,11 +66,11 @@ logger = logging.getLogger(__name__)
         description="Sets is_active=False; does not hard delete.",
     ),
 )
-class AttendanceStatusViewSet(viewsets.ModelViewSet):
+class AttendanceStatusViewSet(SoftDeleteIncludeInactiveModelViewSet):
     """CRUD on the AttendanceStatus referential.
 
     Read: any authenticated user (default queryset filters is_active=True).
-    Write: staff only. Soft delete via perform_destroy.
+    Write: staff only. Soft delete bumps updated_at.
     """
 
     permission_classes = [AdminWriteAuthRead]
@@ -77,16 +78,12 @@ class AttendanceStatusViewSet(viewsets.ModelViewSet):
     search_fields = ["code"]
     ordering_fields = ["order", "code"]
     ordering = ["order", "code"]
+    soft_delete_fields = ("is_active", "updated_at")
 
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return AttendanceStatus.objects.none()
-
-        qs = AttendanceStatus.objects.all()
-        include_inactive = self.request.query_params.get("include_inactive") == "true"
-        if not (include_inactive and self.request.user.is_staff):
-            qs = qs.filter(is_active=True)
-        return qs
+        return self._apply_include_inactive_filter(AttendanceStatus.objects.all())
 
     def get_serializer_class(self):
         user = self.request.user
@@ -97,10 +94,6 @@ class AttendanceStatusViewSet(viewsets.ModelViewSet):
         ):
             return AttendanceStatusAdminSerializer
         return AttendanceStatusSerializer
-
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save(update_fields=["is_active", "updated_at"])
 
 
 class IsTeamCoachOrReadOwnAttendance(BasePermission):

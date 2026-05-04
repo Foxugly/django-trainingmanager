@@ -6,6 +6,7 @@ from rest_framework.response import Response
 
 from team.permissions import IsTrainer
 from team.utils import scope_by_sport_language
+from tools.mixins import SoftDeleteIncludeInactiveModelViewSet
 from tools.openapi import INCLUDE_INACTIVE_PARAM
 from tools.permissions import AdminWriteAuthRead
 
@@ -19,15 +20,6 @@ from .serializers import (
     ModalityAdminSerializer,
     ModalitySerializer,
 )
-
-
-def _staff_include_inactive(request):
-    """Return True iff the request asks for inactive items AND the user is staff."""
-    return (
-        request.query_params.get("include_inactive") == "true"
-        and request.user.is_authenticated
-        and request.user.is_staff
-    )
 
 
 @extend_schema_view(
@@ -58,7 +50,7 @@ def _staff_include_inactive(request):
     ),
     destroy=extend_schema(summary="Soft delete modality (staff only)"),
 )
-class ModalityViewSet(viewsets.ModelViewSet):
+class ModalityViewSet(SoftDeleteIncludeInactiveModelViewSet):
     """CRUD on Modality referential, scoped by sport when nested."""
 
     permission_classes = [AdminWriteAuthRead]
@@ -70,14 +62,11 @@ class ModalityViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return Modality.objects.none()
-
         qs = Modality.objects.all()
         sport_pk = self.kwargs.get("sport_pk")
         if sport_pk:
             qs = qs.filter(sport_id=sport_pk)
-        if not _staff_include_inactive(self.request):
-            qs = qs.filter(is_active=True)
-        return qs
+        return self._apply_include_inactive_filter(qs)
 
     def get_serializer_class(self):
         if (
@@ -87,10 +76,6 @@ class ModalityViewSet(viewsets.ModelViewSet):
         ):
             return ModalityAdminSerializer
         return ModalitySerializer
-
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save(update_fields=["is_active"])
 
 
 @extend_schema_view(
@@ -121,7 +106,7 @@ class ModalityViewSet(viewsets.ModelViewSet):
     ),
     destroy=extend_schema(summary="Soft delete energy system (staff only)"),
 )
-class EnergySystemViewSet(viewsets.ModelViewSet):
+class EnergySystemViewSet(SoftDeleteIncludeInactiveModelViewSet):
     """CRUD on EnergySystem referential."""
 
     permission_classes = [AdminWriteAuthRead]
@@ -133,11 +118,7 @@ class EnergySystemViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return EnergySystem.objects.none()
-
-        qs = EnergySystem.objects.all()
-        if not _staff_include_inactive(self.request):
-            qs = qs.filter(is_active=True)
-        return qs
+        return self._apply_include_inactive_filter(EnergySystem.objects.all())
 
     def get_serializer_class(self):
         if (
@@ -147,10 +128,6 @@ class EnergySystemViewSet(viewsets.ModelViewSet):
         ):
             return EnergySystemAdminSerializer
         return EnergySystemSerializer
-
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save(update_fields=["is_active"])
 
 
 @extend_schema_view(
@@ -181,7 +158,7 @@ class EnergySystemViewSet(viewsets.ModelViewSet):
     ),
     destroy=extend_schema(summary="Soft delete energy segment (staff only)"),
 )
-class EnergySegmentViewSet(viewsets.ModelViewSet):
+class EnergySegmentViewSet(SoftDeleteIncludeInactiveModelViewSet):
     """CRUD on EnergySegment referential."""
 
     permission_classes = [AdminWriteAuthRead]
@@ -193,11 +170,9 @@ class EnergySegmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if getattr(self, "swagger_fake_view", False):
             return EnergySegment.objects.none()
-
-        qs = EnergySegment.objects.select_related("energysystem")
-        if not _staff_include_inactive(self.request):
-            qs = qs.filter(is_active=True)
-        return qs
+        return self._apply_include_inactive_filter(
+            EnergySegment.objects.select_related("energysystem")
+        )
 
     def get_serializer_class(self):
         if (
@@ -207,10 +182,6 @@ class EnergySegmentViewSet(viewsets.ModelViewSet):
         ):
             return EnergySegmentAdminSerializer
         return EnergySegmentSerializer
-
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save(update_fields=["is_active"])
 
 
 class ExerciseViewSet(viewsets.ModelViewSet):

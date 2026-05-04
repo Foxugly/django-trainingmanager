@@ -93,7 +93,7 @@ paths:
         CRUD on the AttendanceStatus referential.
 
         Read: any authenticated user (default queryset filters is_active=True).
-        Write: staff only. Soft delete via perform_destroy.
+        Write: staff only. Soft delete bumps updated_at.
       summary: Create attendance status (staff only)
       tags:
       - attendance-statuses
@@ -125,7 +125,7 @@ paths:
         CRUD on the AttendanceStatus referential.
 
         Read: any authenticated user (default queryset filters is_active=True).
-        Write: staff only. Soft delete via perform_destroy.
+        Write: staff only. Soft delete bumps updated_at.
       summary: Retrieve attendance status (admin flavor for staff)
       parameters:
       - in: path
@@ -157,7 +157,7 @@ paths:
         CRUD on the AttendanceStatus referential.
 
         Read: any authenticated user (default queryset filters is_active=True).
-        Write: staff only. Soft delete via perform_destroy.
+        Write: staff only. Soft delete bumps updated_at.
       parameters:
       - in: path
         name: id
@@ -200,7 +200,7 @@ paths:
         CRUD on the AttendanceStatus referential.
 
         Read: any authenticated user (default queryset filters is_active=True).
-        Write: staff only. Soft delete via perform_destroy.
+        Write: staff only. Soft delete bumps updated_at.
       parameters:
       - in: path
         name: id
@@ -2611,8 +2611,7 @@ paths:
         CRUD on the Sport referential.
 
         Read: any authenticated user (default queryset filters is_active=True).
-        Write: staff only. Soft delete via perform_destroy.
-        Staff can pass ?include_inactive=true to see inactive entries.
+        Write: staff only. Soft delete + ?include_inactive=true via mixins.
       parameters:
       - in: path
         name: id
@@ -2655,8 +2654,7 @@ paths:
         CRUD on the Sport referential.
 
         Read: any authenticated user (default queryset filters is_active=True).
-        Write: staff only. Soft delete via perform_destroy.
-        Staff can pass ?include_inactive=true to see inactive entries.
+        Write: staff only. Soft delete + ?include_inactive=true via mixins.
       parameters:
       - in: path
         name: id
