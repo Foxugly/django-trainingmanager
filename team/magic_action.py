@@ -50,7 +50,12 @@ def parse_token(token: str) -> tuple[int, str] | None:
 
 
 def magic_link(join_request_id: int, action: str) -> str:
-    """Build the absolute URL the manager will receive in the email."""
+    """Build the absolute URL the manager will receive in the email.
+
+    No trailing slash: matches the Angular frontend's strict-routing
+    convention (the frontend route is /team-join-requests/magic-action/:token).
+    The Django REST endpoint /api/v1/join-magic/<token>/ keeps its trailing
+    slash — this URL is the one shipped to the browser, not the API."""
     base = settings.FRONTEND_URL.rstrip("/")
     token = make_token(join_request_id, action)
-    return f"{base}/team-join-requests/magic-action/{token}/"
+    return f"{base}/team-join-requests/magic-action/{token}"
