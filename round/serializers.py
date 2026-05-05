@@ -1,6 +1,9 @@
+from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
+from event.models import Event
 from exercise.models import Exercise
 from sport.models import Sport
 from sport.serializers import SportSerializer
@@ -8,6 +11,20 @@ from tools.exceptions import ResourceLocked
 
 from .models import Round
 from .utils import check_exercise_round_consistency
+
+
+class NotAuthorizedEvent(PermissionDenied):
+    """User has no manager rights on the team owning the target event.
+
+    Raised when a Round is created with `event_id=<id>` but the request user
+    does not manage the team behind the referenced event. The dedicated
+    default_code lets the frontend distinguish this from a generic
+    'permission_denied' — useful since the rest of the POST payload is
+    legitimate (the round itself was creatable).
+    """
+
+    default_detail = _("You are not authorized to attach a round to this event.")
+    default_code = "not_authorized_event"
 
 
 class RoundSerializer(serializers.ModelSerializer):
@@ -19,6 +36,17 @@ class RoundSerializer(serializers.ModelSerializer):
     )
     exercises = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Exercise.objects.all(), required=False
+    )
+    event_id = serializers.PrimaryKeyRelatedField(
+        source="_target_event",
+        queryset=Event.objects.all(),
+        write_only=True,
+        required=False,
+        help_text=_(
+            "Optional. If provided on POST, the newly created Round is atomically "
+            "attached to this Event. The request user must manage the Event's team. "
+            "Ignored on PATCH/PUT."
+        ),
     )
     usage_count = serializers.SerializerMethodField()
 
@@ -38,6 +66,7 @@ class RoundSerializer(serializers.ModelSerializer):
             "t_start",
             "t_break",
             "exercises",
+            "event_id",
             "usage_count",
             "created_at",
             "updated_at",
@@ -62,7 +91,22 @@ class RoundSerializer(serializers.ModelSerializer):
             check_exercise_round_consistency(ex, target)
         return data
 
+    def create(self, validated_data):
+        target_event = validated_data.pop("_target_event", None)
+        if target_event is not None:
+            request = self.context.get("request")
+            user = getattr(request, "user", None)
+            program = target_event.refer_program
+            team = program.team if program is not None else None
+            if user is None or team is None or not team.is_managed_by(user):
+                raise NotAuthorizedEvent()
+        round_obj = super().create(validated_data)
+        if target_event is not None:
+            target_event.rounds.add(round_obj)
+        return round_obj
+
     def update(self, instance, validated_data):
         if instance.usage_count > 1:
             raise ResourceLocked()
+        validated_data.pop("_target_event", None)
         return super().update(instance, validated_data)
