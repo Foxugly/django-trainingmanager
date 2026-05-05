@@ -5,6 +5,8 @@ from rest_framework_nested.routers import NestedSimpleRouter
 from .views import (
     InvitationLookupView,
     TeamInvitationViewSet,
+    TeamJoinRequestMagicActionExecuteView,
+    TeamJoinRequestMagicActionPreviewView,
     TeamJoinRequestViewSet,
     TeamMembershipViewSet,
     TeamViewSet,
@@ -26,6 +28,21 @@ urlpatterns = (
             "invitations/lookup/<str:token>/",
             InvitationLookupView.as_view(),
             name="invitation-lookup",
+        ),
+        # Magic-action: GET preview by token / POST {token} executes.
+        # Distinct base path to avoid collision with the DRF router's
+        # retrieve regex on /join-requests/<pk>/.
+        # Two distinct views (instead of one with GET+POST on both URLs)
+        # so drf-spectacular emits unique operationIds.
+        path(
+            "join-magic/<str:token>/",
+            TeamJoinRequestMagicActionPreviewView.as_view(),
+            name="joinrequest-magic-action-preview",
+        ),
+        path(
+            "join-magic/",
+            TeamJoinRequestMagicActionExecuteView.as_view(),
+            name="joinrequest-magic-action-execute",
         ),
     ]
 )

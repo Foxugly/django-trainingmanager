@@ -20,6 +20,10 @@ class Team(models.Model):
         ALL = "all", _("All members can post")
         COACHES_ONLY = "coaches_only", _("Only coaches can post")
 
+    class JoinRequestPolicy(models.TextChoices):
+        MANUAL = "manual", _("Manual — managers accept/reject each request")
+        AUTO = "auto", _("Auto-accept — every join request is accepted immediately")
+
     name = models.CharField(max_length=200, unique=True)
     sport = models.ForeignKey(
         "sport.Sport",
@@ -65,6 +69,23 @@ class Team(models.Model):
         help_text=_(
             "Statuses available for marking attendance in this team's events. "
             "Default: present, absent, excused."
+        ),
+    )
+    join_request_policy = models.CharField(
+        max_length=10,
+        choices=JoinRequestPolicy.choices,
+        default=JoinRequestPolicy.MANUAL,
+        help_text=_(
+            "Manual = managers accept/reject each TeamJoinRequest. "
+            "Auto = every join request is accepted immediately on submission."
+        ),
+    )
+    notify_managers_on_join_request = models.BooleanField(
+        default=True,
+        help_text=_(
+            "When join_request_policy=manual, send the owner and managers an email "
+            "with accept/reject magic links on each new request. Ignored when "
+            "policy=auto (no manual decision is needed)."
         ),
     )
     created_at = models.DateTimeField(auto_now_add=True)

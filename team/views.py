@@ -85,9 +85,23 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         instance = serializer.save(user=self.request.user)
-        self._notify_managers(instance)
+
+        # Auto-accept policy: short-circuit the manual flow.
+        if instance.team.join_request_policy == Team.JoinRequestPolicy.AUTO:
+            instance.status = "accepted"
+            instance.responded_at = timezone.now()
+            instance.responded_by = None  # accepted by policy, not by a person
+            instance.save(update_fields=["status", "responded_at", "responded_by"])
+            self._handle_acceptance(instance)
+            return
+
+        # Manual policy + opt-in notification: send email with magic links.
+        if instance.team.notify_managers_on_join_request:
+            self._notify_managers(instance)
 
     def _notify_managers(self, join_request):
+        from .magic_action import magic_link
+
         team = join_request.team
         # Owner can also be a manager — dedupe so they don't get the email twice.
         recipients = sorted(
@@ -96,12 +110,16 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
         )
         if not recipients:
             return
-        subject = f"[TrainingManager] Nouvelle demande de {join_request.user.username}"
+        accept_url = magic_link(join_request.id, "accept")
+        reject_url = magic_link(join_request.id, "reject")
+        subject = f"[TrainingManager] {_('Join request from')} {join_request.user.username}"
         body = (
-            f"L'utilisateur {join_request.user.username} ({join_request.user.email}) "
-            f'souhaite rejoindre votre team "{team.name}".\n\n'
-            f"Message : {join_request.message or '(aucun)'}\n\n"
-            f"Connectez-vous pour repondre."
+            f"{join_request.user.username} ({join_request.user.email}) "
+            f'{_("wants to join your team")} "{team.name}".\n\n'
+            f"{_('Message')}: {join_request.message or _('(none)')}\n\n"
+            f"{_('Accept')}: {accept_url}\n"
+            f"{_('Reject')}: {reject_url}\n\n"
+            f"{_('Links are valid for 7 days. You can also respond from the team dashboard.')}"
         )
         try:
             send_mail(
@@ -156,7 +174,8 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
             code="invalid_status_transition",
         )
 
-    def _handle_acceptance(self, join_request):
+    @staticmethod
+    def _handle_acceptance(join_request):
         from member.models import Member
 
         user = join_request.user
@@ -178,6 +197,182 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
             user=user,
         )
         TeamMembership.objects.create(team=team, member=member)
+
+    @staticmethod
+    def _revoke_membership(join_request):
+        """Reverse a previous acceptance — used when a manager flips the
+        decision via magic link from accepted -> rejected. Sets left_at on
+        the active TeamMembership for (team, requester); does not delete."""
+        member = getattr(join_request.user, "member_profile", None)
+        if member is None:
+            return
+        TeamMembership.objects.filter(
+            team=join_request.team,
+            member=member,
+            left_at__isnull=True,
+        ).update(left_at=timezone.now())
+
+
+class _MagicActionBase(APIView):
+    """Shared behaviour for the magic-action preview (GET) and execute (POST)
+    endpoints. Split into two concrete views so each only exposes the
+    relevant HTTP method (avoids drf-spectacular operationId collisions)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def _resolve(self, token):
+        from .magic_action import parse_token
+
+        parsed = parse_token(token)
+        if parsed is None:
+            raise drf_serializers.ValidationError(
+                {"detail": _("Invalid or expired magic-action token.")},
+                code="invalid_or_expired_token",
+            )
+        jr_id, action = parsed
+        join_request = get_object_or_404(TeamJoinRequest, pk=jr_id)
+        if not join_request.team.is_managed_by(self.request.user):
+            raise PermissionDenied(_("You are not a manager of this team."))
+        return join_request, action
+
+    def _serialize(self, join_request, action_proposed, previous_status=None):
+        """Build the magic-action response payload.
+
+        If `previous_status` is given (POST execute path), `would_change_decision`
+        reflects whether the executed action reversed a previous decision —
+        otherwise (GET preview path) it predicts whether the proposed action
+        WOULD reverse the current state."""
+        responded_by = join_request.responded_by.username if join_request.responded_by else None
+        target_status = "accepted" if action_proposed == "accept" else "rejected"
+        if previous_status is None:
+            # GET preview: compare against current state.
+            would_change = (join_request.status == "accepted" and action_proposed == "reject") or (
+                join_request.status == "rejected" and action_proposed == "accept"
+            )
+        else:
+            # POST execute: compare the new state against what it was before.
+            would_change = previous_status in ("accepted", "rejected") and (
+                previous_status != target_status
+            )
+        return {
+            "join_request": {
+                "id": join_request.id,
+                "team_id": join_request.team_id,
+                "team_name": join_request.team.name,
+                "requester_username": join_request.user.username,
+                "requester_email": join_request.user.email,
+                "message": join_request.message,
+                "requested_at": join_request.requested_at.isoformat(),
+                "status": join_request.status,
+                "responded_at": (
+                    join_request.responded_at.isoformat() if join_request.responded_at else None
+                ),
+                "responded_by": responded_by,
+            },
+            "action_proposed": action_proposed,
+            "would_change_decision": would_change,
+            "can_act": join_request.status != "cancelled",
+        }
+
+
+class TeamJoinRequestMagicActionPreviewView(_MagicActionBase):
+    """GET /api/v1/join-magic/<token>/ — preview only. No state change.
+
+    Safe for email link previewers (Outlook safe-links, Gmail bots).
+    Returns the join request + action proposed by the token + current
+    status + whether the action would reverse a previous decision +
+    whether the action can still be performed (false if cancelled)."""
+
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(description="Token decoded; preview returned."),
+            400: OpenApiResponse(
+                description="Invalid or expired token (code=invalid_or_expired_token)."
+            ),
+            403: OpenApiResponse(description="Not a manager of this team."),
+            404: OpenApiResponse(description="Join request not found."),
+        }
+    )
+    def get(self, request, token):
+        join_request, action = self._resolve(token)
+        return Response(self._serialize(join_request, action))
+
+
+class TeamJoinRequestMagicActionExecuteView(_MagicActionBase):
+    """POST /api/v1/join-magic/ {token} — executes the encoded action.
+
+    Reversal support (E-b semantic):
+      - pending  + accept -> accepted (creates TeamMembership)
+      - pending  + reject -> rejected (no membership)
+      - accepted + reject -> rejected (revokes membership: sets left_at)
+      - rejected + accept -> accepted (creates membership again)
+      - cancelled + *    -> 409 conflict (requester withdrew, irreversible)
+    responded_by is updated to the manager who made the latest call.
+    Idempotent when the request is already in the target status."""
+
+    @extend_schema(
+        request=inline_serializer(
+            name="TeamJoinRequestMagicActionPost",
+            fields={"token": drf_serializers.CharField()},
+        ),
+        responses={
+            200: OpenApiResponse(
+                description=(
+                    "Action executed (or no-op if already in target status). "
+                    "Returns the same payload shape as the preview, with "
+                    "the join_request reflecting the new status."
+                )
+            ),
+            400: OpenApiResponse(description="Invalid or expired token."),
+            403: OpenApiResponse(description="Not a manager of this team."),
+            404: OpenApiResponse(description="Join request not found."),
+            409: OpenApiResponse(
+                description=(
+                    "Conflict: the request was cancelled by the requester "
+                    "and cannot be revived (code=request_cancelled)."
+                )
+            ),
+        },
+    )
+    def post(self, request):
+        token = request.data.get("token")
+        if not token:
+            raise drf_serializers.ValidationError(
+                {"token": _("token is required.")}, code="token_required"
+            )
+        join_request, action = self._resolve(token)
+        target_status = "accepted" if action == "accept" else "rejected"
+
+        if join_request.status == "cancelled":
+            return Response(
+                {
+                    "code": "request_cancelled",
+                    "detail": _(
+                        "This join request was cancelled by the requester and cannot be acted on."
+                    ),
+                    **self._serialize(join_request, action),
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        if join_request.status == target_status:
+            # Idempotent: nothing to do, but report the current state so the
+            # frontend can show "already X by Y on Z".
+            return Response(self._serialize(join_request, action))
+
+        previous_status = join_request.status
+
+        with transaction.atomic():
+            join_request.status = target_status
+            join_request.responded_at = timezone.now()
+            join_request.responded_by = request.user
+            join_request.save(update_fields=["status", "responded_at", "responded_by"])
+            if target_status == "accepted":
+                TeamJoinRequestViewSet._handle_acceptance(join_request)
+            elif previous_status == "accepted":
+                TeamJoinRequestViewSet._revoke_membership(join_request)
+
+        return Response(self._serialize(join_request, action, previous_status=previous_status))
 
 
 class TeamInvitationViewSet(viewsets.ModelViewSet):

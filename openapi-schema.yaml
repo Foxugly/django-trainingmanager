@@ -1677,6 +1677,79 @@ paths:
           description: Invalid token state, username taken, or weak password
         '404':
           description: Token not found
+  /api/v1/join-magic/:
+    post:
+      operationId: join_magic_create
+      description: |-
+        POST /api/v1/join-magic/ {token} — executes the encoded action.
+
+        Reversal support (E-b semantic):
+          - pending  + accept -> accepted (creates TeamMembership)
+          - pending  + reject -> rejected (no membership)
+          - accepted + reject -> rejected (revokes membership: sets left_at)
+          - rejected + accept -> accepted (creates membership again)
+          - cancelled + *    -> 409 conflict (requester withdrew, irreversible)
+        responded_by is updated to the manager who made the latest call.
+        Idempotent when the request is already in the target status.
+      tags:
+      - join-magic
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamJoinRequestMagicActionPost'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeamJoinRequestMagicActionPost'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeamJoinRequestMagicActionPost'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Action executed (or no-op if already in target status). Returns
+            the same payload shape as the preview, with the join_request reflecting
+            the new status.
+        '400':
+          description: Invalid or expired token.
+        '403':
+          description: Not a manager of this team.
+        '404':
+          description: Join request not found.
+        '409':
+          description: 'Conflict: the request was cancelled by the requester and cannot
+            be revived (code=request_cancelled).'
+  /api/v1/join-magic/{token}/:
+    get:
+      operationId: join_magic_retrieve
+      description: |-
+        GET /api/v1/join-magic/<token>/ — preview only. No state change.
+
+        Safe for email link previewers (Outlook safe-links, Gmail bots).
+        Returns the join request + action proposed by the token + current
+        status + whether the action would reverse a previous decision +
+        whether the action can still be performed (false if cancelled).
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - join-magic
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Token decoded; preview returned.
+        '400':
+          description: Invalid or expired token (code=invalid_or_expired_token).
+        '403':
+          description: Not a manager of this team.
+        '404':
+          description: Join request not found.
   /api/v1/join-requests/:
     get:
       operationId: join_requests_list
@@ -6777,6 +6850,13 @@ components:
       - responded_by
       - team
       - user
+    TeamJoinRequestMagicActionPost:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+      - token
     TeamMembership:
       type: object
       description: |-
