@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers as drf_serializers
@@ -119,37 +119,52 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
             self._notify_managers(instance)
 
     def _notify_managers(self, join_request):
+        """Send the join-request notification to each owner+manager in the
+        recipient's own language. Owner is also a manager candidate — dedupe
+        on email so they don't get the mail twice if they appear in both."""
         from .magic_action import magic_link
 
         team = join_request.team
-        # Owner can also be a manager — dedupe so they don't get the email twice.
-        recipients = sorted(
-            {e for e in team.managers.values_list("email", flat=True) if e}
-            | ({team.owner.email} if team.owner.email else set())
-        )
-        if not recipients:
+        # Map email -> language for each recipient. Owner takes priority over
+        # managers' duplicate entries.
+        recipients_by_email: dict[str, str] = {}
+        for mgr in team.managers.all():
+            if mgr.email:
+                recipients_by_email[mgr.email] = mgr.language or "en"
+        if team.owner.email:
+            recipients_by_email[team.owner.email] = team.owner.language or "en"
+
+        if not recipients_by_email:
             return
         accept_url = magic_link(join_request.id, "accept")
         reject_url = magic_link(join_request.id, "reject")
-        subject = f"[TrainingManager] {_('Join request from')} {join_request.user.username}"
-        body = (
-            f"{join_request.user.username} ({join_request.user.email}) "
-            f'{_("wants to join your team")} "{team.name}".\n\n'
-            f"{_('Message')}: {join_request.message or _('(none)')}\n\n"
-            f"{_('Accept')}: {accept_url}\n"
-            f"{_('Reject')}: {reject_url}\n\n"
-            f"{_('Links are valid for 7 days. You can also respond from the team dashboard.')}"
-        )
-        try:
-            send_mail(
-                subject=subject,
-                message=body,
-                from_email=dj_settings.DEFAULT_FROM_EMAIL,
-                recipient_list=recipients,
-                fail_silently=False,
-            )
-        except Exception:
-            logger.exception("Failed to send join request notification email")
+
+        for email, lang in recipients_by_email.items():
+            with translation.override(lang):
+                # gettext (not lazy) here so the strings are resolved INSIDE
+                # the override block; gettext_lazy would defer resolution to
+                # the moment the string is used, which on f-string formatting
+                # happens immediately and would be fine, but explicit eager
+                # resolution makes the intent unambiguous.
+                subject = f"[TrainingManager] {_('Join request from')} {join_request.user.username}"
+                body = (
+                    f"{join_request.user.username} ({join_request.user.email}) "
+                    f'{_("wants to join your team")} "{team.name}".\n\n'
+                    f"{_('Message')}: {join_request.message or _('(none)')}\n\n"
+                    f"{_('Accept')}: {accept_url}\n"
+                    f"{_('Reject')}: {reject_url}\n\n"
+                    f"{_('Links are valid for 7 days. You can also respond from the team dashboard.')}"
+                )
+                try:
+                    send_mail(
+                        subject=str(subject),
+                        message=str(body),
+                        from_email=dj_settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[email],
+                        fail_silently=False,
+                    )
+                except Exception:
+                    logger.exception("Failed to send join-request notification to %s", email)
 
     def perform_update(self, serializer):
         instance = serializer.instance
@@ -485,27 +500,31 @@ class TeamInvitationViewSet(viewsets.ModelViewSet):
         )
 
     def _send_invitation_email(self, invitation):
+        """The invitee has no user account yet, so we don't know their
+        language. Fall back to the team's language, which is the most
+        likely match (the invitee is about to join that team)."""
         frontend_url = dj_settings.FRONTEND_URL.rstrip("/")
         link = f"{frontend_url}/invitation/{invitation.token}"
-        subject = f"[TrainingManager] Vous etes invite dans {invitation.team.name}"
-        body = (
-            f"Bonjour {invitation.member.firstname},\n\n"
-            f"{invitation.invited_by.username} vous a invite a rejoindre "
-            f'la team "{invitation.team.name}".\n\n'
-            f"Pour finaliser votre inscription, cliquez sur ce lien :\n"
-            f"{link}\n\n"
-            f"Le lien est valable jusqu'au {invitation.expires_at.strftime('%d/%m/%Y')}.\n"
-        )
-        try:
-            send_mail(
-                subject=subject,
-                message=body,
-                from_email=dj_settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[invitation.email],
-                fail_silently=False,
+        with translation.override(invitation.team.language or "en"):
+            subject = f"[TrainingManager] {_('You are invited to')} {invitation.team.name}"
+            body = (
+                f"{_('Hello')} {invitation.member.firstname},\n\n"
+                f"{invitation.invited_by.username} {_('has invited you to join the team')} "
+                f'"{invitation.team.name}".\n\n'
+                f"{_('To finalize your registration, click the link below:')}\n"
+                f"{link}\n\n"
+                f"{_('The link is valid until')} {invitation.expires_at.strftime('%d/%m/%Y')}.\n"
             )
-        except Exception:
-            logger.exception("Failed to send invitation email")
+            try:
+                send_mail(
+                    subject=str(subject),
+                    message=str(body),
+                    from_email=dj_settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[invitation.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                logger.exception("Failed to send invitation email")
 
     def perform_destroy(self, instance):
         if instance.status != "pending":

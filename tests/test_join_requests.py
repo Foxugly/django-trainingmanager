@@ -26,7 +26,9 @@ def test_POST_join_request_returns_201(auth_client, authenticated_user):
     ).exists()
 
 
-def test_POST_join_request_sends_email_to_managers(auth_client):
+def test_POST_join_request_sends_one_email_per_manager(auth_client):
+    """One email per recipient (so each is rendered in the recipient's
+    own language). Owner deduped if also in managers."""
     owner = UserFactory(email="owner@local.test")
     mgr = UserFactory(email="manager@local.test")
     team = TeamFactory(owner=owner, is_active=True, is_public=True)
@@ -39,8 +41,9 @@ def test_POST_join_request_sends_email_to_managers(auth_client):
         format="json",
     )
     assert response.status_code == 201
-    assert len(mail.outbox) == 1
-    assert set(mail.outbox[0].to) == {"owner@local.test", "manager@local.test"}
+    assert len(mail.outbox) == 2
+    addresses = {tuple(m.to) for m in mail.outbox}
+    assert addresses == {("owner@local.test",), ("manager@local.test",)}
 
 
 def test_POST_join_request_already_member_returns_400(auth_client, authenticated_user):
