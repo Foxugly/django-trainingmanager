@@ -16,7 +16,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from event.models import Event
-from team.queries import managed_teams, user_visible_teams
+from team.queries import managed_teams, user_member_teams
 from tools.openapi import INCLUDE_INACTIVE_PARAM
 from tools.throttling import AIPlanGenerationThrottle
 
@@ -53,7 +53,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         base = (
-            Program.objects.filter(team__in=user_visible_teams(user))
+            Program.objects.filter(team__in=user_member_teams(user))
             .select_related("team", "team__sport", "team__owner")
             .prefetch_related("events")
         )

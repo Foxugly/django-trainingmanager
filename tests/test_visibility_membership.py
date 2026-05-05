@@ -173,3 +173,48 @@ def test_active_member_sees_self_in_members(
     response = athlete_client.get("/api/v1/members/")
     assert response.status_code == 200
     assert athlete_member_of_private.pk in _ids(response.json(), "id")
+
+
+# =====================================================================
+# Public-team discoverability does NOT cascade to internal content
+# =====================================================================
+#
+# A public+active team is visible in /teams/ (so a random user can find
+# it and request to join) but its programs / events / members are NOT
+# accessible until the user has an active TeamMembership. Use
+# user_member_teams (strict) for content-scoping; user_visible_teams
+# (broad) only for the Team list itself.
+
+
+def test_random_user_does_not_see_programs_of_public_team(random_client):
+    public_team = TeamFactory(is_active=True, is_public=True)
+    Program.objects.create(name="Public team prog", team=public_team)
+    response = random_client.get("/api/v1/programs/")
+    assert response.status_code == 200
+    assert _ids(response.json(), "id") == []
+
+
+def test_random_user_does_not_see_events_of_public_team(random_client):
+    public_team = TeamFactory(is_active=True, is_public=True)
+    program = Program.objects.create(name="Public prog 2", team=public_team)
+    Event.objects.create(refer_program=program, name="Public ev", date=None)
+    response = random_client.get("/api/v1/events/")
+    assert response.status_code == 200
+    assert _ids(response.json(), "id") == []
+
+
+def test_random_user_does_not_see_members_of_public_team(random_client):
+    public_team = TeamFactory(is_active=True, is_public=True)
+    member = Member.objects.create(firstname="P", lastname="ub", email="pub@local.test")
+    TeamMembership.objects.create(team=public_team, member=member)
+    response = random_client.get("/api/v1/members/")
+    assert response.status_code == 200
+    assert member.pk not in _ids(response.json(), "id")
+
+
+def test_random_user_still_sees_public_team_in_list(random_client):
+    """Discoverability preserved: /teams/ remains broad."""
+    public_team = TeamFactory(is_active=True, is_public=True)
+    response = random_client.get("/api/v1/teams/")
+    assert response.status_code == 200
+    assert public_team.pk in _ids(response.json(), "id")

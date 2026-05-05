@@ -117,7 +117,10 @@ def test_POST_generate_events_updates_program_ai_fields(
 # ----------------------------- Permissions ---------------------------
 
 
-def test_POST_generate_events_as_non_manager_returns_403(auth_client_trainer):
+def test_POST_generate_events_as_non_member_returns_404(auth_client_trainer):
+    """Programs of teams the user is NOT a member of are invisible (404),
+    not just write-protected (403). Strict team-scope: discoverability
+    via /teams/ does not grant content access."""
     other_team = TeamFactory(is_public=True, is_active=True)
     other_program = ProgramFactory(team=other_team)
     response = auth_client_trainer.post(
@@ -125,7 +128,7 @@ def test_POST_generate_events_as_non_manager_returns_403(auth_client_trainer):
         _generate_payload(date(2026, 5, 1), date(2026, 5, 14)),
         format="json",
     )
-    assert response.status_code == 403
+    assert response.status_code == 404
 
 
 def test_POST_generate_events_unauthenticated_returns_401(api_client, trainer_user):

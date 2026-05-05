@@ -87,8 +87,10 @@ def test_manager_sees_archived_programs_of_their_team_with_include_inactive(api_
 
 
 def test_manager_does_not_see_archived_of_teams_they_do_not_manage(api_client):
-    """Manager of team_a uses ?include_inactive=true; team_b is public+active
-    so its active programs are visible, but its archived programs are NOT."""
+    """Manager of team_a uses ?include_inactive=true. Programs are scoped
+    via user_member_teams (strict, no public-team cascade), so team_b
+    programs (whether active or archived) are invisible — the manager
+    only sees programs of teams they are an actual member of."""
     manager_a = _make_user("mgr_a")
     api_client.force_authenticate(user=manager_a)
     team_a = TeamFactory(owner=manager_a)
@@ -102,9 +104,7 @@ def test_manager_does_not_see_archived_of_teams_they_do_not_manage(api_client):
     response = api_client.get("/api/v1/programs/?include_inactive=true")
     assert response.status_code == 200
     names = {p["name"] for p in response.json()["results"]}
-    assert "a-archived" in names
-    assert "b-active" in names
-    assert "b-archived" not in names
+    assert names == {"a-archived"}
 
 
 # =====================================================================

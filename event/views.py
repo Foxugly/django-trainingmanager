@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from team.queries import managed_teams, user_visible_teams
+from team.queries import managed_teams, user_member_teams
 from tools.throttling import AITrainingGenerationThrottle
 
 from .ai import generate_training as ai_generate_training
@@ -26,7 +26,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return (
-            Event.objects.filter(refer_program__team__in=user_visible_teams(self.request.user))
+            Event.objects.filter(refer_program__team__in=user_member_teams(self.request.user))
             .select_related("refer_program", "refer_program__team", "refer_program__team__sport")
             .prefetch_related("rounds", "members")
         )
