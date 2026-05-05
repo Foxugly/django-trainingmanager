@@ -317,11 +317,19 @@ class PasswordResetRequestView(APIView):
         request=PasswordResetRequestSerializer,
         responses={
             200: OpenApiResponse(
+                response=inline_serializer(
+                    name="PasswordResetRequestResponse",
+                    fields={
+                        "detail": drf_serializers.CharField(),
+                        "code": drf_serializers.ChoiceField(choices=["password_reset_processed"]),
+                    },
+                ),
                 description=(
                     "Always 200. Returns {detail, code: 'password_reset_processed'}. "
                     "If the email matches a registered account, a reset link "
-                    "has been dispatched; otherwise the response is identical."
-                )
+                    "has been dispatched; otherwise the response is identical "
+                    "(anti-leak)."
+                ),
             ),
             400: OpenApiResponse(
                 description=(
@@ -396,7 +404,30 @@ class PasswordResetConfirmView(APIView):
     @extend_schema(
         request=PasswordResetConfirmSerializer,
         responses={
-            200: OpenApiResponse(description="Password updated. Returns {access, refresh, user}."),
+            200: OpenApiResponse(
+                response=inline_serializer(
+                    name="PasswordResetConfirmResponse",
+                    fields={
+                        "access": drf_serializers.CharField(),
+                        "refresh": drf_serializers.CharField(),
+                        "user": inline_serializer(
+                            name="PasswordResetConfirmUser",
+                            fields={
+                                "id": drf_serializers.IntegerField(),
+                                "username": drf_serializers.CharField(),
+                                "email": drf_serializers.EmailField(),
+                                "first_name": drf_serializers.CharField(),
+                                "last_name": drf_serializers.CharField(),
+                                "language": drf_serializers.CharField(),
+                            },
+                        ),
+                    },
+                ),
+                description=(
+                    "Password updated. Returns the JWT pair (access + refresh) "
+                    "for auto-login plus a minimal user payload."
+                ),
+            ),
             400: OpenApiResponse(
                 description=(
                     "Token invalid / expired (code=invalid_or_expired_token), "
