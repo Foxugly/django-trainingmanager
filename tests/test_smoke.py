@@ -117,6 +117,11 @@ def test_GET_teams_authenticated_returns_200(auth_client):
 
 
 def test_POST_teams_creates_with_caller_as_owner(auth_client, authenticated_user):
+    # CustomUser.team_quota defaults to 0 — bump for this smoke test
+    # (quota is validated in tests/test_team_quota.py; here we just want
+    # to assert that a successful create assigns owner=request.user).
+    authenticated_user.team_quota = 1
+    authenticated_user.save(update_fields=["team_quota"])
     sport = SportFactory()
     response = auth_client.post(
         "/api/v1/teams/",

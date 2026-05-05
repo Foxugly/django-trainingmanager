@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -23,7 +24,21 @@ class CustomUserPublicSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class TeamQuotaStatusSerializer(serializers.Serializer):
+    """Computed quota block embedded in /me/. Tells the frontend whether the
+    user can create a new team and how many slots they have used / are
+    entitled to."""
+
+    used = serializers.IntegerField(help_text="Active teams currently owned by the user.")
+    max = serializers.IntegerField(
+        help_text="Maximum active teams the user can own (CustomUser.team_quota)."
+    )
+    can_create = serializers.BooleanField(help_text="True iff used < max.")
+
+
 class MeSerializer(serializers.ModelSerializer):
+    team_quota = serializers.SerializerMethodField()
+
     class Meta:
         model = CustomUser
         fields = [
@@ -37,6 +52,7 @@ class MeSerializer(serializers.ModelSerializer):
             "date_joined",
             "is_staff",
             "is_superuser",
+            "team_quota",
         ]
         read_only_fields = [
             "id",
@@ -46,7 +62,17 @@ class MeSerializer(serializers.ModelSerializer):
             "date_joined",
             "is_staff",
             "is_superuser",
+            "team_quota",
         ]
+
+    @extend_schema_field(TeamQuotaStatusSerializer)
+    def get_team_quota(self, obj):
+        used = obj.active_owned_teams_count()
+        return {
+            "used": used,
+            "max": obj.team_quota,
+            "can_create": used < obj.team_quota,
+        }
 
 
 class RegisterSerializer(serializers.Serializer):

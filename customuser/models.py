@@ -47,9 +47,25 @@ class CustomUser(AbstractUser):
         choices=settings.LANGUAGES,
         default="fr",
     )
+    team_quota = models.PositiveIntegerField(
+        default=0,
+        help_text=_(
+            "Maximum number of active teams this user can own. Defaults to 0 — "
+            "creating a team is a paid feature; admins bump this per user (or "
+            "via a future billing flow)."
+        ),
+    )
     objects = CustomUserManager()
 
     USERNAME_FIELD = "username"
 
     def __str__(self):
         return self.username
+
+    def active_owned_teams_count(self) -> int:
+        """Number of teams the user currently owns AND that are still active.
+        Soft-deleted teams (is_active=False) free up a slot."""
+        return self.owned_teams.filter(is_active=True).count()
+
+    def can_create_team(self) -> bool:
+        return self.active_owned_teams_count() < self.team_quota

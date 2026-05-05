@@ -34,6 +34,19 @@ class CaptchaFailed(APIException):
     default_code = "captcha_failed"
 
 
+class TeamQuotaExceeded(APIException):
+    """User attempted to create a team beyond their `team_quota`. Soft-deleted
+    teams (is_active=False) free up a slot. The exception payload is enriched
+    by the view with `used` / `max` so the frontend can show context."""
+
+    status_code = 403
+    default_detail = _(
+        "You have reached your team quota. Soft-delete an existing team or "
+        "contact an admin to raise your quota."
+    )
+    default_code = "team_quota_exceeded"
+
+
 def custom_exception_handler(exc, context):
     """Normalise every 4xx error to {code, detail, fields?}.
 

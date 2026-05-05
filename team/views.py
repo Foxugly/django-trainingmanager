@@ -16,6 +16,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from tools.exceptions import TeamQuotaExceeded
 from tools.openapi import INCLUDE_INACTIVE_PARAM
 
 from .models import Team, TeamInvitation, TeamJoinRequest, TeamMembership
@@ -63,7 +64,21 @@ class TeamViewSet(viewsets.ModelViewSet):
         )
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        user = self.request.user
+        used = user.active_owned_teams_count()
+        if used >= user.team_quota:
+            # Enrich the exception with quota context so the response body
+            # includes used/max/can_create alongside code+detail.
+            exc = TeamQuotaExceeded()
+            exc.detail = {
+                "code": exc.default_code,
+                "detail": str(exc.default_detail),
+                "used": used,
+                "max": user.team_quota,
+                "can_create": False,
+            }
+            raise exc
+        serializer.save(owner=user)
 
 
 class TeamJoinRequestViewSet(viewsets.ModelViewSet):
