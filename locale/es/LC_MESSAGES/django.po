@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: trainingmanager 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-28 00:30+0000\n"
+"POT-Creation-Date: 2026-05-05 12:36+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -16,3 +16,467 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "prompt must be a non-empty string."
+msgstr ""
+
+msgid "prompt too long (max 5000 chars for ping)."
+msgstr ""
+
+msgid "Ping"
+msgstr ""
+
+msgid "Generate plan"
+msgstr ""
+
+msgid "Generate training"
+msgstr ""
+
+msgid "Only the owner and managers of this team can view AI usage."
+msgstr ""
+
+msgid "Snake_case identifier (e.g. 'present', 'absent', 'excused')"
+msgstr ""
+
+msgid "Display label, translated via modeltranslation."
+msgstr ""
+
+msgid "If True, pre-selected as default in the frontend UI."
+msgstr ""
+
+msgid "Display order for buttons in the frontend."
+msgstr ""
+
+msgid "Hex color (#xxxxxx) for the frontend, optional."
+msgstr ""
+
+msgid "You don't have permission to access this event's attendance."
+msgstr ""
+
+msgid "Event has no team (orphan event)."
+msgstr ""
+
+msgid "This member is not in the team."
+msgstr ""
+
+msgid "Attendance already exists for this member. Use PATCH to update."
+msgstr ""
+
+msgid "Only team owner and managers can bulk-set attendances."
+msgstr ""
+
+#, python-brace-format
+msgid "Members not in team: {ids}"
+msgstr ""
+
+#, python-brace-format
+msgid "Status codes not found or inactive: {codes}"
+msgstr ""
+
+msgid "Author of the message. SET_NULL on user deletion."
+msgstr ""
+
+msgid "Rich HTML content (sanitized via bleach on save)."
+msgstr ""
+
+msgid "Set when the message is edited after creation."
+msgstr ""
+
+msgid "Soft delete timestamp. Non-null = deleted."
+msgstr ""
+
+msgid "You don't have permission to access this team's chat."
+msgstr ""
+
+msgid "Message content cannot be empty."
+msgstr ""
+
+msgid "Personal info"
+msgstr ""
+
+msgid "Permissions"
+msgstr ""
+
+msgid "Important dates"
+msgstr ""
+
+msgid "language"
+msgstr ""
+
+msgid ""
+"Maximum number of active teams this user can own. Defaults to 0 — creating a "
+"team is a paid feature; admins bump this per user (or via a future billing "
+"flow)."
+msgstr ""
+
+msgid "This username is already taken."
+msgstr ""
+
+msgid "This email is already in use."
+msgstr ""
+
+msgid "Account created. Please check your email to confirm your registration."
+msgstr ""
+
+msgid "Invalid or expired confirmation token."
+msgstr ""
+
+msgid ""
+"If a matching unverified account exists, a confirmation email has been sent."
+msgstr ""
+
+msgid "No modalities defined for this sport. Cannot generate."
+msgstr ""
+
+msgid "No energy segments defined. Cannot generate."
+msgstr ""
+
+msgid "AI returned empty or invalid rounds."
+msgstr ""
+
+msgid "AI used an invalid modality id."
+msgstr ""
+
+msgid "AI used an invalid energysegment id."
+msgstr ""
+
+msgid "name"
+msgstr ""
+
+msgid "goal"
+msgstr ""
+
+msgid "color"
+msgstr ""
+
+msgid "refer_program"
+msgstr ""
+
+msgid "Event"
+msgstr ""
+
+msgid "refer_program is required."
+msgstr ""
+
+msgid "You do not manage the team of this program."
+msgstr ""
+
+msgid "You must be owner or manager of this event's team."
+msgstr ""
+
+msgid "Event already has rounds. Remove them before regenerating."
+msgstr ""
+
+msgid "abv"
+msgstr ""
+
+msgid "description"
+msgstr ""
+
+msgid "order"
+msgstr ""
+
+msgid "start"
+msgstr ""
+
+msgid "break"
+msgstr ""
+
+msgid "repetition"
+msgstr ""
+
+msgid "distance"
+msgstr ""
+
+msgid "modality"
+msgstr ""
+
+msgid "Energy Segment"
+msgstr ""
+
+msgid "notes"
+msgstr ""
+
+msgid "Exercise"
+msgstr ""
+
+msgid "Firstname"
+msgstr ""
+
+msgid "Lastname"
+msgstr ""
+
+msgid "Phonenumber"
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Member"
+msgstr ""
+
+msgid "This user already has a member profile."
+msgstr ""
+
+msgid "The user must already belong to at least one of the member's teams."
+msgstr ""
+
+msgid "You must manage at least one team to create members."
+msgstr ""
+
+msgid ""
+"The coach who wrote this note. SET_NULL if the author account is deleted."
+msgstr ""
+
+msgid "You don't have permission to access these notes."
+msgstr ""
+
+msgid "This member does not belong to this team."
+msgstr ""
+
+msgid "AI returned an invalid date format."
+msgstr ""
+
+msgid "AI returned an empty or invalid event list."
+msgstr ""
+
+msgid "AI generated an event with an out-of-range date."
+msgstr ""
+
+msgid "Program"
+msgstr ""
+
+msgid "date_end must be after date_start."
+msgstr ""
+
+msgid "Range cannot exceed 365 days."
+msgstr ""
+
+msgid "You do not manage this team."
+msgstr ""
+
+msgid "You must be owner or manager of this program's team."
+msgstr ""
+
+msgid "Round"
+msgstr ""
+
+msgid "An exercise has a modality.sport that doesn't match round.sport."
+msgstr ""
+
+msgid "An exercise has a language that doesn't match round.language."
+msgstr ""
+
+msgid "exercise_id is required."
+msgstr ""
+
+msgid "Exercise not found or not accessible."
+msgstr ""
+
+msgid "All members can post"
+msgstr ""
+
+msgid "Only coaches can post"
+msgstr ""
+
+msgid "Manual — managers accept/reject each request"
+msgstr ""
+
+msgid "Auto-accept — every join request is accepted immediately"
+msgstr ""
+
+msgid "Defines who can post messages in the team chat."
+msgstr ""
+
+msgid ""
+"If True, athletes can read their own coach notes. Default False (notes are "
+"coach-only)."
+msgstr ""
+
+msgid ""
+"Statuses available for marking attendance in this team's events. Default: "
+"present, absent, excused."
+msgstr ""
+
+msgid ""
+"Manual = managers accept/reject each TeamJoinRequest. Auto = every join "
+"request is accepted immediately on submission."
+msgstr ""
+
+msgid ""
+"When join_request_policy=manual, send the owner and managers an email with "
+"accept/reject magic links on each new request. Ignored when policy=auto (no "
+"manual decision is needed)."
+msgstr ""
+
+msgid "When this athlete joined the team."
+msgstr ""
+
+msgid "When this athlete left the team. NULL = currently active."
+msgstr ""
+
+msgid "Only the team owner can delete the team."
+msgstr ""
+
+msgid ""
+"Only trainers (owners or managers of an active team) can modify the catalog."
+msgstr ""
+
+msgid "You are already a member of this team."
+msgstr ""
+
+msgid "You already have a pending request for this team."
+msgstr ""
+
+msgid "This team is inactive."
+msgstr ""
+
+msgid "This team is not public."
+msgstr ""
+
+msgid "An invitation is already pending for this email on this team."
+msgstr ""
+
+msgid "Join request from"
+msgstr ""
+
+msgid "wants to join your team"
+msgstr ""
+
+msgid "Message"
+msgstr ""
+
+msgid "(none)"
+msgstr ""
+
+msgid "Accept"
+msgstr ""
+
+msgid "Reject"
+msgstr ""
+
+msgid ""
+"Links are valid for 7 days. You can also respond from the team dashboard."
+msgstr ""
+
+msgid "This request has already been handled."
+msgstr ""
+
+msgid "Only the requester can cancel this request."
+msgstr ""
+
+msgid "Only a manager can accept or reject this request."
+msgstr ""
+
+msgid "Unauthorized status transition."
+msgstr ""
+
+msgid "Invalid or expired magic-action token."
+msgstr ""
+
+msgid "You are not a manager of this team."
+msgstr ""
+
+msgid "token is required."
+msgstr ""
+
+msgid ""
+"This join request was cancelled by the requester and cannot be acted on."
+msgstr ""
+
+msgid ""
+"Cet utilisateur est déjà enregistré. Une invitation directe n'est pas "
+"possible pour les comptes existants."
+msgstr ""
+
+msgid "You are invited to"
+msgstr ""
+
+msgid "Hello"
+msgstr ""
+
+msgid "has invited you to join the team"
+msgstr ""
+
+msgid "To finalize your registration, click the link below:"
+msgstr ""
+
+msgid "The link is valid until"
+msgstr ""
+
+msgid "Only pending invitations can be cancelled."
+msgstr ""
+
+msgid "Invitation expired."
+msgstr ""
+
+msgid "Invitation is not pending."
+msgstr ""
+
+msgid "Account created and invitation finalized."
+msgstr ""
+
+msgid "Only owner and managers can add members to a team."
+msgstr ""
+
+msgid "This member is already in the team."
+msgstr ""
+
+msgid "You can only remove yourself or you must be a team manager."
+msgstr ""
+
+msgid ""
+"Team owner cannot leave their own team. Transfer ownership first or delete "
+"the team."
+msgstr ""
+
+msgid "AI service unavailable. Please retry later."
+msgstr ""
+
+msgid "AI service is not configured."
+msgstr ""
+
+msgid "ANTHROPIC_API_KEY is not set. Configure it in .env."
+msgstr ""
+
+msgid "AI authentication failed. Check API key."
+msgstr ""
+
+msgid "AI request timed out."
+msgstr ""
+
+msgid "AI request failed."
+msgstr ""
+
+msgid "Unexpected AI error."
+msgstr ""
+
+msgid "AI did not call the expected tool."
+msgstr ""
+
+msgid ""
+"This resource is locked because it is used in multiple places. Clone it to "
+"modify."
+msgstr ""
+
+msgid ""
+"Email not verified. Please check your inbox or request a new confirmation "
+"link."
+msgstr ""
+
+msgid "Captcha verification failed. Please try again."
+msgstr ""
+
+msgid ""
+"You have reached your team quota. Soft-delete an existing team or contact an "
+"admin to raise your quota."
+msgstr ""
+
+msgid "Validation failed."
+msgstr ""
+
+msgid "Some fields are invalid."
+msgstr ""
+
+msgid "Only staff users can modify the catalog referential."
+msgstr ""
