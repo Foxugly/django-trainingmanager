@@ -36,3 +36,11 @@ class LoginThrottle(AnonRateThrottle):
     legit users on a typo storm."""
 
     scope = "auth_login"
+
+
+class PasswordResetThrottle(AnonRateThrottle):
+    """Anti-spam + anti-enumeration on /auth/password/reset/. Per-IP.
+    Same rate as ResendEmailThrottle (3/hour) since both are "send a
+    new email" patterns triggered by an unauthenticated user."""
+
+    scope = "auth_password_reset"

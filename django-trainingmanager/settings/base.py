@@ -163,6 +163,7 @@ REST_FRAMEWORK = {
         "auth_register": "5/hour",
         "auth_resend_email": "3/hour",
         "auth_login": "10/min",
+        "auth_password_reset": "3/hour",
     },
     "EXCEPTION_HANDLER": "tools.exceptions.custom_exception_handler",
 }
@@ -173,6 +174,9 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": False,
     "AUTH_HEADER_TYPES": ("Bearer",),
+    # Custom key (not consumed by simplejwt itself) — read by
+    # VerifiedTokenObtainPairSerializer when the client sets remember=True.
+    "REFRESH_TOKEN_LIFETIME_REMEMBER": timedelta(days=30),
 }
 
 SPECTACULAR_SETTINGS = {

@@ -17,3 +17,11 @@ class FrontendAccountAdapter(DefaultAccountAdapter):
     def get_email_confirmation_url(self, request, emailconfirmation):
         base = settings.FRONTEND_URL.rstrip("/")
         return f"{base}/auth/confirm-email/{emailconfirmation.key}"
+
+    @staticmethod
+    def get_password_reset_url(key: str) -> str:
+        """Build the absolute frontend URL the user receives in the
+        password-reset email. No trailing slash — matches the SPA's
+        strict-routing convention (cf. magic-link 277b331)."""
+        base = settings.FRONTEND_URL.rstrip("/")
+        return f"{base}/auth/reset-password/{key}"

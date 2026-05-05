@@ -144,11 +144,23 @@ class VerifiedTokenObtainPairSerializer(TokenObtainPairSerializer):
     Legacy users predating allauth integration have no EmailAddress row;
     they are treated as verified to preserve backwards compatibility (no
     data migration). Once an EmailAddress exists for a user, the
-    `verified` flag becomes authoritative."""
+    `verified` flag becomes authoritative.
+
+    Optional `remember` flag (default False) extends the refresh token
+    lifetime to settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME_REMEMBER"]
+    (30 days) instead of the standard REFRESH_TOKEN_LIFETIME (7 days).
+    The access token TTL is unchanged either way.
+    """
+
+    remember = serializers.BooleanField(required=False, default=False, write_only=True)
 
     def validate(self, attrs):
         from allauth.account.models import EmailAddress
+        from rest_framework_simplejwt.tokens import RefreshToken
 
+        # Pop `remember` before super().validate — TokenObtainSerializer
+        # only knows about username/password and would otherwise complain.
+        remember = attrs.pop("remember", False)
         data = super().validate(attrs)  # raises 401 if creds invalid; sets self.user
         addresses = EmailAddress.objects.filter(user=self.user)
         if addresses.exists() and not addresses.filter(verified=True).exists():
@@ -157,4 +169,34 @@ class VerifiedTokenObtainPairSerializer(TokenObtainPairSerializer):
             # surfaces default_code="email_not_verified" at the top of
             # the response, exactly like ResourceLocked does.
             raise EmailNotVerified()
+
+        if remember:
+            # Re-issue the refresh with extended TTL. Access TTL stays at
+            # SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"] (untouched).
+            refresh = RefreshToken.for_user(self.user)
+            extended = settings.SIMPLE_JWT.get("REFRESH_TOKEN_LIFETIME_REMEMBER")
+            if extended is not None:
+                refresh.set_exp(lifetime=extended)
+            data["refresh"] = str(refresh)
+            data["access"] = str(refresh.access_token)
         return data
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """Body of POST /api/v1/auth/password/reset/.
+
+    Anti-leak by design — the view always returns the same 200 payload
+    regardless of whether `email` matches a User. Validation here only
+    enforces field shapes."""
+
+    email = serializers.EmailField()
+    turnstile_token = serializers.CharField(write_only=True)
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """Body of POST /api/v1/auth/password/reset/confirm/. The view decodes
+    `key` (uid + token) and validates `new_password` against Django's
+    password validators with the matched user as context."""
+
+    key = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, min_length=8)

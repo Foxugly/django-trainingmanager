@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: trainingmanager 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-05 12:36+0200\n"
+"POT-Creation-Date: 2026-05-05 13:53+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -123,6 +123,27 @@ msgstr ""
 
 msgid ""
 "If a matching unverified account exists, a confirmation email has been sent."
+msgstr ""
+
+msgid "Password reset"
+msgstr ""
+
+msgid "Hello"
+msgstr ""
+
+msgid "You (or someone) requested a password reset for your account."
+msgstr ""
+
+msgid "To set a new password, click the link below:"
+msgstr ""
+
+msgid "If you did not request this, you can safely ignore this email."
+msgstr ""
+
+msgid "If a matching account exists, a password reset email has been sent."
+msgstr ""
+
+msgid "Invalid or expired password reset token."
 msgstr ""
 
 msgid "No modalities defined for this sport. Cannot generate."
@@ -390,9 +411,6 @@ msgid ""
 msgstr ""
 
 msgid "You are invited to"
-msgstr ""
-
-msgid "Hello"
 msgstr ""
 
 msgid "has invited you to join the team"

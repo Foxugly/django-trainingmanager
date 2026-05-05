@@ -108,3 +108,26 @@ def admin_user(db):
 def admin_client(api_client, admin_user):
     api_client.force_authenticate(user=admin_user)
     return api_client
+
+
+@pytest.fixture
+def set_throttle_rate(monkeypatch):
+    """Override DRF Throttle.THROTTLE_RATES for the duration of a test.
+
+    Direct monkey-patching is required because SimpleRateThrottle.THROTTLE_RATES
+    is captured as a class attribute at import time; pytest-django's settings
+    fixture only replaces the live settings dict and does not propagate.
+
+    Both UserRateThrottle (AI endpoints, JWT-authenticated) and
+    AnonRateThrottle (auth flow endpoints, anonymous) read from this dict,
+    so we patch both class attributes."""
+    from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+
+    new_rates = dict(UserRateThrottle.THROTTLE_RATES)
+
+    def _set(scope, rate):
+        new_rates[scope] = rate
+
+    monkeypatch.setattr(UserRateThrottle, "THROTTLE_RATES", new_rates)
+    monkeypatch.setattr(AnonRateThrottle, "THROTTLE_RATES", new_rates)
+    return _set
