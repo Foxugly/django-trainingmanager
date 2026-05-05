@@ -52,6 +52,8 @@ class TeamSerializer(serializers.ModelSerializer):
             "chat_mode",
             "athlete_can_read_notes",
             "attendance_statuses",
+            "join_request_policy",
+            "notify_managers_on_join_request",
             "created_at",
             "updated_at",
         ]
@@ -59,11 +61,26 @@ class TeamSerializer(serializers.ModelSerializer):
 
 
 class TeamJoinRequestSerializer(serializers.ModelSerializer):
+    """Standard serializer for /join-requests/. Mirrors TeamMembershipSerializer's
+    pattern of exposing username/fullname denorms so the manager dashboard can
+    render the requester without a separate /users/{id}/ fetch."""
+
+    user_username = serializers.CharField(source="user.username", read_only=True)
+    user_fullname = serializers.SerializerMethodField()
+    responded_by_username = serializers.CharField(
+        source="responded_by.username",
+        read_only=True,
+        allow_null=True,
+        default=None,
+    )
+
     class Meta:
         model = TeamJoinRequest
         fields = [
             "id",
             "user",
+            "user_username",
+            "user_fullname",
             "team",
             "status",
             "message",
@@ -71,14 +88,95 @@ class TeamJoinRequestSerializer(serializers.ModelSerializer):
             "requested_at",
             "responded_at",
             "responded_by",
+            "responded_by_username",
         ]
         read_only_fields = [
             "id",
             "user",
+            "user_username",
+            "user_fullname",
             "requested_at",
             "responded_at",
             "responded_by",
+            "responded_by_username",
         ]
+
+    @extend_schema_field(serializers.CharField())
+    def get_user_fullname(self, obj) -> str:
+        user = obj.user
+        parts = [p for p in [user.first_name, user.last_name] if p]
+        return " ".join(parts) if parts else user.username
+
+
+# ---------------------------------------------------------------------
+# Magic-action endpoints (/api/v1/join-magic/) — input + response shapes
+# ---------------------------------------------------------------------
+
+
+class TeamJoinRequestMagicActionPostSerializer(serializers.Serializer):
+    """Body of POST /api/v1/join-magic/. Token is the HMAC-signed link
+    received in the manager email."""
+
+    token = serializers.CharField()
+
+
+class _MagicActionJoinRequestSerializer(serializers.Serializer):
+    """Inline shape of the `join_request` field returned by the magic-action
+    endpoints. Mirrors the dict assembled in
+    TeamJoinRequestMagicActionView._serialize — keep in sync."""
+
+    id = serializers.IntegerField()
+    team_id = serializers.IntegerField()
+    team_name = serializers.CharField()
+    requester_username = serializers.CharField()
+    requester_email = serializers.EmailField()
+    message = serializers.CharField(allow_blank=True)
+    requested_at = serializers.DateTimeField()
+    status = serializers.ChoiceField(choices=["pending", "accepted", "rejected", "cancelled"])
+    responded_at = serializers.DateTimeField(allow_null=True)
+    responded_by = serializers.CharField(allow_null=True, help_text="username")
+
+
+class TeamJoinRequestMagicActionResponseSerializer(serializers.Serializer):
+    """200 response for both GET (preview) and POST (execute) on
+    /api/v1/join-magic/. Identical shape — POST just reflects the
+    post-action state in `join_request.status`."""
+
+    join_request = _MagicActionJoinRequestSerializer()
+    action_proposed = serializers.ChoiceField(choices=["accept", "reject"])
+    would_change_decision = serializers.BooleanField(
+        help_text=(
+            "True iff the action — if executed — would reverse a previous "
+            "manager decision (accepted->rejected or rejected->accepted)."
+        )
+    )
+    can_act = serializers.BooleanField(
+        help_text="False when the request was cancelled by the requester."
+    )
+
+
+class JoinMagicErrorSerializer(serializers.Serializer):
+    """Common 4xx body for the magic-action endpoints. Shape produced by
+    tools.exceptions.custom_exception_handler."""
+
+    code = serializers.ChoiceField(
+        choices=[
+            "invalid_or_expired_token",
+            "token_required",
+            "request_cancelled",
+        ]
+    )
+    detail = serializers.CharField()
+
+
+class JoinMagicCancelledResponseSerializer(TeamJoinRequestMagicActionResponseSerializer):
+    """409 body when the requester cancelled the request. Combines the error
+    envelope (code + detail) with the regular response payload so the
+    frontend can show "the user cancelled" + the snapshot of what was
+    being attempted."""
+
+    code = serializers.ChoiceField(choices=["request_cancelled"])
+    detail = serializers.CharField()
 
 
 class CreateJoinRequestSerializer(serializers.ModelSerializer):

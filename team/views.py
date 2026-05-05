@@ -29,7 +29,11 @@ from .serializers import (
     CompleteInvitationSerializer,
     CreateInvitationSerializer,
     CreateJoinRequestSerializer,
+    JoinMagicCancelledResponseSerializer,
+    JoinMagicErrorSerializer,
     TeamInvitationSerializer,
+    TeamJoinRequestMagicActionPostSerializer,
+    TeamJoinRequestMagicActionResponseSerializer,
     TeamJoinRequestSerializer,
     TeamMembershipSerializer,
     TeamSerializer,
@@ -285,9 +289,10 @@ class TeamJoinRequestMagicActionPreviewView(_MagicActionBase):
 
     @extend_schema(
         responses={
-            200: OpenApiResponse(description="Token decoded; preview returned."),
+            200: TeamJoinRequestMagicActionResponseSerializer,
             400: OpenApiResponse(
-                description="Invalid or expired token (code=invalid_or_expired_token)."
+                response=JoinMagicErrorSerializer,
+                description="Invalid or expired token (code=invalid_or_expired_token).",
             ),
             403: OpenApiResponse(description="Not a manager of this team."),
             404: OpenApiResponse(description="Join request not found."),
@@ -311,34 +316,45 @@ class TeamJoinRequestMagicActionExecuteView(_MagicActionBase):
     Idempotent when the request is already in the target status."""
 
     @extend_schema(
-        request=inline_serializer(
-            name="TeamJoinRequestMagicActionPost",
-            fields={"token": drf_serializers.CharField()},
-        ),
+        request=TeamJoinRequestMagicActionPostSerializer,
         responses={
             200: OpenApiResponse(
+                response=TeamJoinRequestMagicActionResponseSerializer,
                 description=(
                     "Action executed (or no-op if already in target status). "
                     "Returns the same payload shape as the preview, with "
                     "the join_request reflecting the new status."
-                )
+                ),
             ),
-            400: OpenApiResponse(description="Invalid or expired token."),
+            400: OpenApiResponse(
+                response=JoinMagicErrorSerializer,
+                description=(
+                    "Invalid or expired token (code=invalid_or_expired_token), "
+                    "or missing token in body (code=token_required)."
+                ),
+            ),
             403: OpenApiResponse(description="Not a manager of this team."),
             404: OpenApiResponse(description="Join request not found."),
             409: OpenApiResponse(
+                response=JoinMagicCancelledResponseSerializer,
                 description=(
-                    "Conflict: the request was cancelled by the requester "
-                    "and cannot be revived (code=request_cancelled)."
-                )
+                    "Conflict: the request was cancelled by the requester and "
+                    "cannot be revived (code=request_cancelled). The body still "
+                    "contains the regular response payload alongside code/detail "
+                    "so the frontend can show context."
+                ),
             ),
         },
     )
     def post(self, request):
         token = request.data.get("token")
         if not token:
+            # Pass the code via the {detail, code} dict shape so
+            # custom_exception_handler surfaces it at the top level
+            # ({"code": "token_required", "detail": "..."}). The {"token":
+            # ...} shape would have buried the code under fields.token[0].
             raise drf_serializers.ValidationError(
-                {"token": _("token is required.")}, code="token_required"
+                {"detail": _("token is required.")}, code="token_required"
             )
         join_request, action = self._resolve(token)
         target_status = "accepted" if action == "accept" else "rejected"
