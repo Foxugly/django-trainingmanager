@@ -5,9 +5,11 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from customuser.views import VerifiedTokenObtainPairView
+from tools.health import HealthCheckView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/v1/health/", HealthCheckView.as_view(), name="healthcheck"),
     # Auth API (JWT). VerifiedTokenObtainPairView refuses login for users
     # whose primary email is not yet verified — see customuser/serializers.py.
     path(

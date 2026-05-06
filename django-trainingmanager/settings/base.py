@@ -158,6 +158,9 @@ LOGGING = {
             "format": "{asctime} [{levelname}] {name}: {message}",
             "style": "{",
         },
+        "json": {
+            "()": "tools.logging_json.JsonFormatter",
+        },
     },
     "handlers": {
         "console": {
@@ -179,12 +182,15 @@ LOGGING = {
 
 if not DEBUG:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
+    # File handler uses the JSON formatter so an observability stack
+    # (Datadog / GCP Cloud Logging / ELK) can index records without a
+    # parser. Console keeps the human-readable verbose format.
     LOGGING["handlers"]["file"] = {
         "class": "logging.handlers.RotatingFileHandler",
         "filename": str(LOG_DIR / "django.log"),
         "maxBytes": 10 * 1024 * 1024,
         "backupCount": 5,
-        "formatter": "verbose",
+        "formatter": "json",
         "level": "INFO",
     }
     for name in LOGGING["loggers"]:
