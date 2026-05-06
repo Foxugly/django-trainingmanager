@@ -142,6 +142,54 @@ DEBUG_TOOLBAR_CONFIG = {
     "SHOW_TOOLBAR_CALLBACK": lambda request: settings.DEBUG,
 }
 
+# -------------------------- LOGGING --------------------------------
+# Console is always on (so dev/CI see output). A rotating file handler
+# is added when DEBUG=False so prod has a persistent log without burdening
+# dev / pytest with disk writes (and without hardcoding a Linux path that
+# would crash on Windows). The log directory is created on demand,
+# strictly when needed; pytest runs with DEBUG=True so it never touches
+# the filesystem here.
+LOG_DIR = BASE_DIR / "logs"
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} [{levelname}] {name}: {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+            "level": "DEBUG" if DEBUG else "INFO",
+        },
+    },
+    "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        "django.security": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        "team": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "customuser": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "event": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "tools": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
+}
+
+if not DEBUG:
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    LOGGING["handlers"]["file"] = {
+        "class": "logging.handlers.RotatingFileHandler",
+        "filename": str(LOG_DIR / "django.log"),
+        "maxBytes": 10 * 1024 * 1024,
+        "backupCount": 5,
+        "formatter": "verbose",
+        "level": "INFO",
+    }
+    for name in LOGGING["loggers"]:
+        LOGGING["loggers"][name]["handlers"].append("file")
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
