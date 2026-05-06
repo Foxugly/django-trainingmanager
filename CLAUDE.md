@@ -16,9 +16,8 @@ The Django project package is literally named `django-trainingmanager` (with a h
 
 ```bash
 python manage.py runserver
-python manage.py migrate
+python manage.py migrate                             # creates schema + seeds referentials via data migrations (sport.0006, exercise.0009, attendance.0003+0006)
 python manage.py makemigrations <app>
-python manage.py loaddata db.json                    # seed/restore from checked-in fixture
 python manage.py createsuperuser
 python manage.py collectstatic
 python manage.py spectacular --file openapi-schema.yaml --validate   # regenerate API contract

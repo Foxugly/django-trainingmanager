@@ -27,7 +27,6 @@ django-trainingmanager/
 ├── common_tags.py                 # tags template projet (hash, verbose_name, app_name)
 ├── requirements.txt
 ├── db.sqlite3                     # ⚠️ DB committée
-├── db.json                        # fixture (loaddata)
 ├── django-trainingmanager/        # ⚠️ package projet AVEC TIRET
 │   ├── settings.py
 │   ├── urls.py
@@ -198,7 +197,7 @@ Hiérarchie domaine : `Agenda → Event → Round → Exercise` (ForeignKey + `r
 - `db.sqlite3` (410 KB) présent dans le working tree mais correctement ignoré par `.gitignore` (jamais committé).
 - `.idea/` non ignoré (apparaît dans `git status`).
 - Deux venvs (`venv/` et `.venv/`) coexistent — `.venv` est dans `.gitignore` mais `venv/` ne l'est pas explicitement (sauvé par la règle générique `venv/`).
-- Migrations **non commitées** (cf. `git status` : 9 fichiers `0001_initial.py` / `0002_initial.py` untracked) — un clone propre ne pourra pas reproduire le schéma de la DB sans `makemigrations` ou `loaddata db.json`.
+- Migrations **non commitées** (cf. `git status` : 9 fichiers `0001_initial.py` / `0002_initial.py` untracked) — un clone propre ne pourra pas reproduire le schéma de la DB sans `makemigrations`. (Note 2026-05 : les migrations sont désormais commitées et seedent les référentiels — ce point est résolu.)
 - `LICENSE` (35 KB) et `LICENSE.txt` (1 KB) coexistent — doublon.
 - `tools/buildclass.py` : générateur qui imprime du code dépendant de `view_breadcrumbs` (paquet absent de `requirements.txt`) — le script lui-même tourne, mais le code généré ne s'exécutera pas tel quel.
 

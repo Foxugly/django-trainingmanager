@@ -42,8 +42,15 @@ def trainer_event(trainer_user):
     return EventFactory(refer_program=program, total=2000)
 
 
-def _build_rounds_payload():
-    mod_ids = list(Modality.objects.values_list("id", flat=True))
+def _build_rounds_payload(event=None):
+    # Scope modality ids to the event's sport so the AI mock returns ids the
+    # view's catalog filter accepts. Seed migrations populate Natation
+    # modalities globally; tests use a different sport.
+    if event is not None:
+        sport = event.refer_program.team.sport
+        mod_ids = list(Modality.objects.filter(sport=sport).values_list("id", flat=True))
+    else:
+        mod_ids = list(Modality.objects.values_list("id", flat=True))
     seg_ids = list(EnergySegment.objects.values_list("id", flat=True))
     return [
         {
@@ -88,7 +95,7 @@ def test_POST_generate_training_as_team_manager_returns_200(
     auth_client_trainer, trainer_event, settings
 ):
     settings.ANTHROPIC_API_KEY = "sk-ant-fake-test-key"
-    rounds_payload = _build_rounds_payload()
+    rounds_payload = _build_rounds_payload(trainer_event)
 
     with patch("tools.ai.Anthropic") as MockAnthropic:
         mock_client = MockAnthropic.return_value
@@ -227,7 +234,7 @@ def test_POST_generate_training_get_or_create_reuses_exercise(
     auth_client_trainer, trainer_event, settings
 ):
     settings.ANTHROPIC_API_KEY = "sk-ant-fake-test-key"
-    rounds_payload = _build_rounds_payload()
+    rounds_payload = _build_rounds_payload(trainer_event)
 
     # Pre-create one of the exercises identically -> get_or_create should reuse it
     first_ex = rounds_payload[0]["exercises"][0]
@@ -266,7 +273,7 @@ def test_POST_generate_training_get_or_create_reuses_exercise(
 def test_POST_generate_training_atomicity_on_failure(auth_client_trainer, trainer_event, settings):
     """If a database error happens mid-persistence, nothing leaks."""
     settings.ANTHROPIC_API_KEY = "sk-ant-fake-test-key"
-    rounds_payload = _build_rounds_payload()
+    rounds_payload = _build_rounds_payload(trainer_event)
 
     rounds_before = Round.objects.count()
     exercises_before = Exercise.objects.count()
@@ -308,7 +315,7 @@ def test_POST_generate_training_additional_prompt_empty_returns_200(
     auth_client_trainer, trainer_event, settings
 ):
     settings.ANTHROPIC_API_KEY = "sk-ant-fake-test-key"
-    rounds_payload = _build_rounds_payload()
+    rounds_payload = _build_rounds_payload(trainer_event)
 
     with patch("tools.ai.Anthropic") as MockAnthropic:
         mock_client = MockAnthropic.return_value
@@ -328,7 +335,7 @@ def test_POST_generate_training_additional_prompt_appended_to_llm_prompt(
     auth_client_trainer, trainer_event, settings
 ):
     settings.ANTHROPIC_API_KEY = "sk-ant-fake-test-key"
-    rounds_payload = _build_rounds_payload()
+    rounds_payload = _build_rounds_payload(trainer_event)
     coach_text = "focus sur l'endurance, sans matériel, athlètes seniors"
 
     with patch("tools.ai.Anthropic") as MockAnthropic:

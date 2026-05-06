@@ -35,8 +35,8 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 cp .env.example .env
 # Éditer .env : remplir SECRET_KEY, ANTHROPIC_API_KEY, GRAPH_*, FRONTEND_URL
-python manage.py migrate
-python manage.py loaddata db.json   # fixture de seed
+python manage.py migrate            # crée le schéma + seed les référentiels (Sport, Modality, EnergySystem/Segment, AttendanceStatus) via data migrations
+python manage.py createsuperuser    # compte admin pour /admin/
 python manage.py runserver
 ```
 

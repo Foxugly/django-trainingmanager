@@ -171,7 +171,7 @@ def test_generate_training_throttle_after_limit_returns_429(
     program = ProgramFactory(team=team)
     e2 = EventFactory(refer_program=program, total=1000)
 
-    mod = Modality.objects.first()
+    mod = Modality.objects.filter(sport=team.sport).first()
     seg = EnergySegment.objects.first()
     rounds_payload = [
         {
