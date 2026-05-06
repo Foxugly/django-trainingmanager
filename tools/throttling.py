@@ -44,3 +44,14 @@ class PasswordResetThrottle(AnonRateThrottle):
     new email" patterns triggered by an unauthenticated user."""
 
     scope = "auth_password_reset"
+
+
+class LogoutThrottle(UserRateThrottle):
+    """Per-user throttle on /auth/logout/.
+
+    The endpoint requires a valid access token, so abuse is bounded to
+    self-DOS — but a generous rate keeps the door closed against probing
+    behaviours (e.g. an attacker who guessed a fresh access tries to
+    blacklist many candidate refresh strings at once)."""
+
+    scope = "auth_logout"

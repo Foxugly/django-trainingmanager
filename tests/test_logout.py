@@ -86,3 +86,19 @@ def test_logout_with_malformed_refresh_returns_400(api_client):
     response = api_client.post(LOGOUT_URL, {"refresh": "not.a.jwt"}, format="json")
     assert response.status_code == 400, response.json()
     assert response.json()["code"] == "invalid_token"
+
+
+def test_logout_throttle_returns_429_after_limit(api_client, set_throttle_rate):
+    """LogoutThrottle bounds abuse from a holder of an access token who
+    might try to blacklist many candidate refresh strings in quick
+    succession. Default 30/min in prod; lowered here for the test."""
+    set_throttle_rate("auth_logout", "2/min")
+    user = UserFactory()
+    _bearer(api_client, user)
+
+    # Burn the budget with 2 malformed-refresh calls.
+    for _ in range(2):
+        api_client.post(LOGOUT_URL, {"refresh": "not.a.jwt"}, format="json")
+
+    response = api_client.post(LOGOUT_URL, {"refresh": "not.a.jwt"}, format="json")
+    assert response.status_code == 429, response.json()

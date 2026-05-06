@@ -18,6 +18,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from tools.exceptions import CaptchaFailed
 from tools.throttling import (
     LoginThrottle,
+    LogoutThrottle,
     PasswordResetThrottle,
     RegisterThrottle,
     ResendEmailThrottle,
@@ -535,6 +536,7 @@ class LogoutView(APIView):
     """
 
     permission_classes = [IsAuthenticated]
+    throttle_classes = [LogoutThrottle]
 
     @extend_schema(
         request=LogoutSerializer,
@@ -547,6 +549,7 @@ class LogoutView(APIView):
                 )
             ),
             401: OpenApiResponse(description="Access token missing or invalid."),
+            429: OpenApiResponse(description="Too Many Requests (rate limit hit)."),
         },
     )
     def post(self, request):

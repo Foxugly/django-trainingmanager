@@ -219,6 +219,8 @@ REST_FRAMEWORK = {
         "auth_resend_email": "3/hour",
         "auth_login": "10/min",
         "auth_password_reset": "3/hour",
+        # Authenticated auth-flow throttles (per user)
+        "auth_logout": "30/min",
     },
     "EXCEPTION_HANDLER": "tools.exceptions.custom_exception_handler",
 }

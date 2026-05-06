@@ -36,6 +36,13 @@ CSRF_COOKIE_SAMESITE = "Lax"
 
 X_FRAME_OPTIONS = "DENY"
 
+# Explicit Referrer-Policy: don't depend on Django's evolving default.
+# 'same-origin' = the Referer header is sent on same-origin requests
+# (so server-side analytics & logs keep their context) but stripped on
+# cross-origin navigation, which is the safer default for an admin /
+# API surface that doesn't want to leak its URLs to third-party sites.
+SECURE_REFERRER_POLICY = "same-origin"
+
 # CORS_ALLOWED_ORIGINS is now read from the environment in base.py — no
 # code change needed at deploy time, set CORS_ALLOWED_ORIGINS in the
 # prod .env (comma-separated, e.g.
