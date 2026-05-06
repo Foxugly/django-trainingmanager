@@ -190,6 +190,12 @@ if not DEBUG:
     for name in LOGGING["loggers"]:
         LOGGING["loggers"][name]["handlers"].append("file")
 
+# CORS allowed origins are environment-driven so prod can lock down to its
+# real frontend origin(s) without a code change. Default is empty to
+# fail-closed in any environment that forgets to set it; dev.py keeps a
+# hardcoded local override for the Angular dev server convenience.
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
