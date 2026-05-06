@@ -121,6 +121,14 @@ def call_claude_with_tool(
     if system:
         kwargs["system"] = system
 
+    logger.info(
+        "Anthropic call_with_tool: model=%s max_tokens=%s tool=%r prompt_chars=%s",
+        kwargs["model"],
+        kwargs["max_tokens"],
+        tool["name"],
+        len(prompt),
+    )
+
     try:
         response = client.messages.create(**kwargs)
     except AuthenticationError as e:
@@ -136,6 +144,16 @@ def call_claude_with_tool(
         logger.exception("Unexpected error calling Anthropic")
         raise AIServiceError(_("Unexpected AI error."))
 
+    logger.info(
+        "Anthropic call_with_tool returned: model=%s stop_reason=%s "
+        "tokens(in/out)=%s/%s block_types=%s",
+        response.model,
+        response.stop_reason,
+        response.usage.input_tokens,
+        response.usage.output_tokens,
+        [getattr(b, "type", "?") for b in response.content],
+    )
+
     if track_kwargs is not None:
         from tools.ai_tracking import track_ai_usage
 
@@ -148,6 +166,12 @@ def call_claude_with_tool(
             break
 
     if tool_use_block is None:
+        logger.warning(
+            "AI did not call the expected tool %r. stop_reason=%r block_types=%s",
+            tool["name"],
+            response.stop_reason,
+            [getattr(b, "type", "?") for b in response.content],
+        )
         raise AIServiceError(_("AI did not call the expected tool."))
 
     return {

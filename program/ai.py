@@ -3,6 +3,7 @@
 import logging
 from datetime import date as _date
 
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from tools.ai import AIServiceError, call_claude_with_tool
@@ -124,12 +125,34 @@ def _parse_date_strict(s):
     try:
         return _date.fromisoformat(s)
     except (TypeError, ValueError):
+        logger.warning("AI returned invalid date value: %r", s)
         raise AIServiceError(_("AI returned an invalid date format."))
 
 
 def generate_plan(*, program, date_start, date_end, frequency_per_week, description, user=None):
     sport_name = program.team.sport.name if program.team.sport else "the practiced sport"
     language = program.team.language
+
+    duration_days = (date_end - date_start).days + 1
+    weeks = max(duration_days // 7, 1)
+    expected_events = weeks * frequency_per_week
+    logger.info(
+        "generate_plan inputs: program=%s team=%s sport=%r language=%r "
+        "date_start=%s date_end=%s duration_days=%s weeks=%s "
+        "frequency_per_week=%s expected_events=%s description_len=%s description=%r",
+        program.pk,
+        program.team_id,
+        sport_name,
+        language,
+        date_start,
+        date_end,
+        duration_days,
+        weeks,
+        frequency_per_week,
+        expected_events,
+        len(description or ""),
+        description,
+    )
 
     system = build_system_prompt(sport_name)
     user_prompt = build_user_prompt(
@@ -140,16 +163,37 @@ def generate_plan(*, program, date_start, date_end, frequency_per_week, descript
         frequency_per_week=frequency_per_week,
         description=description,
     )
+    logger.info(
+        "generate_plan request: tool=%r system=%r user_prompt=%r",
+        PLAN_TOOL_SCHEMA["name"],
+        system,
+        user_prompt,
+    )
 
     result = call_claude_with_tool(
         prompt=user_prompt,
         system=system,
         tool=PLAN_TOOL_SCHEMA,
+        max_tokens=settings.ANTHROPIC_MAX_TOKENS_PLAN,
         track_kwargs={
             "team": program.team,
             "user": user,
             "endpoint": "plan",
         },
+    )
+    logger.info(
+        "generate_plan response: program=%s model=%s tokens(in/out)=%s/%s "
+        "stop_reason=%s tool_input_keys=%s",
+        program.pk,
+        result["model"],
+        result["input_tokens"],
+        result["output_tokens"],
+        result.get("stop_reason"),
+        (
+            sorted(result["tool_input"].keys())
+            if isinstance(result.get("tool_input"), dict)
+            else "n/a"
+        ),
     )
 
     tool_input = result["tool_input"]
@@ -157,11 +201,26 @@ def generate_plan(*, program, date_start, date_end, frequency_per_week, descript
     rationale = tool_input.get("rationale", "")
 
     if not isinstance(events, list) or not events:
+        logger.warning(
+            "AI returned empty/invalid events for program=%s. type=%s len=%s rationale=%r",
+            program.pk,
+            type(events).__name__,
+            len(events) if isinstance(events, list) else "n/a",
+            (rationale or "")[:200],
+        )
         raise AIServiceError(_("AI returned an empty or invalid event list."))
 
     for ev in events:
         ev_date = _parse_date_strict(ev.get("date"))
         if ev_date < date_start or ev_date > date_end:
+            logger.warning(
+                "AI generated out-of-range date for program=%s: %s not in [%s, %s] (event=%r)",
+                program.pk,
+                ev_date,
+                date_start,
+                date_end,
+                ev,
+            )
             raise AIServiceError(_("AI generated an event with an out-of-range date."))
 
     return {

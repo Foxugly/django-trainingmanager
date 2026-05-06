@@ -109,7 +109,7 @@ def build_system_prompt(sport_name):
     )
 
 
-def build_user_prompt(*, event, modalities_catalog, energysegments_catalog):
+def build_user_prompt(*, event, modalities_catalog, energysegments_catalog, additional_prompt=""):
     language = (
         event.refer_program.team.language
         if event.refer_program and event.refer_program.team
@@ -120,7 +120,7 @@ def build_user_prompt(*, event, modalities_catalog, energysegments_catalog):
     cat_modalities = "\n".join(f"  {m['id']}: {m['name']}" for m in modalities_catalog)
     cat_segments = "\n".join(f"  {s['id']}: {s['abv']}" for s in energysegments_catalog)
 
-    return (
+    base = (
         f"Generate the detail of a training session with these constraints:\n"
         f"- Session name: {event.name}\n"
         f"- Goal: {event.goal or '(not specified)'}\n"
@@ -145,8 +145,24 @@ def build_user_prompt(*, event, modalities_catalog, energysegments_catalog):
         f"- Use the 'create_training_session' tool only.\n"
     )
 
+    extra = (additional_prompt or "").strip()
+    if extra:
+        # Appended AFTER the structured context so the system/base
+        # instructions are not overridable via prompt-injection by the coach;
+        # the marker line makes the boundary explicit for the model.
+        base += (
+            "\n---\n"
+            "Additional instructions provided by the coach (these take "
+            "precedence over generic defaults but must remain consistent "
+            "with the team sport, language, and existing event metadata):\n"
+            f"{extra}\n"
+            "---\n"
+        )
 
-def generate_training(*, event, user=None):
+    return base
+
+
+def generate_training(*, event, user=None, additional_prompt=""):
     from exercise.models import EnergySegment, Modality
 
     sport = (
@@ -166,6 +182,23 @@ def generate_training(*, event, user=None):
     modality_ids = [m["id"] for m in modalities]
     energysegment_ids = [s["id"] for s in energysegments]
 
+    program = event.refer_program
+    team = program.team if program and program.team else None
+    logger.info(
+        "generate_training inputs: event=%s program=%s team=%s sport=%r "
+        "modalities=%s energysegments=%s event_total=%s event_date=%s "
+        "additional_prompt_len=%s",
+        event.pk,
+        program.pk if program else None,
+        team.pk if team else None,
+        sport_name,
+        modality_ids,
+        energysegment_ids,
+        event.total,
+        event.date,
+        len(additional_prompt or ""),
+    )
+
     tool = build_training_tool_schema(
         modality_ids=modality_ids,
         energysegment_ids=energysegment_ids,
@@ -175,9 +208,15 @@ def generate_training(*, event, user=None):
         event=event,
         modalities_catalog=modalities,
         energysegments_catalog=energysegments,
+        additional_prompt=additional_prompt,
+    )
+    logger.info(
+        "generate_training request: tool=%r system=%r user_prompt=%r",
+        tool["name"],
+        system,
+        user_prompt,
     )
 
-    team = event.refer_program.team if event.refer_program and event.refer_program.team else None
     result = call_claude_with_tool(
         prompt=user_prompt,
         system=system,
@@ -188,12 +227,33 @@ def generate_training(*, event, user=None):
             "endpoint": "training",
         },
     )
+    logger.info(
+        "generate_training response: event=%s model=%s tokens(in/out)=%s/%s "
+        "stop_reason=%s tool_input_keys=%s",
+        event.pk,
+        result["model"],
+        result["input_tokens"],
+        result["output_tokens"],
+        result.get("stop_reason"),
+        (
+            sorted(result["tool_input"].keys())
+            if isinstance(result.get("tool_input"), dict)
+            else "n/a"
+        ),
+    )
 
     tool_input = result["tool_input"]
     rounds_data = tool_input.get("rounds", [])
     rationale = tool_input.get("rationale", "")
 
     if not isinstance(rounds_data, list) or not rounds_data:
+        logger.warning(
+            "AI returned empty/invalid rounds for event=%s. type=%s len=%s rationale=%r",
+            event.pk,
+            type(rounds_data).__name__,
+            len(rounds_data) if isinstance(rounds_data, list) else "n/a",
+            (rationale or "")[:200],
+        )
         raise AIServiceError(_("AI returned empty or invalid rounds."))
 
     valid_modality_ids = set(modality_ids)
@@ -201,8 +261,22 @@ def generate_training(*, event, user=None):
     for r in rounds_data:
         for ex in r.get("exercises", []):
             if ex.get("modality_id") not in valid_modality_ids:
+                logger.warning(
+                    "AI used invalid modality_id for event=%s: %r not in %s (exercise=%r)",
+                    event.pk,
+                    ex.get("modality_id"),
+                    sorted(valid_modality_ids),
+                    ex,
+                )
                 raise AIServiceError(_("AI used an invalid modality id."))
             if ex.get("energysegment_id") not in valid_segment_ids:
+                logger.warning(
+                    "AI used invalid energysegment_id for event=%s: %r not in %s (exercise=%r)",
+                    event.pk,
+                    ex.get("energysegment_id"),
+                    sorted(valid_segment_ids),
+                    ex,
+                )
                 raise AIServiceError(_("AI used an invalid energysegment id."))
 
     return {

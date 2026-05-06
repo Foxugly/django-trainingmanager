@@ -176,6 +176,7 @@ LOGGING = {
         "team": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "customuser": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "event": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "program": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "tools": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }
@@ -295,4 +296,9 @@ TURNSTILE_SECRET_KEY = env("TURNSTILE_SECRET_KEY", default="")
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 ANTHROPIC_MODEL_DEFAULT = env("ANTHROPIC_MODEL_DEFAULT", default="claude-haiku-4-5-20251001")
 ANTHROPIC_MAX_TOKENS_DEFAULT = env.int("ANTHROPIC_MAX_TOKENS_DEFAULT", default=2048)
+# Plan generation produces a long JSON list of events (one per session over
+# many weeks); a 41-week × 3-per-week plan needs ~12k output tokens. The
+# default 2048 is far too small here. Other AI features (training generation,
+# ping) keep the smaller default.
+ANTHROPIC_MAX_TOKENS_PLAN = env.int("ANTHROPIC_MAX_TOKENS_PLAN", default=20000)
 ANTHROPIC_TIMEOUT_SECONDS = env.int("ANTHROPIC_TIMEOUT_SECONDS", default=60)

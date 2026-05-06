@@ -299,3 +299,68 @@ def test_POST_generate_training_atomicity_on_failure(auth_client_trainer, traine
     assert trainer_event.rounds.count() == 0
     assert Round.objects.count() == rounds_before
     assert Exercise.objects.count() == exercises_before
+
+
+# ----------------------------- additional_prompt ---------------------
+
+
+def test_POST_generate_training_additional_prompt_empty_returns_200(
+    auth_client_trainer, trainer_event, settings
+):
+    settings.ANTHROPIC_API_KEY = "sk-ant-fake-test-key"
+    rounds_payload = _build_rounds_payload()
+
+    with patch("tools.ai.Anthropic") as MockAnthropic:
+        mock_client = MockAnthropic.return_value
+        mock_client.messages.create.return_value = _mock_training_response(rounds_payload)
+        response = auth_client_trainer.post(
+            f"/api/v1/events/{trainer_event.pk}/generate-training/",
+            {"additional_prompt": ""},
+            format="json",
+        )
+
+    assert response.status_code == 200
+    sent_prompt = mock_client.messages.create.call_args.kwargs["messages"][0]["content"]
+    assert "---" not in sent_prompt or "Additional instructions" not in sent_prompt
+
+
+def test_POST_generate_training_additional_prompt_appended_to_llm_prompt(
+    auth_client_trainer, trainer_event, settings
+):
+    settings.ANTHROPIC_API_KEY = "sk-ant-fake-test-key"
+    rounds_payload = _build_rounds_payload()
+    coach_text = "focus sur l'endurance, sans matériel, athlètes seniors"
+
+    with patch("tools.ai.Anthropic") as MockAnthropic:
+        mock_client = MockAnthropic.return_value
+        mock_client.messages.create.return_value = _mock_training_response(rounds_payload)
+        response = auth_client_trainer.post(
+            f"/api/v1/events/{trainer_event.pk}/generate-training/",
+            {"additional_prompt": coach_text},
+            format="json",
+        )
+
+    assert response.status_code == 200
+    sent_prompt = mock_client.messages.create.call_args.kwargs["messages"][0]["content"]
+    assert coach_text in sent_prompt
+    assert "Additional instructions provided by the coach" in sent_prompt
+    # Coach text appears AFTER the structured context, never before — guards
+    # against prompt-injection that could override the system instructions.
+    assert sent_prompt.index("Authorized modalities catalog") < sent_prompt.index(coach_text)
+
+
+def test_POST_generate_training_additional_prompt_too_long_returns_400(
+    auth_client_trainer, trainer_event, settings
+):
+    settings.ANTHROPIC_API_KEY = "sk-ant-fake-test-key"
+
+    response = auth_client_trainer.post(
+        f"/api/v1/events/{trainer_event.pk}/generate-training/",
+        {"additional_prompt": "x" * 2001},
+        format="json",
+    )
+
+    assert response.status_code == 400
+    body = response.json()
+    field_errors = body.get("fields", {}).get("additional_prompt", [])
+    assert any(err.get("code") == "additional_prompt_too_long" for err in field_errors), body

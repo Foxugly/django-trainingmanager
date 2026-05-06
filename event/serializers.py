@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from program.models import Program
@@ -5,6 +6,36 @@ from program.serializers import ProgramMinimalSerializer
 from round.models import Round
 
 from .models import Event
+
+ADDITIONAL_PROMPT_MAX_LENGTH = 2000
+
+
+class GenerateTrainingRequestSerializer(serializers.Serializer):
+    """Optional payload for POST /events/{id}/generate-training/.
+
+    `additional_prompt` is appended to the LLM user prompt after the
+    structured context (sport, level, duration, catalogs). Empty/missing
+    is a no-op so older clients without a body remain compatible.
+    """
+
+    additional_prompt = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        default="",
+        trim_whitespace=True,
+    )
+
+    def validate_additional_prompt(self, value):
+        # Custom validation (vs. CharField max_length) so we can stamp a
+        # specific error code that the frontend can match on, instead of
+        # the generic DRF "max_length".
+        if len(value) > ADDITIONAL_PROMPT_MAX_LENGTH:
+            raise serializers.ValidationError(
+                _("Additional prompt cannot exceed %(n)d characters.")
+                % {"n": ADDITIONAL_PROMPT_MAX_LENGTH},
+                code="additional_prompt_too_long",
+            )
+        return value
 
 
 class EventSerializer(serializers.ModelSerializer):

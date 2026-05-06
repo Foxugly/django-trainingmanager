@@ -8,7 +8,7 @@ class TeamAdmin(admin.ModelAdmin):
     list_display = ("name", "owner", "is_active", "is_public", "created_at")
     list_filter = ("is_active", "is_public")
     search_fields = ("name",)
-    filter_horizontal = ("managers",)
+    filter_horizontal = ("managers", "attendance_statuses")
 
 
 @admin.register(TeamJoinRequest)

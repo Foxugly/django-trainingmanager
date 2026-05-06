@@ -12,14 +12,18 @@ from tools.throttling import AITrainingGenerationThrottle
 
 from .ai import generate_training as ai_generate_training
 from .models import Event
-from .serializers import EventSerializer
+from .serializers import EventSerializer, GenerateTrainingRequestSerializer
 
 
 class EventViewSet(viewsets.ModelViewSet):
     """CRUD complet pour Event, scopé par team du program."""
 
     serializer_class = EventSerializer
-    filterset_fields = ["refer_program", "date", "color"]
+    filterset_fields = {
+        "refer_program": ["exact"],
+        "date": ["exact", "gte", "lte"],
+        "color": ["exact"],
+    }
     search_fields = ["name", "goal"]
     ordering_fields = ["date", "hour_start", "name", "id"]
     ordering = ["-date", "hour_start"]
@@ -48,7 +52,7 @@ class EventViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     @extend_schema(
-        request=None,
+        request=GenerateTrainingRequestSerializer,
         responses={
             200: OpenApiResponse(
                 response=inline_serializer(
@@ -70,12 +74,17 @@ class EventViewSet(viewsets.ModelViewSet):
                 ),
                 description="Training session generated successfully",
             ),
+            400: OpenApiResponse(description="Invalid request body"),
             403: OpenApiResponse(description="Not a manager of this event team"),
             409: OpenApiResponse(description="Event already has rounds"),
             500: OpenApiResponse(description="AI configuration error"),
             502: OpenApiResponse(description="AI service error"),
         },
-        description="Generate detailed Rounds and Exercises with AI for an Event.",
+        description=(
+            "Generate detailed Rounds and Exercises with AI for an Event. "
+            "Optionally accepts an `additional_prompt` (max 2000 chars) "
+            "appended to the LLM user prompt after the structured context."
+        ),
     )
     @action(
         detail=True,
@@ -108,9 +117,14 @@ class EventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_409_CONFLICT,
             )
 
+        body_serializer = GenerateTrainingRequestSerializer(data=request.data)
+        body_serializer.is_valid(raise_exception=True)
+        additional_prompt = body_serializer.validated_data.get("additional_prompt", "")
+
         ai_result = ai_generate_training(
             event=event,
             user=request.user if request.user.is_authenticated else None,
+            additional_prompt=additional_prompt,
         )
 
         created_rounds = 0
