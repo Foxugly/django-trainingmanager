@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "drf_spectacular",
     "django_filters",
@@ -172,7 +173,11 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": False,
+    # Blacklist enabled: rotated refresh tokens are blacklisted, and
+    # POST /auth/logout/ blacklists the caller's refresh on demand.
+    # Requires the `rest_framework_simplejwt.token_blacklist` app
+    # (declared above in INSTALLED_APPS).
+    "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
     # Custom key (not consumed by simplejwt itself) — read by
     # VerifiedTokenObtainPairSerializer when the client sets remember=True.

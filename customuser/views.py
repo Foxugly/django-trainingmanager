@@ -11,6 +11,7 @@ from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -27,6 +28,7 @@ from .models import CustomUser
 from .serializers import (
     EmailConfirmSerializer,
     EmailResendSerializer,
+    LogoutSerializer,
     MeSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
@@ -500,12 +502,81 @@ class PasswordResetConfirmView(APIView):
             addr.primary = True
             addr.save(update_fields=["verified", "primary"])
 
-        # Note (deferred): we do NOT invalidate existing refresh tokens.
-        # SimpleJWT.TokenBlacklist is not enabled (BLACKLIST_AFTER_ROTATION
-        # is False, no rest_framework_simplejwt.token_blacklist app).
-        # If a stolen refresh token were in the wild, this reset wouldn't
-        # neutralize it. To enable: install token_blacklist + run
-        # token.blacklist() for every outstanding token of the user. Out
-        # of scope for this batch.
+        # Defence in depth: blacklist every outstanding refresh token of
+        # this user so a stolen-but-still-valid refresh in the wild is
+        # neutralised by the reset. Tokens issued before
+        # token_blacklist was enabled are NOT in OutstandingToken and
+        # cannot be revoked retroactively — this is acceptable: the
+        # reset itself was the trigger to enable the feature.
+        from rest_framework_simplejwt.token_blacklist.models import (
+            BlacklistedToken,
+            OutstandingToken,
+        )
+
+        for token in OutstandingToken.objects.filter(user=user):
+            BlacklistedToken.objects.get_or_create(token=token)
 
         return Response({**_jwt_pair(user), "user": _user_payload(user)})
+
+
+class LogoutView(APIView):
+    """POST /api/v1/auth/logout/ — revoke a refresh token.
+
+    The caller authenticates with their access token and posts the refresh
+    they want revoked. On success (204), that refresh — and any rotation
+    descendants produced by /auth/token/refresh/ — can no longer be used.
+    The access token itself is short-lived and not invalidated here; it
+    naturally expires within ACCESS_TOKEN_LIFETIME.
+
+    Ownership is verified before blacklisting: a holder of someone else's
+    refresh string cannot use this endpoint to revoke it. We respond with
+    a generic invalid_token to avoid signalling whether the token exists
+    or only doesn't belong to the caller.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        request=LogoutSerializer,
+        responses={
+            204: OpenApiResponse(description="Refresh token blacklisted."),
+            400: OpenApiResponse(
+                description=(
+                    "Refresh token missing, malformed, expired, already blacklisted, "
+                    "or not owned by the caller. code=invalid_token."
+                )
+            ),
+            401: OpenApiResponse(description="Access token missing or invalid."),
+        },
+    )
+    def post(self, request):
+        serializer = LogoutSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        raw = serializer.validated_data["refresh"]
+
+        try:
+            token = RefreshToken(raw)
+        except TokenError:
+            raise drf_serializers.ValidationError(
+                {"detail": _("Invalid or expired refresh token.")},
+                code="invalid_token",
+            )
+
+        # Ownership check: the refresh must belong to the authenticated user.
+        # SimpleJWT stores user_id under USER_ID_CLAIM (default 'user_id').
+        if str(token.get("user_id")) != str(request.user.pk):
+            raise drf_serializers.ValidationError(
+                {"detail": _("Invalid or expired refresh token.")},
+                code="invalid_token",
+            )
+
+        try:
+            token.blacklist()
+        except TokenError:
+            # Already blacklisted, or any token-state error.
+            raise drf_serializers.ValidationError(
+                {"detail": _("Invalid or expired refresh token.")},
+                code="invalid_token",
+            )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
