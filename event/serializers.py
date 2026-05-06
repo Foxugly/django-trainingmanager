@@ -10,6 +10,20 @@ from .models import Event
 ADDITIONAL_PROMPT_MAX_LENGTH = 2000
 
 
+class ReorderRoundsRequestSerializer(serializers.Serializer):
+    """Body for POST /events/{id}/rounds/reorder/.
+
+    `round_ids` must contain exactly the IDs of the Rounds attached to the
+    Event in the desired final order. The view enforces scope/completeness
+    in addition to this serializer's syntactic validation.
+    """
+
+    round_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        allow_empty=True,
+    )
+
+
 class GenerateTrainingRequestSerializer(serializers.Serializer):
     """Optional payload for POST /events/{id}/generate-training/.
 

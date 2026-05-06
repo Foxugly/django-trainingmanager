@@ -14,6 +14,20 @@ from .models import Round
 from .utils import check_exercise_round_consistency
 
 
+class ReorderExercisesRequestSerializer(serializers.Serializer):
+    """Body for POST /rounds/{id}/exercises/reorder/.
+
+    `exercise_ids` must contain exactly the IDs of the Exercises currently
+    attached to the Round in the desired final order. The view enforces
+    scope/completeness in addition to this serializer's syntactic check.
+    """
+
+    exercise_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        allow_empty=True,
+    )
+
+
 class NotAuthorizedEvent(PermissionDenied):
     """User has no manager rights on the team owning the target event.
 

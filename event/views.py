@@ -4,15 +4,20 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 
+from round.models import Round
 from team.queries import managed_teams, user_member_teams
 from tools.throttling import AITrainingGenerationThrottle
 
 from .ai import generate_training as ai_generate_training
 from .models import Event
-from .serializers import EventSerializer, GenerateTrainingRequestSerializer
+from .serializers import (
+    EventSerializer,
+    GenerateTrainingRequestSerializer,
+    ReorderRoundsRequestSerializer,
+)
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -189,3 +194,76 @@ class EventViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK,
         )
+
+    @extend_schema(
+        request=ReorderRoundsRequestSerializer,
+        responses={
+            204: OpenApiResponse(description="Rounds reordered"),
+            400: OpenApiResponse(
+                description=(
+                    "Validation error. `body.code` is one of: `empty_list`, "
+                    "`duplicate_id`, `scope_mismatch`, `incomplete_reorder`."
+                )
+            ),
+            403: OpenApiResponse(description="Not a manager of this event team"),
+        },
+        description=(
+            "Atomically reorder the Rounds attached to this Event. "
+            "`round_ids` must contain exactly the IDs of the Rounds currently "
+            "attached, in the desired final order. Round.order is set to "
+            "1..N matching list position, in a single transaction."
+        ),
+    )
+    @action(detail=True, methods=["post"], url_path="rounds/reorder")
+    def rounds_reorder(self, request, pk=None):
+        event = self.get_object()
+        if not event.refer_program or not event.refer_program.team.is_managed_by(request.user):
+            return Response(
+                {
+                    "code": "not_authorized_event",
+                    "detail": _("You must manage this event's team to reorder its rounds."),
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        body_serializer = ReorderRoundsRequestSerializer(data=request.data)
+        body_serializer.is_valid(raise_exception=True)
+        round_ids = body_serializer.validated_data["round_ids"]
+
+        if not round_ids:
+            raise ValidationError(
+                detail={"detail": _("round_ids cannot be empty.")},
+                code="empty_list",
+            )
+        if len(round_ids) != len(set(round_ids)):
+            raise ValidationError(
+                detail={"detail": _("round_ids contains duplicate IDs.")},
+                code="duplicate_id",
+            )
+
+        expected_ids = set(event.rounds.values_list("id", flat=True))
+        submitted_ids = set(round_ids)
+        if not submitted_ids.issubset(expected_ids):
+            raise ValidationError(
+                detail={
+                    "detail": _("round_ids contains IDs not attached to this event: {ids}").format(
+                        ids=sorted(submitted_ids - expected_ids)
+                    ),
+                },
+                code="scope_mismatch",
+            )
+        if submitted_ids != expected_ids:
+            raise ValidationError(
+                detail={
+                    "detail": _("round_ids is missing rounds attached to this event: {ids}").format(
+                        ids=sorted(expected_ids - submitted_ids)
+                    ),
+                },
+                code="incomplete_reorder",
+            )
+
+        with transaction.atomic():
+            for index, round_id in enumerate(round_ids, start=1):
+                Round.objects.filter(pk=round_id).update(order=index)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
