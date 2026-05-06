@@ -139,6 +139,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
             date_end=data["date_end"],
             frequency_per_week=data["frequency_per_week"],
             description=data["description"],
+            additional_prompt=data.get("additional_prompt", ""),
             user=request.user if request.user.is_authenticated else None,
         )
 

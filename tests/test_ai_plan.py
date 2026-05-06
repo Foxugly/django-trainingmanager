@@ -334,3 +334,54 @@ def test_POST_generate_events_merge_adds_alongside_existing(
     assert body["deleted_count"] == 0
     # Two events on the start date now (existing + AI duplicate)
     assert Event.objects.filter(refer_program=program, date=start).count() == 2
+
+
+# ----------------------------- additional_prompt ---------------------
+
+
+def test_POST_generate_events_additional_prompt_appended_to_llm_prompt(
+    auth_client_trainer, trainer_user, settings
+):
+    settings.ANTHROPIC_API_KEY = "sk-ant-fake-test-key"
+    program = _trainer_program(trainer_user)
+    start = date(2026, 5, 1)
+    end = date(2026, 5, 14)
+    events_payload = _make_events_payload(start, 2)
+    coach_text = "pic en mars, semaine de récup en novembre"
+
+    with patch("tools.ai.Anthropic") as MockAnthropic:
+        mock_client = MockAnthropic.return_value
+        mock_client.messages.create.return_value = _mock_tool_use_response(events_payload)
+        response = auth_client_trainer.post(
+            f"/api/v1/programs/{program.pk}/generate-events/",
+            _generate_payload(start, end, additional_prompt=coach_text),
+            format="json",
+        )
+
+    assert response.status_code == 200
+    sent_prompt = mock_client.messages.create.call_args.kwargs["messages"][0]["content"]
+    assert coach_text in sent_prompt
+    assert "Additional instructions provided by the coach" in sent_prompt
+    # Coach text appears AFTER the structured context — guards against
+    # prompt-injection that could override the system instructions.
+    assert sent_prompt.index("IMPORTANT instructions") < sent_prompt.index(coach_text)
+
+
+def test_POST_generate_events_additional_prompt_too_long_returns_400(
+    auth_client_trainer, trainer_user, settings
+):
+    settings.ANTHROPIC_API_KEY = "sk-ant-fake-test-key"
+    program = _trainer_program(trainer_user)
+    start = date(2026, 5, 1)
+    end = date(2026, 5, 14)
+
+    response = auth_client_trainer.post(
+        f"/api/v1/programs/{program.pk}/generate-events/",
+        _generate_payload(start, end, additional_prompt="x" * 2001),
+        format="json",
+    )
+
+    assert response.status_code == 400
+    body = response.json()
+    field_errors = body.get("fields", {}).get("additional_prompt", [])
+    assert any(err.get("code") == "additional_prompt_too_long" for err in field_errors), body

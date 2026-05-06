@@ -14,6 +14,21 @@ from rest_framework.exceptions import APIException
 logger = logging.getLogger(__name__)
 
 
+_PROMPT_LOG_MAX_CHARS = 500
+
+
+def truncate_for_log(text, max_chars=_PROMPT_LOG_MAX_CHARS):
+    """Trim long prompts in log lines. The full prompt is persisted on
+    Program.ai_prompt / Event.ai_prompt — logs only need a snippet for
+    operational debugging, not the full copy."""
+    if text is None:
+        return ""
+    s = str(text)
+    if len(s) <= max_chars:
+        return repr(s)
+    return f"{s[:max_chars]!r}…[+{len(s) - max_chars} chars]"
+
+
 class AIServiceError(APIException):
     status_code = 502
     default_detail = _("AI service unavailable. Please retry later.")

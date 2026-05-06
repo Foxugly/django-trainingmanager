@@ -73,15 +73,33 @@ class ProgramSerializer(serializers.ModelSerializer):
         ]
 
 
+ADDITIONAL_PROMPT_MAX_LENGTH = 2000
+
+
 class GeneratePlanRequestSerializer(serializers.Serializer):
     date_start = serializers.DateField()
     date_end = serializers.DateField()
     frequency_per_week = serializers.IntegerField(min_value=1, max_value=14)
     description = serializers.CharField(required=False, allow_blank=True, default="")
+    additional_prompt = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        default="",
+        trim_whitespace=True,
+    )
     overlap_strategy = serializers.ChoiceField(
         choices=OVERLAP_STRATEGY_CHOICES,
         default="add_only",
     )
+
+    def validate_additional_prompt(self, value):
+        if len(value) > ADDITIONAL_PROMPT_MAX_LENGTH:
+            raise serializers.ValidationError(
+                _("Additional prompt cannot exceed %(n)d characters.")
+                % {"n": ADDITIONAL_PROMPT_MAX_LENGTH},
+                code="additional_prompt_too_long",
+            )
+        return value
 
     def validate(self, data):
         if data["date_end"] < data["date_start"]:

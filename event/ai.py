@@ -4,7 +4,7 @@ import logging
 
 from django.utils.translation import gettext_lazy as _
 
-from tools.ai import AIServiceError, call_claude_with_tool
+from tools.ai import AIServiceError, call_claude_with_tool, truncate_for_log
 from tools.i18n import resolve_language_label
 
 logger = logging.getLogger(__name__)
@@ -211,10 +211,10 @@ def generate_training(*, event, user=None, additional_prompt=""):
         additional_prompt=additional_prompt,
     )
     logger.info(
-        "generate_training request: tool=%r system=%r user_prompt=%r",
+        "generate_training request: tool=%r system=%s user_prompt=%s",
         tool["name"],
-        system,
-        user_prompt,
+        truncate_for_log(system),
+        truncate_for_log(user_prompt),
     )
 
     result = call_claude_with_tool(

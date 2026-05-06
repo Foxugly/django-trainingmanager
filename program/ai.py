@@ -6,7 +6,7 @@ from datetime import date as _date
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-from tools.ai import AIServiceError, call_claude_with_tool
+from tools.ai import AIServiceError, call_claude_with_tool, truncate_for_log
 from tools.i18n import resolve_language_label
 
 logger = logging.getLogger(__name__)
@@ -87,14 +87,21 @@ def build_system_prompt(sport_name):
 
 
 def build_user_prompt(
-    *, sport_name, language, date_start, date_end, frequency_per_week, description
+    *,
+    sport_name,
+    language,
+    date_start,
+    date_end,
+    frequency_per_week,
+    description,
+    additional_prompt="",
 ):
     duration_days = (date_end - date_start).days + 1
     weeks = max(duration_days // 7, 1)
     expected_events = weeks * frequency_per_week
     language_label = resolve_language_label(language)
 
-    return (
+    base = (
         f"Generate a training plan with these constraints:\n"
         f"- Sport: {sport_name}\n"
         f"- Period: from {date_start.isoformat()} to {date_end.isoformat()} "
@@ -120,6 +127,22 @@ def build_user_prompt(
         f"- Use the 'create_training_plan' tool only.\n"
     )
 
+    extra = (additional_prompt or "").strip()
+    if extra:
+        # Appended AFTER the structured context as a marked block to deter
+        # prompt-injection: the system rules above stay binding even if the
+        # coach's text says "ignore previous instructions".
+        base += (
+            "\n---\n"
+            "Additional instructions provided by the coach (these take "
+            "precedence over generic defaults but must remain consistent "
+            "with the team sport, language, and the requested period):\n"
+            f"{extra}\n"
+            "---\n"
+        )
+
+    return base
+
 
 def _parse_date_strict(s):
     try:
@@ -129,7 +152,16 @@ def _parse_date_strict(s):
         raise AIServiceError(_("AI returned an invalid date format."))
 
 
-def generate_plan(*, program, date_start, date_end, frequency_per_week, description, user=None):
+def generate_plan(
+    *,
+    program,
+    date_start,
+    date_end,
+    frequency_per_week,
+    description,
+    user=None,
+    additional_prompt="",
+):
     sport_name = program.team.sport.name if program.team.sport else "the practiced sport"
     language = program.team.language
 
@@ -139,7 +171,8 @@ def generate_plan(*, program, date_start, date_end, frequency_per_week, descript
     logger.info(
         "generate_plan inputs: program=%s team=%s sport=%r language=%r "
         "date_start=%s date_end=%s duration_days=%s weeks=%s "
-        "frequency_per_week=%s expected_events=%s description_len=%s description=%r",
+        "frequency_per_week=%s expected_events=%s description_len=%s description=%r "
+        "additional_prompt_len=%s",
         program.pk,
         program.team_id,
         sport_name,
@@ -152,6 +185,7 @@ def generate_plan(*, program, date_start, date_end, frequency_per_week, descript
         expected_events,
         len(description or ""),
         description,
+        len(additional_prompt or ""),
     )
 
     system = build_system_prompt(sport_name)
@@ -162,12 +196,13 @@ def generate_plan(*, program, date_start, date_end, frequency_per_week, descript
         date_end=date_end,
         frequency_per_week=frequency_per_week,
         description=description,
+        additional_prompt=additional_prompt,
     )
     logger.info(
-        "generate_plan request: tool=%r system=%r user_prompt=%r",
+        "generate_plan request: tool=%r system=%s user_prompt=%s",
         PLAN_TOOL_SCHEMA["name"],
-        system,
-        user_prompt,
+        truncate_for_log(system),
+        truncate_for_log(user_prompt),
     )
 
     result = call_claude_with_tool(
