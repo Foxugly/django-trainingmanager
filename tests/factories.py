@@ -15,6 +15,11 @@ from team.models import Team
 class UserFactory(DjangoModelFactory):
     class Meta:
         model = get_user_model()
+        # set_password is a post_generation hook that calls .save() itself;
+        # opt out of factory_boy's implicit second save (deprecated in
+        # current versions, removed in next major) — eliminates a noisy
+        # DeprecationWarning without changing semantics.
+        skip_postgeneration_save = True
 
     username = factory.Sequence(lambda n: f"user_factory_{n}")
     email = factory.LazyAttribute(lambda o: f"{o.username}@local.test")
