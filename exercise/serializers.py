@@ -6,6 +6,7 @@ from rest_framework.exceptions import PermissionDenied
 from round.models import Round
 from sport.serializers import SportSerializer
 from tools.exceptions import ResourceLocked
+from tools.validators import MMSS_VALIDATOR
 
 from .models import EnergySegment, EnergySystem, Exercise, Modality
 
@@ -129,6 +130,21 @@ class ExerciseSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False,
         allow_null=True,
+    )
+    # Explicit declaration so drf-spectacular emits `pattern` in the schema.
+    t_start = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        validators=[MMSS_VALIDATOR],
+        help_text=_("MM:SS format, e.g. 1:30."),
+    )
+    t_break = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        validators=[MMSS_VALIDATOR],
+        help_text=_("MM:SS format, e.g. 1:30."),
     )
     energysegment = EnergySegmentSerializer(read_only=True)
     energysegment_id = serializers.PrimaryKeyRelatedField(

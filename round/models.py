@@ -3,6 +3,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from exercise.models import Exercise
+from tools.validators import MMSS_VALIDATOR
 
 
 class Round(models.Model):
@@ -12,12 +13,14 @@ class Round(models.Model):
         max_length=10,
         null=True,
         blank=True,
+        validators=[MMSS_VALIDATOR],
         verbose_name=_("start"),
     )
     t_break = models.CharField(
         max_length=10,
         null=True,
         blank=True,
+        validators=[MMSS_VALIDATOR],
         verbose_name=_("break"),
     )
     exercises = models.ManyToManyField(

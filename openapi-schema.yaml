@@ -5140,13 +5140,13 @@ components:
         t_start:
           type: string
           nullable: true
-          title: Start
-          maxLength: 10
+          description: MM:SS format, e.g. 1:30.
+          pattern: ^\d{1,3}:[0-5]\d$
         t_break:
           type: string
           nullable: true
-          title: Break
-          maxLength: 10
+          description: MM:SS format, e.g. 1:30.
+          pattern: ^\d{1,3}:[0-5]\d$
         modality:
           allOf:
           - $ref: '#/components/schemas/Modality'
@@ -6403,13 +6403,13 @@ components:
         t_start:
           type: string
           nullable: true
-          title: Start
-          maxLength: 10
+          description: MM:SS format, e.g. 1:30.
+          pattern: ^\d{1,3}:[0-5]\d$
         t_break:
           type: string
           nullable: true
-          title: Break
-          maxLength: 10
+          description: MM:SS format, e.g. 1:30.
+          pattern: ^\d{1,3}:[0-5]\d$
         modality:
           allOf:
           - $ref: '#/components/schemas/Modality'
@@ -6736,13 +6736,13 @@ components:
         t_start:
           type: string
           nullable: true
-          title: Start
-          maxLength: 10
+          description: MM:SS format, e.g. 1:30.
+          pattern: ^\d{1,3}:[0-5]\d$
         t_break:
           type: string
           nullable: true
-          title: Break
-          maxLength: 10
+          description: MM:SS format, e.g. 1:30.
+          pattern: ^\d{1,3}:[0-5]\d$
         exercises:
           type: array
           items:
@@ -7122,13 +7122,13 @@ components:
         t_start:
           type: string
           nullable: true
-          title: Start
-          maxLength: 10
+          description: MM:SS format, e.g. 1:30.
+          pattern: ^\d{1,3}:[0-5]\d$
         t_break:
           type: string
           nullable: true
-          title: Break
-          maxLength: 10
+          description: MM:SS format, e.g. 1:30.
+          pattern: ^\d{1,3}:[0-5]\d$
         exercises:
           type: array
           items:

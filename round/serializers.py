@@ -8,6 +8,7 @@ from exercise.models import Exercise
 from sport.models import Sport
 from sport.serializers import SportSerializer
 from tools.exceptions import ResourceLocked
+from tools.validators import MMSS_VALIDATOR
 
 from .models import Round
 from .utils import check_exercise_round_consistency
@@ -36,6 +37,23 @@ class RoundSerializer(serializers.ModelSerializer):
     )
     exercises = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Exercise.objects.all(), required=False
+    )
+    # Explicit declaration so drf-spectacular emits `pattern` in the
+    # OpenAPI schema (auto-generated ModelSerializer fields don't surface
+    # model-level RegexValidator patterns).
+    t_start = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        validators=[MMSS_VALIDATOR],
+        help_text=_("MM:SS format, e.g. 1:30."),
+    )
+    t_break = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        validators=[MMSS_VALIDATOR],
+        help_text=_("MM:SS format, e.g. 1:30."),
     )
     event_id = serializers.PrimaryKeyRelatedField(
         source="_target_event",

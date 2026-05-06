@@ -2,6 +2,8 @@ from django.conf import settings as django_settings
 from django.db import models
 from django.utils.translation import gettext as _
 
+from tools.validators import MMSS_VALIDATOR
+
 
 class Modality(models.Model):
     name = models.CharField(max_length=20, verbose_name=_("name"))
@@ -46,12 +48,14 @@ class Exercise(models.Model):
         max_length=10,
         null=True,
         blank=True,
+        validators=[MMSS_VALIDATOR],
         verbose_name=_("start"),
     )
     t_break = models.CharField(
         max_length=10,
         null=True,
         blank=True,
+        validators=[MMSS_VALIDATOR],
         verbose_name=_("break"),
     )
     repetition = models.PositiveIntegerField(verbose_name=_("repetition"), default=1)
