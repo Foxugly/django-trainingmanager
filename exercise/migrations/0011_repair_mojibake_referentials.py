@@ -1,5 +1,9 @@
 """Defensive cleanup of mojibake (double-encoded UTF-8) in referential rows.
 
+ONE-WAY DATA CLEANUP — the reverse is a no-op on purpose. Reverting this
+migration leaves the repaired rows untouched (we cannot reconstruct the
+original bytes after collapsing the double-encoding).
+
 Some early dev databases (pre-i18n era) contain rows where accented
 characters were double-encoded — e.g. "Apnée" stored as "Apnée" (the
 UTF-8 bytes C3 A9 of "é" re-encoded a second time as C3 83 C2 A9).

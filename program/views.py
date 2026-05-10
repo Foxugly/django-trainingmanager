@@ -17,6 +17,7 @@ from rest_framework.response import Response
 
 from event.models import Event
 from team.queries import managed_teams, user_member_teams
+from tools.exceptions import NotAManagerDenied
 from tools.openapi import INCLUDE_INACTIVE_PARAM
 from tools.throttling import AIPlanGenerationThrottle
 
@@ -121,13 +122,7 @@ class ProgramViewSet(viewsets.ModelViewSet):
         program = self.get_object()
 
         if not program.team.is_managed_by(request.user):
-            return Response(
-                {
-                    "code": "not_a_manager",
-                    "detail": _("You must be owner or manager of this program's team."),
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise NotAManagerDenied(_("You must be owner or manager of this program's team."))
 
         serializer = GeneratePlanRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

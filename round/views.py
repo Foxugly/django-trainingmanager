@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -11,6 +10,8 @@ from exercise.models import Exercise
 from exercise.serializers import ExerciseSerializer
 from team.permissions import IsTrainer
 from team.utils import scope_by_sport_language
+from tools.exceptions import NotAuthorizedRoundDenied
+from tools.validators import validate_reorder_ids
 
 from .models import Round
 from .serializers import ReorderExercisesRequestSerializer, RoundSerializer
@@ -130,52 +131,23 @@ class RoundViewSet(viewsets.ModelViewSet):
     def exercises_reorder(self, request, pk=None):
         round_obj = self.get_object()
         if not _user_may_mutate_round(round_obj, request.user):
-            return Response(
-                {
-                    "code": "not_authorized_round",
-                    "detail": _(
-                        "You must manage at least one team owning an event "
-                        "linked to this round to reorder its exercises."
-                    ),
-                },
-                status=status.HTTP_403_FORBIDDEN,
+            raise NotAuthorizedRoundDenied(
+                _(
+                    "You must manage at least one team owning an event "
+                    "linked to this round to reorder its exercises."
+                )
             )
 
         body_serializer = ReorderExercisesRequestSerializer(data=request.data)
         body_serializer.is_valid(raise_exception=True)
         exercise_ids = body_serializer.validated_data["exercise_ids"]
 
-        if not exercise_ids:
-            raise ValidationError(
-                detail={"detail": _("exercise_ids cannot be empty.")},
-                code="empty_list",
-            )
-        if len(exercise_ids) != len(set(exercise_ids)):
-            raise ValidationError(
-                detail={"detail": _("exercise_ids contains duplicate IDs.")},
-                code="duplicate_id",
-            )
-
-        expected_ids = set(round_obj.exercises.values_list("id", flat=True))
-        submitted_ids = set(exercise_ids)
-        if not submitted_ids.issubset(expected_ids):
-            raise ValidationError(
-                detail={
-                    "detail": _(
-                        "exercise_ids contains IDs not attached to this round: {ids}"
-                    ).format(ids=sorted(submitted_ids - expected_ids)),
-                },
-                code="scope_mismatch",
-            )
-        if submitted_ids != expected_ids:
-            raise ValidationError(
-                detail={
-                    "detail": _(
-                        "exercise_ids is missing exercises attached to this round: {ids}"
-                    ).format(ids=sorted(expected_ids - submitted_ids)),
-                },
-                code="incomplete_reorder",
-            )
+        validate_reorder_ids(
+            exercise_ids,
+            round_obj.exercises.values_list("id", flat=True),
+            field_name="exercise_ids",
+            container_label="round",
+        )
 
         with transaction.atomic():
             for index, exercise_id in enumerate(exercise_ids, start=1):
@@ -189,7 +161,7 @@ def _user_may_mutate_round(round_obj, user):
     team owning an event that contains this round. Library rounds (no
     events) fall back to the IsTrainer class permission check (already
     enforced by RoundViewSet.permission_classes)."""
-    linked_events = list(round_obj.event_set.all())
+    linked_events = list(round_obj.event_set.select_related("refer_program__team").all())
     if not linked_events:
         return True  # library round; class-level IsTrainer already passed
     return any(

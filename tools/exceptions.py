@@ -1,6 +1,30 @@
 from django.utils.translation import gettext_lazy as _
-from rest_framework.exceptions import APIException, ErrorDetail, ValidationError
+from rest_framework.exceptions import APIException, ErrorDetail, PermissionDenied, ValidationError
 from rest_framework.views import exception_handler
+
+
+class NotAManagerDenied(PermissionDenied):
+    """403 raised when the caller is neither owner nor manager of the team
+    behind a Program / Event. Frontend matches on `code == "not_a_manager"`."""
+
+    default_detail = _("You must be owner or manager of this team.")
+    default_code = "not_a_manager"
+
+
+class NotAuthorizedEventDenied(PermissionDenied):
+    """403 raised on event-scoped mutations (e.g. POST rounds-reorder/) when
+    the caller does not manage the event's parent program team."""
+
+    default_detail = _("You must manage this event's team to perform this action.")
+    default_code = "not_authorized_event"
+
+
+class NotAuthorizedRoundDenied(PermissionDenied):
+    """403 raised on round-scoped mutations (e.g. POST exercises-reorder/)
+    when the caller does not manage any event team linked to the round."""
+
+    default_detail = _("You must manage at least one team owning an event linked to this round.")
+    default_code = "not_authorized_round"
 
 
 class ResourceLocked(APIException):

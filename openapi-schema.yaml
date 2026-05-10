@@ -5532,17 +5532,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-        is_staff:
-          type: boolean
-          readOnly: true
-          title: Staff status
-          description: Designates whether the user can log into this admin site.
-        is_superuser:
-          type: boolean
-          readOnly: true
-          title: Superuser status
-          description: Designates that this user has all permissions without explicitly
-            assigning them.
         team_quota:
           allOf:
           - $ref: '#/components/schemas/TeamQuotaStatus'
@@ -5551,8 +5540,6 @@ components:
       - date_joined
       - email
       - id
-      - is_staff
-      - is_superuser
       - last_login
       - team_quota
       - username
@@ -6555,17 +6542,6 @@ components:
           type: string
           format: date-time
           readOnly: true
-        is_staff:
-          type: boolean
-          readOnly: true
-          title: Staff status
-          description: Designates whether the user can log into this admin site.
-        is_superuser:
-          type: boolean
-          readOnly: true
-          title: Superuser status
-          description: Designates that this user has all permissions without explicitly
-            assigning them.
         team_quota:
           allOf:
           - $ref: '#/components/schemas/TeamQuotaStatus'

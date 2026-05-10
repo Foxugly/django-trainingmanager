@@ -199,7 +199,7 @@ class ExerciseSerializer(serializers.ModelSerializer):
         if target_round is not None:
             request = self.context.get("request")
             user = getattr(request, "user", None)
-            linked_events = list(target_round.event_set.all())
+            linked_events = list(target_round.event_set.select_related("refer_program__team").all())
             if linked_events:
                 authorized = any(
                     e.refer_program is not None and e.refer_program.team.is_managed_by(user)

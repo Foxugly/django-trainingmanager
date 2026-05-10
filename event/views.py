@@ -4,12 +4,14 @@ from django.utils.translation import gettext_lazy as _
 from drf_spectacular.utils import OpenApiResponse, extend_schema, inline_serializer
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from round.models import Round
 from team.queries import managed_teams, user_member_teams
+from tools.exceptions import NotAManagerDenied, NotAuthorizedEventDenied
 from tools.throttling import AITrainingGenerationThrottle
+from tools.validators import validate_reorder_ids
 
 from .ai import generate_training as ai_generate_training
 from .models import Event
@@ -105,13 +107,7 @@ class EventViewSet(viewsets.ModelViewSet):
         event = self.get_object()
 
         if not event.refer_program or not event.refer_program.team.is_managed_by(request.user):
-            return Response(
-                {
-                    "code": "not_a_manager",
-                    "detail": _("You must be owner or manager of this event's team."),
-                },
-                status=status.HTTP_403_FORBIDDEN,
-            )
+            raise NotAManagerDenied(_("You must be owner or manager of this event's team."))
 
         if event.rounds.exists():
             return Response(
@@ -218,49 +214,20 @@ class EventViewSet(viewsets.ModelViewSet):
     def rounds_reorder(self, request, pk=None):
         event = self.get_object()
         if not event.refer_program or not event.refer_program.team.is_managed_by(request.user):
-            return Response(
-                {
-                    "code": "not_authorized_event",
-                    "detail": _("You must manage this event's team to reorder its rounds."),
-                },
-                status=status.HTTP_403_FORBIDDEN,
+            raise NotAuthorizedEventDenied(
+                _("You must manage this event's team to reorder its rounds.")
             )
 
         body_serializer = ReorderRoundsRequestSerializer(data=request.data)
         body_serializer.is_valid(raise_exception=True)
         round_ids = body_serializer.validated_data["round_ids"]
 
-        if not round_ids:
-            raise ValidationError(
-                detail={"detail": _("round_ids cannot be empty.")},
-                code="empty_list",
-            )
-        if len(round_ids) != len(set(round_ids)):
-            raise ValidationError(
-                detail={"detail": _("round_ids contains duplicate IDs.")},
-                code="duplicate_id",
-            )
-
-        expected_ids = set(event.rounds.values_list("id", flat=True))
-        submitted_ids = set(round_ids)
-        if not submitted_ids.issubset(expected_ids):
-            raise ValidationError(
-                detail={
-                    "detail": _("round_ids contains IDs not attached to this event: {ids}").format(
-                        ids=sorted(submitted_ids - expected_ids)
-                    ),
-                },
-                code="scope_mismatch",
-            )
-        if submitted_ids != expected_ids:
-            raise ValidationError(
-                detail={
-                    "detail": _("round_ids is missing rounds attached to this event: {ids}").format(
-                        ids=sorted(expected_ids - submitted_ids)
-                    ),
-                },
-                code="incomplete_reorder",
-            )
+        validate_reorder_ids(
+            round_ids,
+            event.rounds.values_list("id", flat=True),
+            field_name="round_ids",
+            container_label="event",
+        )
 
         with transaction.atomic():
             for index, round_id in enumerate(round_ids, start=1):

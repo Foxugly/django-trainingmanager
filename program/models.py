@@ -38,3 +38,4 @@ class Program(models.Model):
 
     class Meta:
         verbose_name = _("Program")
+        ordering = ["-updated_at", "-id"]

@@ -124,7 +124,13 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
         on email so they don't get the mail twice if they appear in both."""
         from .magic_action import magic_link
 
-        team = join_request.team
+        # Re-fetch team with owner select_related + managers prefetched so
+        # the recipient resolution below does not trigger per-row queries.
+        team = (
+            Team.objects.select_related("owner")
+            .prefetch_related("managers")
+            .get(pk=join_request.team_id)
+        )
         # Map email -> language for each recipient. Owner takes priority over
         # managers' duplicate entries.
         recipients_by_email: dict[str, str] = {}

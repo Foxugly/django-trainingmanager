@@ -50,8 +50,6 @@ class MeSerializer(serializers.ModelSerializer):
             "language",
             "last_login",
             "date_joined",
-            "is_staff",
-            "is_superuser",
             "team_quota",
         ]
         read_only_fields = [
@@ -60,8 +58,6 @@ class MeSerializer(serializers.ModelSerializer):
             "email",
             "last_login",
             "date_joined",
-            "is_staff",
-            "is_superuser",
             "team_quota",
         ]
 
