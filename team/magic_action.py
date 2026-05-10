@@ -1,6 +1,6 @@
 """HMAC-signed magic links for one-click accept/reject of TeamJoinRequest.
 
-Format: TimestampSigner.sign(f"{join_request_id}:{action}") with a 7-day
+Format: TimestampSigner.sign(f"{join_request_id}:{action}") with a 48-hour
 max-age. No DB row — the signature is the entire credential. A token
 is replayable until it expires; the actual transition is idempotent
 (see views.TeamJoinRequestMagicActionView).
@@ -15,7 +15,7 @@ from django.conf import settings
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 
 ALLOWED_ACTIONS = ("accept", "reject")
-TOKEN_MAX_AGE_SECONDS = 7 * 24 * 3600  # 7 days
+TOKEN_MAX_AGE_SECONDS = 48 * 3600  # 48 hours
 SIGNER_SALT = "team.join_request.magic_action"
 
 
@@ -26,7 +26,7 @@ def _signer() -> TimestampSigner:
 def make_token(join_request_id: int, action: str) -> str:
     """Return an HMAC-signed token encoding (join_request_id, action).
 
-    `action` must be in ALLOWED_ACTIONS. Tokens expire 7 days after issue."""
+    `action` must be in ALLOWED_ACTIONS. Tokens expire 48 hours after issue."""
     if action not in ALLOWED_ACTIONS:
         raise ValueError(f"action must be one of {ALLOWED_ACTIONS}, got {action!r}")
     return _signer().sign(f"{join_request_id}:{action}")

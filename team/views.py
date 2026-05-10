@@ -159,7 +159,7 @@ class TeamJoinRequestViewSet(viewsets.ModelViewSet):
                     f"{_('Message')}: {join_request.message or _('(none)')}\n\n"
                     f"{_('Accept')}: {accept_url}\n"
                     f"{_('Reject')}: {reject_url}\n\n"
-                    f"{_('Links are valid for 7 days. You can also respond from the team dashboard.')}"
+                    f"{_('Links are valid for 48 hours. You can also respond from the team dashboard.')}"
                 )
                 try:
                     send_mail(

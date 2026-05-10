@@ -216,8 +216,13 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ),
-    "DEFAULT_THROTTLE_CLASSES": [],
+    # Global baseline throttle for unauthenticated callers (per IP). Endpoints
+    # with their own throttle_classes override this (e.g. ai_* + auth_* below).
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+    ],
     "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/hour",
         "ai_ping": "30/hour",
         "ai_plan_generation": "10/hour",
         "ai_training_generation": "10/hour",
