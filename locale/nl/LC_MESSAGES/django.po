@@ -18,483 +18,456 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "prompt must be a non-empty string."
-msgstr ""
+msgstr "prompt moet een niet-lege tekenreeks zijn."
 
 msgid "prompt too long (max 5000 chars for ping)."
-msgstr ""
+msgstr "prompt te lang (max 5000 tekens voor ping)."
 
 msgid "Ping"
-msgstr ""
+msgstr "Ping"
 
 msgid "Generate plan"
-msgstr ""
+msgstr "Plan genereren"
 
 msgid "Generate training"
-msgstr ""
+msgstr "Training genereren"
 
 msgid "Only the owner and managers of this team can view AI usage."
-msgstr ""
+msgstr "Alleen de eigenaar en managers van dit team kunnen het AI-gebruik bekijken."
 
 msgid "Snake_case identifier (e.g. 'present', 'absent', 'excused')"
-msgstr ""
+msgstr "Snake_case-identificator (bv. 'present', 'absent', 'excused')"
 
 msgid "Display label, translated via modeltranslation."
-msgstr ""
+msgstr "Weergavelabel, vertaald via modeltranslation."
 
 msgid "If True, pre-selected as default in the frontend UI."
-msgstr ""
+msgstr "Indien True, standaard voorgeselecteerd in de frontend-UI."
 
 msgid "Display order for buttons in the frontend."
-msgstr ""
+msgstr "Weergavevolgorde van de knoppen in de frontend."
 
 msgid "Hex color (#xxxxxx) for the frontend, optional."
-msgstr ""
+msgstr "Hex-kleur (#xxxxxx) voor de frontend, optioneel."
 
 msgid "You don't have permission to access this event's attendance."
-msgstr ""
+msgstr "U hebt geen toestemming om de aanwezigheid van dit evenement te raadplegen."
 
 msgid "Event has no team (orphan event)."
-msgstr ""
+msgstr "Het evenement heeft geen team (verweesd evenement)."
 
 msgid "This member is not in the team."
-msgstr ""
+msgstr "Dit lid maakt geen deel uit van het team."
 
 msgid "Attendance already exists for this member. Use PATCH to update."
-msgstr ""
+msgstr "Er bestaat al een aanwezigheid voor dit lid. Gebruik PATCH om bij te werken."
 
 msgid "Only team owner and managers can bulk-set attendances."
-msgstr ""
+msgstr "Alleen de teameigenaar en managers kunnen aanwezigheden in bulk instellen."
 
 #, python-brace-format
 msgid "Members not in team: {ids}"
-msgstr ""
+msgstr "Leden niet in het team: {ids}"
 
 #, python-brace-format
 msgid "Status codes not found or inactive: {codes}"
-msgstr ""
+msgstr "Statuscodes niet gevonden of inactief: {codes}"
 
 msgid "Author of the message. SET_NULL on user deletion."
-msgstr ""
+msgstr "Auteur van het bericht. SET_NULL bij verwijdering van de gebruiker."
 
 msgid "Rich HTML content (sanitized via bleach on save)."
-msgstr ""
+msgstr "Rijke HTML-inhoud (opgeschoond via bleach bij opslag)."
 
 msgid "Set when the message is edited after creation."
-msgstr ""
+msgstr "Ingesteld wanneer het bericht na aanmaak wordt bewerkt."
 
 msgid "Soft delete timestamp. Non-null = deleted."
-msgstr ""
+msgstr "Tijdstempel voor zachte verwijdering. Niet-null = verwijderd."
 
 msgid "You don't have permission to access this team's chat."
-msgstr ""
+msgstr "U hebt geen toestemming om de chat van dit team te raadplegen."
 
 msgid "Message content cannot be empty."
-msgstr ""
+msgstr "De berichtinhoud mag niet leeg zijn."
 
 msgid "Personal info"
-msgstr ""
+msgstr "Persoonlijke gegevens"
 
 msgid "Permissions"
-msgstr ""
+msgstr "Rechten"
 
 msgid "Important dates"
-msgstr ""
+msgstr "Belangrijke datums"
 
 msgid "language"
-msgstr ""
+msgstr "taal"
 
-msgid ""
-"Maximum number of active teams this user can own. Defaults to 0 — creating a "
-"team is a paid feature; admins bump this per user (or via a future billing "
-"flow)."
-msgstr ""
+msgid "Maximum number of active teams this user can own. Defaults to 0 — creating a team is a paid feature; admins bump this per user (or via a future billing flow)."
+msgstr "Maximaal aantal actieve teams dat deze gebruiker mag bezitten. Standaard 0 — een team aanmaken is een betaalde functie; admins verhogen deze waarde per gebruiker (of via een toekomstige facturatiestroom)."
 
 msgid "This username is already taken."
-msgstr ""
+msgstr "Deze gebruikersnaam is al in gebruik."
 
 msgid "This email is already in use."
-msgstr ""
+msgstr "Dit e-mailadres is al in gebruik."
 
 msgid "Account created. Please check your email to confirm your registration."
-msgstr ""
+msgstr "Account aangemaakt. Controleer uw e-mail om uw registratie te bevestigen."
 
 msgid "Invalid or expired confirmation token."
-msgstr ""
+msgstr "Ongeldig of verlopen bevestigingstoken."
 
-msgid ""
-"If a matching unverified account exists, a confirmation email has been sent."
-msgstr ""
+msgid "If a matching unverified account exists, a confirmation email has been sent."
+msgstr "Als een overeenkomend niet-geverifieerd account bestaat, is er een bevestigingsmail verzonden."
 
 msgid "Password reset"
-msgstr ""
+msgstr "Wachtwoord opnieuw instellen"
 
 msgid "Hello"
-msgstr ""
+msgstr "Hallo"
 
 msgid "You (or someone) requested a password reset for your account."
-msgstr ""
+msgstr "U (of iemand anders) heeft een nieuwe instelling van het wachtwoord voor uw account aangevraagd."
 
 msgid "To set a new password, click the link below:"
-msgstr ""
+msgstr "Klik op onderstaande link om een nieuw wachtwoord in te stellen:"
 
 msgid "If you did not request this, you can safely ignore this email."
-msgstr ""
+msgstr "Als u dit niet hebt aangevraagd, kunt u deze e-mail veilig negeren."
 
 msgid "If a matching account exists, a password reset email has been sent."
-msgstr ""
+msgstr "Als er een overeenkomend account bestaat, is er een e-mail voor wachtwoordherstel verzonden."
 
 msgid "Invalid or expired password reset token."
-msgstr ""
+msgstr "Ongeldige of verlopen herstellink voor wachtwoord."
 
 msgid "No modalities defined for this sport. Cannot generate."
-msgstr ""
+msgstr "Geen modaliteiten gedefinieerd voor deze sport. Genereren niet mogelijk."
 
 msgid "No energy segments defined. Cannot generate."
-msgstr ""
+msgstr "Geen energiesegmenten gedefinieerd. Genereren niet mogelijk."
 
 msgid "AI returned empty or invalid rounds."
-msgstr ""
+msgstr "AI gaf lege of ongeldige rounds terug."
 
 msgid "AI used an invalid modality id."
-msgstr ""
+msgstr "AI gebruikte een ongeldige modaliteit-id."
 
 msgid "AI used an invalid energysegment id."
-msgstr ""
+msgstr "AI gebruikte een ongeldige energiesegment-id."
 
 msgid "name"
-msgstr ""
+msgstr "naam"
 
 msgid "goal"
-msgstr ""
+msgstr "doel"
 
 msgid "color"
-msgstr ""
+msgstr "kleur"
 
 msgid "refer_program"
-msgstr ""
+msgstr "refer_program"
 
 msgid "Event"
-msgstr ""
+msgstr "Evenement"
 
 msgid "refer_program is required."
-msgstr ""
+msgstr "refer_program is verplicht."
 
 msgid "You do not manage the team of this program."
-msgstr ""
+msgstr "U beheert het team van dit programma niet."
 
 msgid "You must be owner or manager of this event's team."
-msgstr ""
+msgstr "U moet eigenaar of manager zijn van het team van dit evenement."
 
 msgid "Event already has rounds. Remove them before regenerating."
-msgstr ""
+msgstr "Het evenement heeft al rounds. Verwijder ze voordat u opnieuw genereert."
 
 msgid "abv"
-msgstr ""
+msgstr "afk"
 
 msgid "description"
-msgstr ""
+msgstr "beschrijving"
 
 msgid "order"
-msgstr ""
+msgstr "volgorde"
 
 msgid "start"
-msgstr ""
+msgstr "start"
 
 msgid "break"
-msgstr ""
+msgstr "pauze"
 
 msgid "repetition"
-msgstr ""
+msgstr "herhaling"
 
 msgid "distance"
-msgstr ""
+msgstr "afstand"
 
 msgid "modality"
-msgstr ""
+msgstr "modaliteit"
 
 msgid "Energy Segment"
-msgstr ""
+msgstr "Energiesegment"
 
 msgid "notes"
-msgstr ""
+msgstr "notities"
 
 msgid "Exercise"
-msgstr ""
+msgstr "Oefening"
 
 msgid "Firstname"
-msgstr ""
+msgstr "Voornaam"
 
 msgid "Lastname"
-msgstr ""
+msgstr "Achternaam"
 
 msgid "Phonenumber"
-msgstr ""
+msgstr "Telefoonnummer"
 
 msgid "Email"
-msgstr ""
+msgstr "E-mail"
 
 msgid "Member"
-msgstr ""
+msgstr "Lid"
 
 msgid "This user already has a member profile."
-msgstr ""
+msgstr "Deze gebruiker heeft al een lidprofiel."
 
 msgid "The user must already belong to at least one of the member's teams."
-msgstr ""
+msgstr "De gebruiker moet al lid zijn van ten minste één van de teams van het lid."
 
 msgid "You must manage at least one team to create members."
-msgstr ""
+msgstr "U moet ten minste één team beheren om leden aan te maken."
 
-msgid ""
-"The coach who wrote this note. SET_NULL if the author account is deleted."
-msgstr ""
+msgid "The coach who wrote this note. SET_NULL if the author account is deleted."
+msgstr "De trainer die deze notitie heeft geschreven. SET_NULL als het auteursaccount wordt verwijderd."
 
 msgid "You don't have permission to access these notes."
-msgstr ""
+msgstr "U hebt geen toestemming om deze notities te raadplegen."
 
 msgid "This member does not belong to this team."
-msgstr ""
+msgstr "Dit lid maakt geen deel uit van dit team."
 
 msgid "AI returned an invalid date format."
-msgstr ""
+msgstr "AI gaf een ongeldig datumformaat terug."
 
 msgid "AI returned an empty or invalid event list."
-msgstr ""
+msgstr "AI gaf een lege of ongeldige lijst van evenementen terug."
 
 msgid "AI generated an event with an out-of-range date."
-msgstr ""
+msgstr "AI heeft een evenement gegenereerd met een datum buiten bereik."
 
 msgid "Program"
-msgstr ""
+msgstr "Programma"
 
 msgid "date_end must be after date_start."
-msgstr ""
+msgstr "date_end moet na date_start liggen."
 
 msgid "Range cannot exceed 365 days."
-msgstr ""
+msgstr "Het bereik mag niet meer dan 365 dagen bedragen."
 
 msgid "You do not manage this team."
-msgstr ""
+msgstr "U beheert dit team niet."
 
 msgid "You must be owner or manager of this program's team."
-msgstr ""
+msgstr "U moet eigenaar of manager zijn van het team van dit programma."
 
 msgid "Round"
-msgstr ""
+msgstr "Round"
 
 msgid "An exercise has a modality.sport that doesn't match round.sport."
-msgstr ""
+msgstr "Een oefening heeft een modality.sport die niet overeenkomt met round.sport."
 
 msgid "An exercise has a language that doesn't match round.language."
-msgstr ""
+msgstr "Een oefening heeft een taal die niet overeenkomt met round.language."
 
 msgid "exercise_id is required."
-msgstr ""
+msgstr "exercise_id is verplicht."
 
 msgid "Exercise not found or not accessible."
-msgstr ""
+msgstr "Oefening niet gevonden of niet toegankelijk."
 
 msgid "All members can post"
-msgstr ""
+msgstr "Alle leden kunnen berichten plaatsen"
 
 msgid "Only coaches can post"
-msgstr ""
+msgstr "Alleen trainers kunnen berichten plaatsen"
 
 msgid "Manual — managers accept/reject each request"
-msgstr ""
+msgstr "Handmatig — managers aanvaarden/weigeren elk verzoek"
 
 msgid "Auto-accept — every join request is accepted immediately"
-msgstr ""
+msgstr "Automatisch accepteren — elk aansluitingsverzoek wordt onmiddellijk geaccepteerd"
 
 msgid "Defines who can post messages in the team chat."
-msgstr ""
+msgstr "Bepaalt wie berichten kan plaatsen in de teamchat."
 
-msgid ""
-"If True, athletes can read their own coach notes. Default False (notes are "
-"coach-only)."
-msgstr ""
+msgid "If True, athletes can read their own coach notes. Default False (notes are coach-only)."
+msgstr "Indien True kunnen atleten hun eigen trainernotities lezen. Standaard False (notities zijn alleen voor trainers)."
 
-msgid ""
-"Statuses available for marking attendance in this team's events. Default: "
-"present, absent, excused."
-msgstr ""
+msgid "Statuses available for marking attendance in this team's events. Default: present, absent, excused."
+msgstr "Statussen die beschikbaar zijn om aanwezigheid te markeren bij de evenementen van dit team. Standaard: present, absent, excused."
 
-msgid ""
-"Manual = managers accept/reject each TeamJoinRequest. Auto = every join "
-"request is accepted immediately on submission."
-msgstr ""
+msgid "Manual = managers accept/reject each TeamJoinRequest. Auto = every join request is accepted immediately on submission."
+msgstr "Handmatig = managers aanvaarden/weigeren elke TeamJoinRequest. Auto = elk aansluitingsverzoek wordt onmiddellijk geaccepteerd bij indiening."
 
-msgid ""
-"When join_request_policy=manual, send the owner and managers an email with "
-"accept/reject magic links on each new request. Ignored when policy=auto (no "
-"manual decision is needed)."
-msgstr ""
+msgid "When join_request_policy=manual, send the owner and managers an email with accept/reject magic links on each new request. Ignored when policy=auto (no manual decision is needed)."
+msgstr "Wanneer join_request_policy=manual, stuur de eigenaar en managers bij elk nieuw verzoek een e-mail met magic links om te accepteren/weigeren. Genegeerd wanneer policy=auto (geen handmatige beslissing nodig)."
 
 msgid "When this athlete joined the team."
-msgstr ""
+msgstr "Wanneer deze atleet zich bij het team heeft aangesloten."
 
 msgid "When this athlete left the team. NULL = currently active."
-msgstr ""
+msgstr "Wanneer deze atleet het team heeft verlaten. NULL = momenteel actief."
 
 msgid "Only the team owner can delete the team."
-msgstr ""
+msgstr "Alleen de teameigenaar kan het team verwijderen."
 
-msgid ""
-"Only trainers (owners or managers of an active team) can modify the catalog."
-msgstr ""
+msgid "Only trainers (owners or managers of an active team) can modify the catalog."
+msgstr "Alleen trainers (eigenaars of managers van een actief team) kunnen de catalogus wijzigen."
 
 msgid "You are already a member of this team."
-msgstr ""
+msgstr "U bent al lid van dit team."
 
 msgid "You already have a pending request for this team."
-msgstr ""
+msgstr "U hebt al een openstaand verzoek voor dit team."
 
 msgid "This team is inactive."
-msgstr ""
+msgstr "Dit team is inactief."
 
 msgid "This team is not public."
-msgstr ""
+msgstr "Dit team is niet openbaar."
 
 msgid "An invitation is already pending for this email on this team."
-msgstr ""
+msgstr "Er staat al een uitnodiging open voor dit e-mailadres bij dit team."
 
 msgid "Join request from"
-msgstr ""
+msgstr "Aansluitingsverzoek van"
 
 msgid "wants to join your team"
-msgstr ""
+msgstr "wil zich bij uw team aansluiten"
 
 msgid "Message"
-msgstr ""
+msgstr "Bericht"
 
 msgid "(none)"
-msgstr ""
+msgstr "(geen)"
 
 msgid "Accept"
-msgstr ""
+msgstr "Accepteren"
 
 msgid "Reject"
-msgstr ""
+msgstr "Weigeren"
 
-msgid ""
-"Links are valid for 7 days. You can also respond from the team dashboard."
-msgstr ""
+msgid "Links are valid for 7 days. You can also respond from the team dashboard."
+msgstr "De links zijn 7 dagen geldig. U kunt ook reageren vanaf het teamdashboard."
 
 msgid "This request has already been handled."
-msgstr ""
+msgstr "Dit verzoek is al verwerkt."
 
 msgid "Only the requester can cancel this request."
-msgstr ""
+msgstr "Alleen de aanvrager kan dit verzoek annuleren."
 
 msgid "Only a manager can accept or reject this request."
-msgstr ""
+msgstr "Alleen een manager kan dit verzoek accepteren of weigeren."
 
 msgid "Unauthorized status transition."
-msgstr ""
+msgstr "Niet-toegestane statusovergang."
 
 msgid "Invalid or expired magic-action token."
-msgstr ""
+msgstr "Ongeldig of verlopen magic-action-token."
 
 msgid "You are not a manager of this team."
-msgstr ""
+msgstr "U bent geen manager van dit team."
 
 msgid "token is required."
-msgstr ""
+msgstr "token is verplicht."
 
-msgid ""
-"This join request was cancelled by the requester and cannot be acted on."
-msgstr ""
+msgid "This join request was cancelled by the requester and cannot be acted on."
+msgstr "Dit aansluitingsverzoek werd door de aanvrager geannuleerd en kan niet meer worden verwerkt."
 
-msgid ""
-"Cet utilisateur est déjà enregistré. Une invitation directe n'est pas "
-"possible pour les comptes existants."
-msgstr ""
+msgid "Cet utilisateur est déjà enregistré. Une invitation directe n'est pas possible pour les comptes existants."
+msgstr "Deze gebruiker is al geregistreerd. Een directe uitnodiging is niet mogelijk voor bestaande accounts."
 
 msgid "You are invited to"
-msgstr ""
+msgstr "U bent uitgenodigd om"
 
 msgid "has invited you to join the team"
-msgstr ""
+msgstr "heeft u uitgenodigd om lid te worden van het team"
 
 msgid "To finalize your registration, click the link below:"
-msgstr ""
+msgstr "Klik op onderstaande link om uw registratie af te ronden:"
 
 msgid "The link is valid until"
-msgstr ""
+msgstr "De link is geldig tot"
 
 msgid "Only pending invitations can be cancelled."
-msgstr ""
+msgstr "Alleen openstaande uitnodigingen kunnen worden geannuleerd."
 
 msgid "Invitation expired."
-msgstr ""
+msgstr "Uitnodiging verlopen."
 
 msgid "Invitation is not pending."
-msgstr ""
+msgstr "De uitnodiging staat niet in afwachting."
 
 msgid "Account created and invitation finalized."
-msgstr ""
+msgstr "Account aangemaakt en uitnodiging afgerond."
 
 msgid "Only owner and managers can add members to a team."
-msgstr ""
+msgstr "Alleen de eigenaar en managers kunnen leden aan een team toevoegen."
 
 msgid "This member is already in the team."
-msgstr ""
+msgstr "Dit lid maakt al deel uit van het team."
 
 msgid "You can only remove yourself or you must be a team manager."
-msgstr ""
+msgstr "U kunt alleen uzelf verwijderen of u moet teammanager zijn."
 
-msgid ""
-"Team owner cannot leave their own team. Transfer ownership first or delete "
-"the team."
-msgstr ""
+msgid "Team owner cannot leave their own team. Transfer ownership first or delete the team."
+msgstr "De teameigenaar kan het eigen team niet verlaten. Draag eerst het eigendom over of verwijder het team."
 
 msgid "AI service unavailable. Please retry later."
-msgstr ""
+msgstr "AI-dienst niet beschikbaar. Probeer het later opnieuw."
 
 msgid "AI service is not configured."
-msgstr ""
+msgstr "De AI-dienst is niet geconfigureerd."
 
 msgid "ANTHROPIC_API_KEY is not set. Configure it in .env."
-msgstr ""
+msgstr "ANTHROPIC_API_KEY is niet ingesteld. Configureer deze in .env."
 
 msgid "AI authentication failed. Check API key."
-msgstr ""
+msgstr "AI-authenticatie mislukt. Controleer de API-sleutel."
 
 msgid "AI request timed out."
-msgstr ""
+msgstr "AI-aanvraag is verlopen."
 
 msgid "AI request failed."
-msgstr ""
+msgstr "AI-aanvraag is mislukt."
 
 msgid "Unexpected AI error."
-msgstr ""
+msgstr "Onverwachte AI-fout."
 
 msgid "AI did not call the expected tool."
-msgstr ""
+msgstr "AI heeft de verwachte tool niet aangeroepen."
 
-msgid ""
-"This resource is locked because it is used in multiple places. Clone it to "
-"modify."
-msgstr ""
+msgid "This resource is locked because it is used in multiple places. Clone it to modify."
+msgstr "Deze bron is vergrendeld omdat ze op meerdere plaatsen wordt gebruikt. Kloon ze om te wijzigen."
 
-msgid ""
-"Email not verified. Please check your inbox or request a new confirmation "
-"link."
-msgstr ""
+msgid "Email not verified. Please check your inbox or request a new confirmation link."
+msgstr "E-mail niet geverifieerd. Controleer uw inbox of vraag een nieuwe bevestigingslink aan."
 
 msgid "Captcha verification failed. Please try again."
-msgstr ""
+msgstr "Captcha-verificatie mislukt. Probeer het opnieuw."
 
-msgid ""
-"You have reached your team quota. Soft-delete an existing team or contact an "
-"admin to raise your quota."
-msgstr ""
+msgid "You have reached your team quota. Soft-delete an existing team or contact an admin to raise your quota."
+msgstr "U hebt uw teamquotum bereikt. Voer een zachte verwijdering uit op een bestaand team of neem contact op met een admin om uw quotum te verhogen."
 
 msgid "Validation failed."
-msgstr ""
+msgstr "Validatie mislukt."
 
 msgid "Some fields are invalid."
-msgstr ""
+msgstr "Sommige velden zijn ongeldig."
 
 msgid "Only staff users can modify the catalog referential."
-msgstr ""
+msgstr "Alleen staff-gebruikers kunnen het catalogusreferentieel wijzigen."
