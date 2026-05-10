@@ -19,7 +19,7 @@ class Member(models.Model):
         verbose_name=_("Phonenumber"),
     )
     email = models.EmailField(
-        max_length=50,
+        max_length=254,
         blank=True,
         null=True,
         verbose_name=_("Email"),

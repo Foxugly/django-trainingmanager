@@ -5562,7 +5562,7 @@ components:
           type: string
           format: email
           nullable: true
-          maxLength: 50
+          maxLength: 254
         phonenumber:
           type: string
           nullable: true
@@ -6565,7 +6565,7 @@ components:
           type: string
           format: email
           nullable: true
-          maxLength: 50
+          maxLength: 254
         phonenumber:
           type: string
           nullable: true
@@ -6731,6 +6731,7 @@ components:
           type: array
           items:
             type: integer
+          readOnly: true
         frequency_per_week:
           type: integer
           maximum: 9223372036854775807
@@ -7052,6 +7053,7 @@ components:
           type: array
           items:
             type: integer
+          readOnly: true
         frequency_per_week:
           type: integer
           maximum: 9223372036854775807
@@ -7085,6 +7087,7 @@ components:
       - ai_generated_at
       - ai_response
       - created_at
+      - events
       - generated_by_ai
       - id
       - name

@@ -202,15 +202,17 @@ def test_DELETE_program_by_athlete_returns_403(api_client):
 
 
 # =====================================================================
-# C4 — Program.events queryset scoped to managed teams
+# Program.events is now read-only (FK reverse manager — Program.events M2M
+# was dropped in migration 0008). Cross-team attachment must use the
+# canonical write path: setting Event.refer_program. The legacy C4 fix
+# (scoped writable queryset) is no longer needed.
 # =====================================================================
 
 
-def test_PATCH_program_cannot_attach_event_of_other_team(api_client):
-    """C4 fix: a manager of team A cannot PATCH their Program to attach
-    Events that belong to team B. The pre-fix ProgramSerializer used
-    Event.objects.all() as the queryset for the `events` M2M field —
-    breaking the team-scoped boundary."""
+def test_PATCH_program_events_field_is_read_only(api_client):
+    """`events` cannot be written via PATCH /programs/{id}/. DRF silently
+    ignores writes to read-only fields; cross-team contamination is
+    structurally impossible because the field has no write path."""
     from event.models import Event
 
     manager_a = _make_user("c4_mgr_a")
@@ -228,18 +230,15 @@ def test_PATCH_program_cannot_attach_event_of_other_team(api_client):
         {"events": [foreign_event.pk]},
         format="json",
     )
-    assert response.status_code == 400
-    body = response.json()
-    # Field-level validation error: foreign_event.pk is no longer in the
-    # scoped queryset, DRF reports it as an invalid PK.
-    assert "fields" in body or body.get("code") == "validation_error", body
+    # Read-only field => 200 with the payload silently ignored.
+    assert response.status_code == 200
     program_a.refresh_from_db()
     assert not program_a.events.filter(pk=foreign_event.pk).exists()
 
 
-def test_PATCH_program_can_attach_event_of_own_team(api_client):
-    """Non-regression: attaching an Event of a team the user manages still
-    works."""
+def test_program_events_reflects_FK_reverse(api_client):
+    """`program.events` (FK reverse manager) returns every Event whose
+    refer_program points at it."""
     from event.models import Event
 
     manager = _make_user("c4_legit")
@@ -248,11 +247,6 @@ def test_PATCH_program_can_attach_event_of_own_team(api_client):
     own_event = Event.objects.create(refer_program=program, name="own")
 
     api_client.force_authenticate(user=manager)
-    response = api_client.patch(
-        f"/api/v1/programs/{program.pk}/",
-        {"events": [own_event.pk]},
-        format="json",
-    )
+    response = api_client.get(f"/api/v1/programs/{program.pk}/")
     assert response.status_code == 200
-    program.refresh_from_db()
-    assert program.events.filter(pk=own_event.pk).exists()
+    assert own_event.pk in response.json()["events"]

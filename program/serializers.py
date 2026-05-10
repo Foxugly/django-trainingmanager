@@ -1,7 +1,6 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from event.models import Event
 from team.models import Team
 from team.serializers import TeamMinimalSerializer
 
@@ -25,24 +24,10 @@ class ProgramSerializer(serializers.ModelSerializer):
         queryset=Team.objects.all(),
         write_only=True,
     )
-    events = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Event.objects.all(), required=False
-    )
-
-    def __init__(self, *args, **kwargs):
-        # C4 fix: scope the writable `events` queryset to events of teams the
-        # requesting user manages. Without this, a manager of team A could
-        # PATCH a Program of team A to attach Events belonging to team B,
-        # crossing the team-scoped boundary.
-        super().__init__(*args, **kwargs)
-        request = self.context.get("request")
-        if request is None or not getattr(request.user, "is_authenticated", False):
-            return
-        from team.queries import managed_teams
-
-        self.fields["events"].child_relation.queryset = Event.objects.filter(
-            refer_program__team__in=managed_teams(request.user)
-        )
+    # `events` is the FK reverse manager since Program.events M2M was dropped
+    # in migration 0008. Exposed read-only — to attach an Event to a Program,
+    # write `refer_program` on the Event itself.
+    events = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Program
@@ -65,6 +50,7 @@ class ProgramSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "events",
             "generated_by_ai",
             "ai_response",
             "ai_generated_at",

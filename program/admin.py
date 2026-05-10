@@ -4,7 +4,7 @@ from program.models import Program
 
 
 class ProgramAdmin(admin.ModelAdmin):
-    filter_horizontal = ["events"]
+    pass
 
 
 admin.site.register(Program, ProgramAdmin)

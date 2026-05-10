@@ -1,8 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext as _
 
-from event.models import Event
-
 
 class Program(models.Model):
     name = models.CharField(max_length=100, verbose_name=_("name"))
@@ -13,10 +11,6 @@ class Program(models.Model):
     date_end = models.DateField(
         blank=True,
         null=True,
-    )
-    events = models.ManyToManyField(
-        Event,
-        blank=True,
     )
     team = models.ForeignKey(
         "team.Team",

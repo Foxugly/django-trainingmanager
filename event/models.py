@@ -33,9 +33,9 @@ class Event(models.Model):
     refer_program = models.ForeignKey(
         "program.Program",
         verbose_name=_("refer_program"),
-        related_name="back_program",
+        related_name="events",
         null=True,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
     )
     generated_by_ai = models.BooleanField(default=False)
     ai_prompt = models.TextField(blank=True, default="")
