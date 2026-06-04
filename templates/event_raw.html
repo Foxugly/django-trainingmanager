@@ -6,10 +6,11 @@
 <div class="container mt-3 mb-5">
     <div class="row">
         <div class="col-2 p-0 text-center">
-            <img src="file:///var/www/django_websites/django-trainingmanager/static/img/rbp.jpeg"
-     alt="RBP"
-     width="80%"
-     height="80%"/>
+            {% if pdf %}
+            <img src="{{ logo_uri }}" alt="RBP" width="80%" height="80%"/>
+            {% else %}
+            <img src="{% static 'img/rbp.jpeg' %}" alt="RBP" width="80%" height="80%"/>
+            {% endif %}
         </div>
         <div class="col-8">
             {{object.get_title_raw |safe}}

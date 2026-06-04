@@ -1,6 +1,8 @@
 import json
+import os
 
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
+from django.conf import settings
 from django.http import HttpResponse
 from django.utils.translation import gettext as _
 from wkhtmltopdf.views import PDFTemplateResponse
@@ -88,6 +90,10 @@ class PDFEventView(DetailView):
     def get(self, request, pk):
         self.context['object'] = self.get_object()
         self.context['pdf'] = True
+        # wkhtmltopdf (enable-local-file-access) can't fetch a relative /static
+        # URL — it needs an absolute file:// path. Build it from STATIC_ROOT so
+        # it's correct in every environment (the old hard-coded path was wrong).
+        self.context['logo_uri'] = 'file://' + os.path.join(settings.STATIC_ROOT, 'img', 'rbp.jpeg')
         response = PDFTemplateResponse(request=request,
                                        template=self.template_name,
                                        filename=self.filename,
