@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "TrainingmanagerSsmRead",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParametersByPath",
+        "ssm:GetParameters",
+        "ssm:GetParameter"
+      ],
+      "Resource": [
+        "arn:aws:ssm:eu-west-1:362629935151:parameter/trainingmanager/prod",
+        "arn:aws:ssm:eu-west-1:362629935151:parameter/trainingmanager/prod/*"
+      ]
+    },
+    {
+      "Sid": "TrainingmanagerKmsDecryptViaSsm",
+      "Effect": "Allow",
+      "Action": "kms:Decrypt",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": { "kms:ViaService": "ssm.eu-west-1.amazonaws.com" }
+      }
+    }
+  ]
+}
