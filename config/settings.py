@@ -1,23 +1,25 @@
 import os
 
+import environ
 from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SECRET_KEY = 'ke2rim3a=ukld9cjh6$d$fb%ztgobvrs807i^d!_whg%@n^%v#'
 
-DEBUG = True
-STATE = 'PROD'  # or ACC or PROD
-WEBSITE = "wp.foxugly.com"
+# Config is environment-driven (bare names) so prod secrets come from SSM →
+# /run/trainingmanager/.env (systemd EnvironmentFile); dev reads a local .env.
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
-# ALLOWED_HOSTS = ['*']
-ALLOWED_HOSTS = ["wp.foxugly.com", "127.0.0.1", "localhost"]
+# No real default for SECRET_KEY in prod: the old hard-coded key was leaked in
+# git history and MUST be rotated — a fresh value lives only in SSM.
+SECRET_KEY = env("SECRET_KEY", default="dev-insecure-change-me-in-production")
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = False  # laisse Nginx gérer la redirection HTTP -> HTTPS
+DEBUG = env.bool("DEBUG", default=False)
+STATE = env("STATE", default="INT")  # INT / ACC / PROD — also the Sentry env
+WEBSITE = env("WEBSITE", default="www.example.com")
 
-
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -29,7 +31,6 @@ INSTALLED_APPS = [
     'bootstrap_modal_forms',
     'widget_tweaks',
     'qr_code',
-    'debug_toolbar',
     'hijack',
     'hijack.contrib.admin',
     'bootstrap4',
@@ -44,7 +45,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -53,6 +53,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# django-debug-toolbar: only wired in when DEBUG (never in prod). It refuses to
+# run with DEBUG=False anyway, but keeping it out of INSTALLED_APPS/MIDDLEWARE/urls
+# avoids the always-True SHOW_TOOLBAR_CALLBACK that shipped on the box.
+if DEBUG:
+    INSTALLED_APPS.append('debug_toolbar')
+    MIDDLEWARE.insert(1, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    DEBUG_TOOLBAR_CONFIG = {'SHOW_TOOLBAR_CALLBACK': lambda request: True}
 
 ROOT_URLCONF = 'config.urls'
 
@@ -79,17 +87,17 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    "default": env.db(
+        "DATABASE_URL",
+        default="sqlite:///" + os.path.join(BASE_DIR, "db.sqlite3"),
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
-    { 'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
-    { 'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',  },
-    { 'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
-    { 'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 LOGIN_REDIRECT_URL = '/'
@@ -113,11 +121,8 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 STATIC_URL = '/static/'
-# ACTIVE TO PROD / COMMENT TO TEST
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-# COMMENT TO PROD / ACTIVE TO TEST
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
-#WKHTMLTOPDF_CMD = 'xvfb-run /usr/bin/wkhtmltopdf'
+
 WKHTMLTOPDF_CMD = '/usr/bin/wkhtmltopdf'
 WKHTMLTOPDF_CMD_OPTIONS = {
     'enable-local-file-access': True,
@@ -136,14 +141,6 @@ HIJACK_REGISTER_ADMIN = False
 AUTH_USER_MODEL = "customuser.CustomUser"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-if DEBUG:
-    def show_toolbar(request):
-        return True
-
-DEBUG_TOOLBAR_CONFIG = {
-    'SHOW_TOOLBAR_CALLBACK': 'config.settings.show_toolbar',
-}
 
 BOOTSTRAP4 = {
 
@@ -225,3 +222,42 @@ BOOTSTRAP4 = {
         'inline': 'bootstrap4.renderers.InlineFieldRenderer',
     },
 }
+
+# --- Security headers (enforced only outside DEBUG; nginx terminates TLS) ------
+# Behind nginx, requests already arrive over TLS with X-Forwarded-Proto=https, so
+# Django sees them as secure. SECURE_SSL_REDIRECT is a harmless extra guard
+# (nginx also redirects); set it False via env if you prefer nginx-only.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+if not DEBUG:
+    SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = env.int("HSTS_SECONDS", default=0)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("HSTS_INCLUDE_SUBDOMAINS", default=False)
+    SECURE_HSTS_PRELOAD = env.bool("HSTS_PRELOAD", default=False)
+
+# --- Sentry — optional. Set SENTRY_DSN to enable. ----------------------------
+SENTRY_DSN = env("SENTRY_DSN", default="")
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from django.core.exceptions import DisallowedHost
+
+    def _drop_benign_noise(event, hint):
+        # Drop DisallowedHost (raw-IP scanners hitting the box) — the rejection
+        # is correct behaviour, not an error worth paging on. Do NOT add the IP
+        # to ALLOWED_HOSTS.
+        exc = hint.get("exc_info")
+        if exc and isinstance(exc[1], DisallowedHost):
+            return None
+        return event
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        environment=STATE,
+        traces_sample_rate=0.1,
+        send_default_pii=False,
+        before_send=_drop_benign_noise,
+    )

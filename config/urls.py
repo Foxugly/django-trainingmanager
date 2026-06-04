@@ -9,6 +9,8 @@ from django.utils import translation
 
 from customuser.views import CustomUserUpdateView
 
+from .health import health
+
 
 def home(request):
     c = {}
@@ -48,6 +50,7 @@ def set_lang(request):
 
 urlpatterns = [
     path('', home, name='index'),
+    path('health/', health, name='health'),
     path('agenda/', include('agenda.urls', namespace='agenda')),
     path('event/', include('event.urls', namespace='event')),
     path('member/', include('member.urls', namespace='member')),
