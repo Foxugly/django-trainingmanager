@@ -34,9 +34,12 @@ command -v aws >/dev/null || { echo "Installing awscli..."; sudo apt-get update 
 command -v /usr/bin/wkhtmltopdf >/dev/null || { echo "Installing wkhtmltopdf..."; sudo apt-get update -y && sudo apt-get install -y wkhtmltopdf; }
 
 echo "=== 1/8 Move the tree to origin/$BRANCH (config-package canonical) ==="
-# db.sqlite3 and db.sqlite3.bak-* are gitignored -> preserved across the reset.
+# The box's pre-cutover tree is dirty (drifted, with untracked migrations now
+# tracked in $BRANCH). -f forces past modified AND "untracked files in the way";
+# all of it is already captured in $BRANCH. gitignored data (db.sqlite3,
+# db.sqlite3.bak-*) is NOT touched and survives the switch.
 sudo -u "$APP_USER" git -C "$APP_DIR" fetch --quiet origin "$BRANCH"
-sudo -u "$APP_USER" git -C "$APP_DIR" checkout -B "$BRANCH" "origin/$BRANCH"
+sudo -u "$APP_USER" git -C "$APP_DIR" checkout -f -B "$BRANCH" "origin/$BRANCH"
 sudo -u "$APP_USER" git -C "$APP_DIR" reset --hard --quiet "origin/$BRANCH"
 
 echo "=== 2/8 venv deps (adds django-environ, sentry-sdk to the existing venv) ==="
