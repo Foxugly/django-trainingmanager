@@ -44,14 +44,30 @@ else
     echo "WARNING: $ENV_FILE missing — has trainingmanager-env-fetch run? Trying without it." >&2
 fi
 
-# Back up the sqlite DB before migrating (this site is sqlite-backed). Keep the
-# last 5 backups. Skipped automatically if a non-sqlite DATABASE_URL is set.
-if [ -f "$APP_DIR/db.sqlite3" ] && [ -z "${DATABASE_URL:-}" ]; then
-    TS="$(date +%Y%m%d-%H%M%S)"
-    cp -p "$APP_DIR/db.sqlite3" "$APP_DIR/db.sqlite3.bak-$TS"
-    echo ">>> Backed up db.sqlite3 -> db.sqlite3.bak-$TS"
-    ls -1t "$APP_DIR"/db.sqlite3.bak-* 2>/dev/null | tail -n +6 | xargs -r rm -f
-fi
+# Back up the database before migrating (non-fatal — a backup hiccup must not
+# block the deploy). PostgreSQL (fleet default, §3.13) → pg_dump; sqlite (dev) →
+# file copy. Keep the last 5 in $APP_DIR/db-backups/.
+BACKUP_DIR="$APP_DIR/db-backups"
+mkdir -p "$BACKUP_DIR"
+TS="$(date +%Y%m%d-%H%M%S)"
+case "${DB_ENGINE:-sqlite3}" in
+    postgres*|psql)
+        DUMP="$BACKUP_DIR/${DB_NAME:-trainingmanager}-$TS.sql.gz"
+        if PGPASSWORD="${DB_PASSWORD:-}" pg_dump -h "${DB_HOST:-127.0.0.1}" -p "${DB_PORT:-5432}" \
+                -U "${DB_USER:-trainingmanager}" "${DB_NAME:-trainingmanager}" 2>/dev/null | gzip > "$DUMP"; then
+            echo ">>> pg_dump -> $DUMP"
+            ls -1t "$BACKUP_DIR"/*.sql.gz 2>/dev/null | tail -n +6 | xargs -r rm -f
+        else
+            echo "WARNING: pg_dump backup failed; continuing." >&2; rm -f "$DUMP"
+        fi
+        ;;
+    *)
+        if [ -f "$APP_DIR/db.sqlite3" ]; then
+            cp -p "$APP_DIR/db.sqlite3" "$BACKUP_DIR/db.sqlite3.bak-$TS"
+            ls -1t "$BACKUP_DIR"/db.sqlite3.bak-* 2>/dev/null | tail -n +6 | xargs -r rm -f
+        fi
+        ;;
+esac
 
 echo ">>> Running migrations..."
 "$VENV/bin/python" manage.py migrate --noinput
