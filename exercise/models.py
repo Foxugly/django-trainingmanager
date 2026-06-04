@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from tools.generic_class import GenericClass
 
@@ -28,7 +28,7 @@ class EnergySegment(GenericClass):
 
 
 class Exercise(GenericClass):
-    order = models.IntegerField(verbose_name=_("order"), default=1)
+    order = models.IntegerField(verbose_name=_("order"), default=1, db_index=True)
     t_start = models.CharField(max_length=10, null=True, blank=True, verbose_name=_("start"), )
     t_break = models.CharField(max_length=10, null=True, blank=True, verbose_name=_("break"), )
     repetition = models.PositiveIntegerField(verbose_name=_("repetition"), default=1)

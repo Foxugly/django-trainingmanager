@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from member.models import Member
 from round.models import Round
@@ -11,7 +11,7 @@ class Event(GenericClass):
     name = models.CharField(max_length=100, verbose_name=_("name"))
     goal = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("goal"))
     color = models.CharField(max_length=10, blank=True, verbose_name=_("color"))
-    date = models.DateField(blank=True, null=True, )
+    date = models.DateField(blank=True, null=True, db_index=True)
     hour_start = models.TimeField(blank=True, null=True, )
     hour_end = models.TimeField(blank=True, null=True, )
     total = models.PositiveIntegerField(default=0)
@@ -27,13 +27,13 @@ class Event(GenericClass):
         return self.members.all()
 
     def get_nb_members_present(self):
-        return len(self.get_members_present())
+        return self.members.count()
 
     def get_all_members(self):
         return self.refer_agenda.members.all()
 
     def get_nb_all_members(self):
-        return len(self.get_all_members())
+        return self.refer_agenda.members.count()
 
     @staticmethod
     def hour_t(t):
@@ -50,7 +50,9 @@ class Event(GenericClass):
                     url=self.get_absolute_url())
 
     def get_rounds(self):
-        return self.rounds.all().order_by("order")
+        # prefetch exercises so each round's get_total()/get_row() doesn't re-hit
+        # the DB (big win when rendering the event PDF).
+        return self.rounds.all().order_by("order").prefetch_related("exercises")
 
     def get_table(self):
         out = "<table class='card-table table mb-0 table-bordered'>"
@@ -77,10 +79,11 @@ class Event(GenericClass):
         return out
 
     def get_attendance_members(self):
-        l = []
-        for m in self.refer_agenda.members.all():
-            l.append(dict(member=m, attendance=True if m in self.members.all() else False))
-        return l
+        # Resolve membership with one query (a set of present pks) instead of
+        # re-evaluating self.members.all() inside the loop (N+1).
+        present_ids = set(self.members.values_list("pk", flat=True))
+        return [dict(member=m, attendance=m.pk in present_ids)
+                for m in self.refer_agenda.members.all()]
 
     def get_total(self):
         distance = 0

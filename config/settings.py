@@ -1,4 +1,5 @@
 import os
+import sys
 
 import environ
 from django.utils.translation import gettext_lazy as _
@@ -57,7 +58,7 @@ MIDDLEWARE = [
 # django-debug-toolbar: only wired in when DEBUG (never in prod). It refuses to
 # run with DEBUG=False anyway, but keeping it out of INSTALLED_APPS/MIDDLEWARE/urls
 # avoids the always-True SHOW_TOOLBAR_CALLBACK that shipped on the box.
-if DEBUG:
+if DEBUG and "test" not in sys.argv:
     INSTALLED_APPS.append('debug_toolbar')
     MIDDLEWARE.insert(1, 'debug_toolbar.middleware.DebugToolbarMiddleware')
     DEBUG_TOOLBAR_CONFIG = {'SHOW_TOOLBAR_CALLBACK': lambda request: True}

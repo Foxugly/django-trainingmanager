@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from exercise.models import Exercise
 from tools.generic_class import GenericClass
@@ -7,7 +7,7 @@ from tools.generic_class import GenericClass
 
 # Create your models here.
 class Round(GenericClass):
-    order = models.PositiveIntegerField(default=1)
+    order = models.PositiveIntegerField(default=1, db_index=True)
     count = models.PositiveIntegerField(default=1)
     t_start = models.CharField(max_length=10, null=True, blank=True, verbose_name=_("start"), )
     t_break = models.CharField(max_length=10, null=True, blank=True, verbose_name=_("break"), )
@@ -16,9 +16,10 @@ class Round(GenericClass):
                                     null=True, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
-        super(Round, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
         if self.refer_event:
-            self.refer_event.rounds.add(self) if self not in self.refer_event.rounds.all() else None
+            # M2M add() is idempotent (DB-level get_or_create) — no membership check needed.
+            self.refer_event.rounds.add(self)
 
     def get_row(self, buttons):
         out = ""

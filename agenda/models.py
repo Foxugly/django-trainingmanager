@@ -1,7 +1,7 @@
 # Create your models here.
 from django.db import models
 from django.urls import reverse_lazy
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from event.models import Event
 from member.models import Member
