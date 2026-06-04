@@ -7,8 +7,8 @@
 Django==6.0.5
 gunicorn==26.0.0
 
-# UI / app
-django-bootstrap4==26.1
+# UI / app — Bootstrap 5.3 is loaded from CDN in base.html (no server-side
+# bootstrap package); widget_tweaks renders form fields.
 django-widget-tweaks==1.4.2
 django-hijack==3.7.8
 django-hijack-admin==2.1.10

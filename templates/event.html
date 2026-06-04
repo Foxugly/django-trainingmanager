@@ -1,18 +1,14 @@
 {% extends "base.html" %}
 {% load i18n common_tags static %}
 
-{% block extrastylesheets %}
-<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
-{% endblock extrastylesheets %}
-
 {% block content %}
 <div class="container mt-3">
     <div class="row">
         <div class="col-sm-12 mb-4">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="float-left mb-0">Event : {{ object }}</h3>
-                    <a class="btn btn-primary float-right" id="btn_edit_event"
+                    <h3 class="float-start mb-0">Event : {{ object }}</h3>
+                    <a class="btn btn-primary float-end" id="btn_edit_event"
                        href="{% url 'event:event_change' object.id %}?next={% url 'event:event_detail' object.id %}">
                         <span class="fa fa-edit"></span> Edit Event
                     </a>
@@ -38,12 +34,12 @@
         <div class="col-sm-8 mb-4">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="float-left mb-0">Program</h3>
-		    <a class="btn btn-secondary float-right ml-1" href="{% url 'event:event_raw' object.id %}"
+                    <h3 class="float-start mb-0">Program</h3>
+		    <a class="btn btn-secondary float-end ms-1" href="{% url 'event:event_raw' object.id %}"
                        name="btn_event_raw"><i class="far fa-file-alt"></i> </a>
-		    <a class="btn btn-secondary float-right ml-1" href="{% url 'event:event_pdf' object.id %}"
+		    <a class="btn btn-secondary float-end ms-1" href="{% url 'event:event_pdf' object.id %}"
                        name="btn_event_pdf"><i class="far fa-file-pdf"></i></a>
-                    <a class="btn btn-primary float-right ml-1" id="btn_add_round"
+                    <a class="btn btn-primary float-end ms-1" id="btn_add_round"
                        href="{% url 'round:round_add' %}?next={% url 'event:event_detail' object.id %}&event_id={{ object.id }}">
                         <span class="fa fa-plus"></span> Add Exercise
                     </a>
@@ -54,10 +50,10 @@
         <div class="col-sm-4 mb-4 table-responsive">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="float-left mb-0">Attendance : <span id="nb_members">{{object.get_nb_members_present}}/{{object.get_nb_all_members}}</span>
+                    <h3 class="float-start mb-0">Attendance : <span id="nb_members">{{object.get_nb_members_present}}/{{object.get_nb_all_members}}</span>
                     </h3>
 
-                    <a class="btn btn-primary float-right" id="btn_add_member"
+                    <a class="btn btn-primary float-end" id="btn_add_member"
                        href="{% url 'member:member_add' %}?next={% url 'event:event_detail' object.id %}&event_id={{ object.id }}">
                         <span class="fa fa-user-plus"></span>
                     </a>
@@ -72,14 +68,14 @@
                     <tbody>
                     {% for m in object.get_attendance_members %}
                     <tr>
-                        <td class="control-label" for="checkbox_{{m.member.id}}">{{m.member}}</td>
-                        <td class="">
-                            <input {% if m.attendance %}checked {% endif %}
-                                   class="checkox_attendance" data-id="{{m.member.id}}" data-off="Missing  "
-                                   data-offstyle="danger" data-on="Present  " data-onstyle="success" data-size="small"
-                                   data-toggle="toggle" data-width="120px"
-                                   id="checkbox_{{m.member.id}}" type="checkbox"
-                            >
+                        <td><label class="form-check-label" for="checkbox_{{m.member.id}}">{{m.member}}</label></td>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input {% if m.attendance %}checked {% endif %}
+                                       class="checkox_attendance form-check-input" role="switch"
+                                       data-id="{{m.member.id}}"
+                                       id="checkbox_{{m.member.id}}" type="checkbox">
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -93,7 +89,6 @@
 
 
 {% block extrascripts %}
-<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
 <script type="text/javascript">
       $(function () {
           // Hide message
