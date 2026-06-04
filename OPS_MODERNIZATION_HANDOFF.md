@@ -106,11 +106,10 @@ Add a UptimeRobot HTTP monitor on `https://wp.foxugly.com/health/` (§3.9), and 
 - **Verify** (§3.12.9): after cutover,
   `sudo find /var/www/django_websites/old/django_trainingmanager ! -type l \( -perm /020 -o -perm /004 \)` → 0;
   `sudo -l -U django` shows only the `trainingmanager-deploy` grant.
-- **Pre-existing app bug, committed verbatim (not fixed — ops task):**
-  `templates/event_raw.html` hard-codes
-  `file:///var/www/django_websites/django-trainingmanager/static/img/rbp.jpeg`
-  — wrong path (missing `old/`), so the PDF logo is already broken in prod.
-  Fix to a `{% static %}` ref or the correct absolute path when convenient.
+- **Pre-existing PDF logo path bug — FIXED** (`8304336`): `event_raw.html` had a
+  wrong hard-coded `file://` path (missing `old/`) that also broke the HTML view.
+  Now branches on the `pdf` flag: `file://` from `STATIC_ROOT` for wkhtmltopdf,
+  `{% static %}` for the browser. (Ships with the cutover like everything else.)
 - **Repo hygiene:** default branch is now `main`. `legacy/hyphenated-package`
   (+ tag `archive/ops-modernization-v1`) preserves the old lineage;
   `refactor/api-only` (the API rewrite) is untouched.
