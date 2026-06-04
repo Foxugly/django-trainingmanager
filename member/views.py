@@ -22,7 +22,7 @@ class MemberCreateView(BSModalCreateView):
             return self.success_url
 
     def form_valid(self, form):
-        if not self.request.is_ajax():
+        if self.request.headers.get('x-requested-with') != 'XMLHttpRequest':
             if "event_id" in self.request.GET:
                 f = form.save(commit=False)
                 f.save()

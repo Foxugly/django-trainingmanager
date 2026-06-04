@@ -39,20 +39,18 @@ class RoundCreateView(BSModalCreateView):
         return initial
 
     def form_valid(self, form):
-        print("round:form_valid")
-        if not self.request.is_ajax():
+        if self.request.headers.get('x-requested-with') != 'XMLHttpRequest':
             with transaction.atomic():
                 f = form.save(commit=False)
                 f.save()
                 context = self.get_context_data()
                 exercises = context['exercises']
                 for exform in exercises:
-                    print("exform")
                     if exform.is_valid():
                         ex = exform.save(commit=False)
                         ex.refer_round = f
                         ex.save()
-                        f.exercises.add(ex) if ex not in f.exercises.all() else None
+                        f.exercises.add(ex)
         return super().form_valid(form)
 
     def get_success_url(self):

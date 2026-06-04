@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.forms import ModelForm
 from django.urls import reverse_lazy
@@ -22,7 +23,7 @@ class CustomUserForm(ModelForm):
         fields = ['username', 'first_name', 'last_name', 'email', 'language', 'is_foo_admin', 'is_superuser', ]
 
 
-class CustomUserUpdateView(SuccessMessageMixin, UpdateView):
+class CustomUserUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = CustomUser
     form_class = CustomUserForm
     template_name = 'update.html'

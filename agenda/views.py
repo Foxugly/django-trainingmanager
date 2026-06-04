@@ -67,7 +67,7 @@ def qdict_to_dict(qdict):
 
 def create_events(request, agenda_id):
     results = {}
-    if request.is_ajax() and request.method == "GET":
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == "GET":
         dict_get = qdict_to_dict(request.GET)
         name = dict_get['name']
         color = dict_get['color']
@@ -82,7 +82,9 @@ def create_events(request, agenda_id):
             e = Event(name=name, date=date_start, hour_start=hour_start, hour_end=hour_end)
             e.save()
             a = Agenda.objects.get(id=agenda_id)
-            a.trainings.add(e)
+            e.refer_agenda = a
+            e.save()
+            a.events.add(e)
             results['events'] = [e.as_json() for e in a.get_events()]
         elif date_start <= date_end:
             a = Agenda.objects.get(id=agenda_id)

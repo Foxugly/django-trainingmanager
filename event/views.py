@@ -85,20 +85,22 @@ class PDFEventView(DetailView):
     model = Event
     template_name = 'event_raw.html'
     filename = 'event.pdf'
-    context = {'title': 'Hello World!'}
 
     def get(self, request, pk):
-        self.context['object'] = self.get_object()
-        self.context['pdf'] = True
-        # wkhtmltopdf (enable-local-file-access) can't fetch a relative /static
-        # URL — it needs an absolute file:// path. Build it from STATIC_ROOT so
-        # it's correct in every environment (the old hard-coded path was wrong).
-        self.context['logo_uri'] = 'file://' + os.path.join(settings.STATIC_ROOT, 'img', 'rbp.jpeg')
-        response = PDFTemplateResponse(request=request,
-                                       template=self.template_name,
-                                       filename=self.filename,
-                                       context=self.context,
-                                       show_content_in_browser=True,
-                                       cmd_options={'margin-top': 50,'enable-local-file-access': True, },
-                                       )
-        return response
+        # Build the context LOCALLY (not a shared class attribute — that dict was
+        # mutated per request and could serve the wrong event PDF under concurrency).
+        # wkhtmltopdf (enable-local-file-access) can't fetch a relative /static URL,
+        # so the logo is an absolute file:// path built from STATIC_ROOT.
+        context = {
+            'title': 'Training Manager',
+            'object': self.get_object(),
+            'pdf': True,
+            'logo_uri': 'file://' + os.path.join(settings.STATIC_ROOT, 'img', 'rbp.jpeg'),
+        }
+        return PDFTemplateResponse(request=request,
+                                   template=self.template_name,
+                                   filename=self.filename,
+                                   context=context,
+                                   show_content_in_browser=True,
+                                   cmd_options={'margin-top': 50, 'enable-local-file-access': True},
+                                   )

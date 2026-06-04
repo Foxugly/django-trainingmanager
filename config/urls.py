@@ -6,6 +6,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import path, include, reverse
 from django.utils import translation
+from django.utils.translation import check_for_language
 
 from customuser.views import CustomUserUpdateView
 
