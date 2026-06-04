@@ -86,11 +86,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# Database — env-driven on the fleet DB_* 6-var convention (OPERATIONS.md §3.5).
+# Unset DB_* (dev / pre-migration) → sqlite at BASE_DIR/db.sqlite3; prod uses the
+# local PostgreSQL (DB_ENGINE=postgresql, DB_HOST=127.0.0.1, ...) via SSM.
+_DB_ENGINE_ALIASES = {
+    "sqlite3": "django.db.backends.sqlite3",
+    "postgresql": "django.db.backends.postgresql",
+    "postgres": "django.db.backends.postgresql",
+}
+_db_engine = env("DB_ENGINE", default="sqlite3")
 DATABASES = {
-    "default": env.db(
-        "DATABASE_URL",
-        default="sqlite:///" + os.path.join(BASE_DIR, "db.sqlite3"),
-    )
+    "default": {
+        "ENGINE": _DB_ENGINE_ALIASES.get(_db_engine, _db_engine),
+        "NAME": env("DB_NAME", default=os.path.join(BASE_DIR, "db.sqlite3")),
+        "USER": env("DB_USER", default=""),
+        "PASSWORD": env("DB_PASSWORD", default=""),
+        "HOST": env("DB_HOST", default=""),
+        "PORT": env("DB_PORT", default=""),
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
