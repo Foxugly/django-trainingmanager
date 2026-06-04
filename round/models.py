@@ -53,7 +53,7 @@ class Round(GenericClass):
         return self.count * distance
 
     def __str__(self):
-        return "%s %d" % (_('Round'), self.id)
+        return "[#%d] %s %d" % (self.order, _('Round'), self.id)
 
     class Meta:
         verbose_name = _('Round')

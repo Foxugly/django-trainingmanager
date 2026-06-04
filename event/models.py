@@ -49,10 +49,13 @@ class Event(GenericClass):
         return dict(id=str(self.id), start=self.start_t(), end=self.end_t(), title=self.name, color=self.color,
                     url=self.get_absolute_url())
 
+    def get_rounds(self):
+        return self.rounds.all().order_by("order")
+
     def get_table(self):
         out = "<table class='card-table table mb-0 table-bordered'>"
         out += "<thead><tr><th>#</th><th>Dist.</th><th>Round</th><th>Ex.</th><th></th></tr></head><tbody>"
-        for r in self.rounds.all().order_by('order'):
+        for r in self.get_rounds():
             out += r.get_row(True)
         out += "</tbody></table>"
         return out
@@ -60,7 +63,7 @@ class Event(GenericClass):
     def get_table_raw(self):
         out = "<table class='table mb-0'>"
         out += "<thead><tr><th>#</th><th>Dist.</th><th>Round</th><th>Exercices</th></tr></thead><tbody>"
-        for r in self.rounds.all().order_by('order'):
+        for r in self.get_rounds():
             out += r.get_row(False)
         out += "</tbody></table>"
         return out

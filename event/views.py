@@ -87,11 +87,12 @@ class PDFEventView(DetailView):
 
     def get(self, request, pk):
         self.context['object'] = self.get_object()
+        self.context['pdf'] = True
         response = PDFTemplateResponse(request=request,
                                        template=self.template_name,
                                        filename=self.filename,
                                        context=self.context,
                                        show_content_in_browser=True,
-                                       cmd_options={'margin-top': 50, },
+                                       cmd_options={'margin-top': 50,'enable-local-file-access': True, },
                                        )
         return response

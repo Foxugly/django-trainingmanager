@@ -6,10 +6,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'ke2rim3a=ukld9cjh6$d$fb%ztgobvrs807i^d!_whg%@n^%v#'
 
 DEBUG = True
-STATE = 'INT'  # or ACC or PROD
-WEBSITE = "www.example.com"
+STATE = 'PROD'  # or ACC or PROD
+WEBSITE = "wp.foxugly.com"
 
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ["wp.foxugly.com", "127.0.0.1", "localhost"]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = False  # laisse Nginx gérer la redirection HTTP -> HTTPS
+
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -23,7 +31,6 @@ INSTALLED_APPS = [
     'qr_code',
     'debug_toolbar',
     'hijack',
-    # 'compat',
     'hijack.contrib.admin',
     'bootstrap4',
     'wkhtmltopdf',
@@ -37,6 +44,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -46,7 +54,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'django-trainingmanager.urls'
+ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
@@ -68,7 +76,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'django-trainingmanager.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
@@ -78,18 +86,10 @@ DATABASES = {
 }
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    { 'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
+    { 'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',  },
+    { 'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
+    { 'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
 LOGIN_REDIRECT_URL = '/'
@@ -112,13 +112,18 @@ STATICFILES_FINDERS = [
     # searches in STATIC subfolder of each app
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
-
 STATIC_URL = '/static/'
 # ACTIVE TO PROD / COMMENT TO TEST
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # COMMENT TO PROD / ACTIVE TO TEST
 # STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
-WKHTMLTOPDF_CMD = 'xvfb-run /usr/bin/wkhtmltopdf'
+#WKHTMLTOPDF_CMD = 'xvfb-run /usr/bin/wkhtmltopdf'
+WKHTMLTOPDF_CMD = '/usr/bin/wkhtmltopdf'
+WKHTMLTOPDF_CMD_OPTIONS = {
+    'enable-local-file-access': True,
+    'load-error-handling': 'ignore',
+    'load-media-error-handling': 'ignore',
+}
 
 HIJACK_LOGIN_REDIRECT_URL = '/'
 HIJACK_LOGOUT_REDIRECT_URL = '/'
@@ -136,9 +141,9 @@ if DEBUG:
     def show_toolbar(request):
         return True
 
-    DEBUG_TOOLBAR_CONFIG = {
-        'SHOW_TOOLBAR_CALLBACK': 'django_timesheets.settings.show_toolbar',
-    }
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': 'config.settings.show_toolbar',
+}
 
 BOOTSTRAP4 = {
 
