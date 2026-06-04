@@ -1,15 +1,25 @@
 import os
 
+import environ
 from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SECRET_KEY = 'ke2rim3a=ukld9cjh6$d$fb%ztgobvrs807i^d!_whg%@n^%v#'
 
-DEBUG = True
-STATE = 'INT'  # or ACC or PROD
-WEBSITE = "www.example.com"
+# Config is environment-driven (bare names) so prod secrets come from SSM →
+# /run/trainingmanager/.env (systemd EnvironmentFile); dev reads a local .env.
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
-ALLOWED_HOSTS = ['*']
+# No real default for SECRET_KEY in prod: the old hard-coded key was leaked in
+# git history and MUST be rotated — a fresh value lives only in SSM.
+SECRET_KEY = env("SECRET_KEY", default="dev-insecure-change-me-in-production")
+
+DEBUG = env.bool("DEBUG", default=False)
+STATE = env("STATE", default="INT")  # INT / ACC / PROD — also the Sentry env
+WEBSITE = env("WEBSITE", default="www.example.com")
+
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -71,10 +81,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'django-trainingmanager.wsgi.application'
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+    "default": env.db(
+        "DATABASE_URL",
+        default="sqlite:///" + os.path.join(BASE_DIR, "db.sqlite3"),
+    )
 }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -220,3 +230,39 @@ BOOTSTRAP4 = {
         'inline': 'bootstrap4.renderers.InlineFieldRenderer',
     },
 }
+
+# --- Security headers (enforced only outside DEBUG; nginx terminates TLS) ------
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = env.int("HSTS_SECONDS", default=0)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("HSTS_INCLUDE_SUBDOMAINS", default=False)
+    SECURE_HSTS_PRELOAD = env.bool("HSTS_PRELOAD", default=False)
+
+# --- Sentry — optional. Set SENTRY_DSN to enable. ----------------------------
+SENTRY_DSN = env("SENTRY_DSN", default="")
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from django.core.exceptions import DisallowedHost
+
+    def _drop_benign_noise(event, hint):
+        # Drop DisallowedHost (raw-IP scanners hitting the box) — the rejection
+        # is correct behaviour, not an error worth paging on. Do NOT add the IP
+        # to ALLOWED_HOSTS.
+        exc = hint.get("exc_info")
+        if exc and isinstance(exc[1], DisallowedHost):
+            return None
+        return event
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        environment=STATE,
+        traces_sample_rate=0.1,
+        send_default_pii=False,
+        before_send=_drop_benign_noise,
+    )

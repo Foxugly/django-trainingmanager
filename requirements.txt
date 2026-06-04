@@ -9,3 +9,8 @@ django-hijack-admin
 django-qr-code
 django-debug-toolbar
 django-bootstrap4
+
+# --- ops / deployment ---
+django-environ==0.13.0      # env-driven settings (SECRET_KEY, DATABASE_URL, ...)
+gunicorn==23.0.0            # prod WSGI server (systemd: trainingmanager-gunicorn)
+sentry-sdk==2.20.0          # opt-in error tracking (enabled when SENTRY_DSN set)
