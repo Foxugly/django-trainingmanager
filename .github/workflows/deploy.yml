@@ -1,0 +1,109 @@
+name: Test & Deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"   # matches the box venv
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Django checks (config + migration drift)
+        env:
+          STATE: TEST
+          SECRET_KEY: test-secret-key
+        run: |
+          python manage.py check
+          python manage.py makemigrations --check --dry-run
+
+      - name: Run tests
+        env:
+          STATE: TEST
+          SECRET_KEY: test-secret-key
+        run: python manage.py test --noinput
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    permissions:
+      id-token: write    # mint the OIDC token to assume the deploy role
+      contents: read
+
+    steps:
+      # OIDC -> SSM (no long-lived SSH key). AWS-RunShellScript runs as root and
+      # invokes deploy.sh as django (git reset, pip, sqlite backup, migrate,
+      # collectstatic, perms, restart via the trainingmanager-deploy sudoers
+      # grant). Secrets stay in SSM (/trainingmanager/prod/*), fetched to
+      # /run/trainingmanager/.env at boot by trainingmanager-env-fetch.
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-session-name: gh-actions-${{ github.run_id }}
+
+      - name: Trigger deploy on EC2 via SSM
+        id: ssm
+        env:
+          INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+        run: |
+          # Reset the tree FIRST (picks up a changed deploy.sh this run), THEN
+          # run it — otherwise a deploy.sh that resets itself needs two deploys.
+          cat > /tmp/ssm-params.json <<'EOF'
+          { "commands": [
+            "sudo -u django bash -c 'umask 027; cd /var/www/django_websites/old/django_trainingmanager && git fetch --quiet origin main && git reset --hard --quiet origin/main'",
+            "sudo -u django bash /var/www/django_websites/old/django_trainingmanager/deploy/deploy.sh"
+          ], "executionTimeout": ["900"] }
+          EOF
+          CMD_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --comment "Deploy trainingmanager ${{ github.sha }}" \
+            --cloud-watch-output-config CloudWatchOutputEnabled=true \
+            --parameters file:///tmp/ssm-params.json \
+            --query Command.CommandId --output text)
+          echo "Command ID: $CMD_ID"
+          echo "cmd_id=$CMD_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for SSM command to finish
+        env:
+          INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+          CMD_ID: ${{ steps.ssm.outputs.cmd_id }}
+        run: |
+          for _ in $(seq 1 180); do
+            STATUS=$(aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --query Status --output text 2>/dev/null || echo Pending)
+            case "$STATUS" in
+              Success)
+                echo "::group::stdout"
+                aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --query StandardOutputContent --output text
+                echo "::endgroup::"
+                exit 0 ;;
+              Failed|Cancelled|TimedOut)
+                echo "Deploy $STATUS"
+                echo "::group::stdout"
+                aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --query StandardOutputContent --output text
+                echo "::endgroup::"
+                echo "::group::stderr"
+                aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --query StandardErrorContent --output text
+                echo "::endgroup::"
+                exit 1 ;;
+              *) sleep 5 ;;
+            esac
+          done
+          echo "Timed out waiting for SSM command after 15 minutes"
+          exit 1

@@ -1,0 +1,25 @@
+[Unit]
+Description=TrainingManager (wp.foxugly.com) — Gunicorn (config.wsgi)
+After=network.target trainingmanager-env-fetch.service
+# Hard dependency: without the SSM-fetched env, refuse to start.
+Requires=trainingmanager-env-fetch.service
+
+[Service]
+User=django
+Group=www-data
+UMask=0027
+WorkingDirectory=/var/www/django_websites/old/django_trainingmanager
+EnvironmentFile=/run/trainingmanager/.env
+ExecStart=/var/www/django_websites/old/django_trainingmanager/.venv/bin/gunicorn \
+    --workers 2 \
+    --bind 127.0.0.1:8003 \
+    config.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+KillMode=mixed
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
