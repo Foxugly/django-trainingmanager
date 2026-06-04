@@ -29,7 +29,7 @@ Activate the venv first (Windows bash): `source .venv/Scripts/activate`
 - Apply migrations: `python manage.py migrate`
 - Make migrations after model changes: `python manage.py makemigrations`
 - Check for model/migration drift (CI gate): `python manage.py makemigrations --check --dry-run`
-- Run tests: `python manage.py test` (no pytest; app `tests.py` files are largely empty)
+- Run tests: `python manage.py test` (no pytest; smoke + model tests in `event/tests.py`, `round/tests.py` — the CI test job gate)
 - Create admin user: `python manage.py createsuperuser`
 
 ## Architecture
