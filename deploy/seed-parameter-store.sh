@@ -34,7 +34,7 @@ SSM_PREFIX="/trainingmanager/prod"
 AWS_REGION="eu-west-1"
 
 # Keys whose values are secrets -> stored as SecureString (KMS key aws/ssm).
-SECRET_KEYS=" SECRET_KEY DATABASE_PASSWORD SENTRY_DSN "
+SECRET_KEYS=" SECRET_KEY DB_PASSWORD SENTRY_DSN "
 
 [ -f "$ENV_FILE" ] || { echo "No such file: $ENV_FILE" >&2; exit 1; }
 

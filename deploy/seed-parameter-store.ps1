@@ -29,7 +29,7 @@ $SsmPrefix = "/trainingmanager/prod"
 $AwsRegion = "eu-west-1"
 
 # Keys whose values are secrets -> SecureString (KMS key aws/ssm). Rest -> String.
-$SecretKeys = @("SECRET_KEY", "DATABASE_PASSWORD", "SENTRY_DSN")
+$SecretKeys = @("SECRET_KEY", "DB_PASSWORD", "SENTRY_DSN")
 
 if (-not (Test-Path -LiteralPath $EnvFile)) { throw "No such file: $EnvFile" }
 
