@@ -1,51 +1,34 @@
 import json
 from datetime import datetime, timedelta
 
-from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 
-from agenda.forms import BSAgendaCreateForm
+from agenda.forms import AgendaForm
 from agenda.models import Agenda
 from event.models import Event
+from tools.crud_views import FullPageCreateView, FullPageDeleteView, FullPageUpdateView
 from tools.generic_views import *
 
 
-class AgendaCreateView(LoginRequiredMixin, BSModalCreateView):
+class AgendaCreateView(FullPageCreateView):
     model = Agenda
-    fields = None
-    form_class = BSAgendaCreateForm
-    template_name = 'modal.html'
+    form_class = AgendaForm
     success_url = reverse_lazy('agenda:agenda_list')
     success_message = _('agenda created.')
-
-    def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
 
 
 class AgendaListView(GenericListView):
     model = Agenda
 
 
-class AgendaUpdateView(LoginRequiredMixin, BSModalUpdateView):
+class AgendaUpdateView(FullPageUpdateView):
     model = Agenda
-    fields = None
-    form_class = BSAgendaCreateForm
-    template_name = 'modal.html'
+    form_class = AgendaForm
     success_url = reverse_lazy('agenda:agenda_list')
-    success_message = _('agenda created.')
-
-    def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+    success_message = _('agenda updated.')
 
 
 class AgendaDetailView(GenericDetailView):
@@ -53,14 +36,10 @@ class AgendaDetailView(GenericDetailView):
     template_name = 'agenda.html'
 
 
-class AgendaDeleteView(GenericDeleteView):
+class AgendaDeleteView(FullPageDeleteView):
     model = Agenda
-
-    def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+    success_url = reverse_lazy('agenda:agenda_list')
+    success_message = _('agenda deleted.')
 
 
 def qdict_to_dict(qdict):

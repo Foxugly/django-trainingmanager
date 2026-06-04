@@ -1,53 +1,36 @@
 import json
 import os
 
-from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from wkhtmltopdf.views import PDFTemplateResponse
 
-from event.forms import BSEventForm
+from event.forms import EventForm
 from event.models import Event
 from member.models import Member
+from tools.crud_views import FullPageCreateView, FullPageDeleteView, FullPageUpdateView
 from tools.generic_views import *
 
 
-class EventCreateView(LoginRequiredMixin, BSModalCreateView):
+class EventCreateView(FullPageCreateView):
     model = Event
-    fields = None
-    form_class = BSEventForm
-    template_name = 'modal.html'
+    form_class = EventForm
     success_url = reverse_lazy('index')
     success_message = _('event created.')
-
-    def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
 
 
 class EventListView(GenericListView):
     model = Event
 
 
-class EventUpdateView(LoginRequiredMixin, BSModalUpdateView):
+class EventUpdateView(FullPageUpdateView):
     model = Event
-    fields = None
-    form_class = BSEventForm
-    template_name = 'modal.html'
+    form_class = EventForm
     success_url = reverse_lazy('index')
-    success_message = _('event created.')
-
-    def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+    success_message = _('event updated.')
 
 
 class EventDetailView(GenericDetailView):
@@ -60,14 +43,10 @@ class EventRawView(GenericDetailView):
     template_name = 'event_raw.html'
 
 
-class EventDeleteView(LoginRequiredMixin, BSModalDeleteView):
+class EventDeleteView(FullPageDeleteView):
     model = Event
-
-    def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+    success_url = reverse_lazy('index')
+    success_message = _('event deleted.')
 
 
 @login_required

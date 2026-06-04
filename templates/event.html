@@ -6,20 +6,16 @@
 {% endblock extrastylesheets %}
 
 {% block content %}
-{% include "_modal.html" %}
-{% include "_modal_large.html" %}
 <div class="container mt-3">
     <div class="row">
         <div class="col-sm-12 mb-4">
             <div class="card">
                 <div class="card-header">
                     <h3 class="float-left mb-0">Event : {{ object }}</h3>
-                    <button class="bs-modal btn btn-primary float-right"
-                            data-form-url="{% url 'event:event_change' object.id  %}"
-                            data-next="{% url 'event:event_detail' object.id %}" id="btn_edit_event"
-                            name="btn_edit_event" name="button" type="button"><span
-                            class="fa fa-edit"></span> Edit Event
-                    </button>
+                    <a class="btn btn-primary float-right" id="btn_edit_event"
+                       href="{% url 'event:event_change' object.id %}?next={% url 'event:event_detail' object.id %}">
+                        <span class="fa fa-edit"></span> Edit Event
+                    </a>
                 </div>
                 <div class="card-block">
                     <div class="row justify-content-md-center">
@@ -47,12 +43,10 @@
                        name="btn_event_raw"><i class="far fa-file-alt"></i> </a>
 		    <a class="btn btn-secondary float-right ml-1" href="{% url 'event:event_pdf' object.id %}"
                        name="btn_event_pdf"><i class="far fa-file-pdf"></i></a>
-                    <button class="bs-modal-lg btn btn-primary float-right ml-1"
-                            data-form-url="{% url 'round:round_add' %}"
-                            data-next="{% url 'event:event_detail' object.id %}" id="btn_add_round"
-                            name="btn_add_round" name="button" type="button"><span
-                            class="fa fa-plus"></span> Add Exercise
-                    </button>
+                    <a class="btn btn-primary float-right ml-1" id="btn_add_round"
+                       href="{% url 'round:round_add' %}?next={% url 'event:event_detail' object.id %}&event_id={{ object.id }}">
+                        <span class="fa fa-plus"></span> Add Exercise
+                    </a>
                 </div>
                 {{object.get_table|safe}}
             </div>
@@ -63,11 +57,10 @@
                     <h3 class="float-left mb-0">Attendance : <span id="nb_members">{{object.get_nb_members_present}}/{{object.get_nb_all_members}}</span>
                     </h3>
 
-                    <button class="bs-modal btn btn-primary float-right" data-form-url="{% url 'member:member_add' %}"
-                            data-next="{% url 'event:event_detail' object.id %}" id="btn_add_member"
-                            name="btn_add_member" name="button" type="button"><span
-                            class="fa fa-user-plus"></span>
-                    </button>
+                    <a class="btn btn-primary float-right" id="btn_add_member"
+                       href="{% url 'member:member_add' %}?next={% url 'event:event_detail' object.id %}&event_id={{ object.id }}">
+                        <span class="fa fa-user-plus"></span>
+                    </a>
                 </div>
                 <table class="card-table table table-striped mb-0">
                     <thead>
@@ -103,22 +96,6 @@
 <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
 <script type="text/javascript">
       $(function () {
-          // Read and Delete book buttons open modal with id="modal"
-          // The formURL is retrieved from the data of the element
-          $(".bs-modal").each(function () {
-              $(this).modalForm({
-                  formURL: $(this).data("form-url") + "?next=" + $(this).data('next')+ "&event_id={{object.id}}",
-                  modalID:"#modal"
-              });
-          });
-          $(".bs-modal-lg").each(function () {
-              $(this).modalForm({
-                  formURL: $(this).data("form-url") + "?next=" + $(this).data('next')+ "&event_id={{object.id}}",
-                  modalID:"#modal-lg"
-              });
-          });
-
-
           // Hide message
           $(".alert").fadeTo(2000, 500).slideUp(500, function () {
               $(".alert").slideUp(500);

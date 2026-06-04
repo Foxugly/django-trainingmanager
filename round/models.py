@@ -33,12 +33,12 @@ class Round(GenericClass):
                        '<td>%s</td>' % (nb, self.order, nb, self.get_total(), nb, self.count, "<BR>break : %s" % self.t_break if self.t_break else " ", "<BR>start : %s" % self.t_start if self.t_start else " ", e.get_row())
                 if buttons:
                     out += '<td style="width:95px" class="align-middle text-center" rowspan="%d">' \
-                           '<button class="bs-modal btn btn-sm btn-info" type="button" data-form-url="%s" data-next="%s">' \
+                           '<a class="btn btn-sm btn-info" href="%s?next=%s">' \
                            '<span class="fa fa-edit"></span>' \
-                           '</button> ' \
-                           '<button class="bs-modal btn btn-sm btn-danger" type="button" data-form-url="%s" data-next="%s">' \
+                           '</a> ' \
+                           '<a class="btn btn-sm btn-danger" href="%s?next=%s">' \
                            '<span class="fa fa-trash"></span>' \
-                           '</button>' \
+                           '</a>' \
                            '</td>' % (
                                nb, self.get_change_url(), self.refer_event.get_absolute_url(), self.get_delete_url(),
                                self.refer_event.get_absolute_url())

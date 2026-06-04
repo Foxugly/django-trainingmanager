@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n widget_tweaks common_tags %}
+
+{% block content %}
+<div class="container mt-3">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="mb-3">
+                {% if object %}{% trans "Edit" %}{% else %}{% trans "Add" %}{% endif %}{% if model %} {{ model|verbose_name }}{% endif %}
+            </h1>
+
+            <form method="post" action="">
+                {% csrf_token %}
+
+                {% for error in form.non_field_errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+                {% endfor %}
+
+                {% for field in form.visible_fields %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {% render_field field class="form-control" %}
+                    {% for error in field.errors %}
+                    <div class="invalid">{{ error }}</div>
+                    {% endfor %}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+                <div class="d-flex justify-content-between mt-3">
+                    <a class="btn btn-secondary" href="{% if request.GET.next %}{{ request.GET.next }}{% else %}/{% endif %}">{% trans "Cancel" %}</a>
+                    <button type="submit" class="btn btn-primary">{% trans "Save" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}

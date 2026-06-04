@@ -1,20 +1,26 @@
-{% load widget_tweaks %}
+{% extends "base.html" %}
+{% load i18n %}
 
-<form method="post" action="">
-    {% csrf_token %}
-
-    <div class="modal-header">
-        <h3 class="modal-title">Delete item</h3>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+{% block content %}
+<div class="container mt-3">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">{% trans "Delete" %}</h3>
+                </div>
+                <div class="card-body">
+                    <p>{% blocktrans with obj=object %}Are you sure you want to delete <strong>{{ obj }}</strong>?{% endblocktrans %}</p>
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a class="btn btn-secondary" href="{% if request.GET.next %}{{ request.GET.next }}{% else %}/{% endif %}">{% trans "Cancel" %}</a>
+                            <button type="submit" class="btn btn-danger">{% trans "Delete" %}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="modal-body">
-        <p class="delete-text">Are you sure you want to delete book with title
-            <strong>{{ object }}</strong>?</p>
-    </div>
-
-    <div class="modal-footer">
-        <button type="submit" id="delete-btn" class="btn btn-danger">Delete</button>
-    </div>
+</div>
+{% endblock content %}

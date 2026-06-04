@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static i18n widget_tweaks common_tags %}
+
+{% block content %}
+<div class="container mt-3">
+    <h1 class="mb-3">{% if object %}{% trans "Edit round" %}{% else %}{% trans "Add round" %}{% endif %}</h1>
+
+    <form action="" method="post">
+        {% csrf_token %}
+
+        {% for error in form.non_field_errors %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endfor %}
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Order</th>
+                <th>Count</th>
+                <th>Start</th>
+                <th>Break</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                {% for field in form.visible_fields %}
+                <td>
+                    {% render_field field class="form-control" placeholder=field.label %}
+                    {% for error in field.errors %}<div class="invalid">{{ error }}</div>{% endfor %}
+                </td>
+                {% endfor %}
+            </tr>
+            </tbody>
+        </table>
+        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+        <label class="mt-2"><strong>{% trans "Exercises" %}</strong></label>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Order</th>
+                <th>Rep.</th>
+                <th>Distance</th>
+                <th>Stroke</th>
+                <th>Segment</th>
+                <th>Note</th>
+                <th>start</th>
+                <th>break</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{ exercises.management_form }}
+            {% for exform in exercises.forms %}
+            <tr class="{% cycle 'row1' 'row2' %} formset_row">
+                {% for field in exform.visible_fields %}
+                <td>
+                    {% if forloop.first %}
+                    {% for hidden in exform.hidden_fields %}{{ hidden }}{% endfor %}
+                    {% endif %}
+                    {{ field.errors.as_ul }}
+                    {% render_field field class="form-control" placeholder=field.label %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="d-flex justify-content-between mt-3">
+            <a class="btn btn-secondary"
+               href="{% if request.GET.next %}{{ request.GET.next }}{% else %}{% url 'round:round_list' %}{% endif %}">{% trans "Cancel" %}</a>
+            <button class="btn btn-primary" type="submit">{% trans "Save" %}</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}
+
+{% block extrascripts %}
+<script src="{% static 'formset/jquery.formset.js' %}"></script>
+<script type="text/javascript">
+    $('.formset_row').formset({
+        addText: '{{ add_exercise }}',
+        deleteText: '{{ delete_exercise }}',
+        prefix: '{{ exercises.prefix }}'
+    });
+</script>
+{% endblock extrascripts %}

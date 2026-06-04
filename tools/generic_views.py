@@ -1,7 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
 
@@ -24,7 +24,7 @@ class GenericCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super(GenericCreateView, self).get_context_data(**kwargs)
-        # context['model'] = self.model
+        context['model'] = self.model
         return context
 
 
@@ -40,6 +40,10 @@ class GenericListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super(GenericListView, self).get_context_data(**kwargs)
         context['model'] = self.model
+        # Full-page CRUD links: the "Add" button and the per-row "next" target.
+        app, name = self.model._meta.app_label, self.model._meta.model_name
+        context['add_url'] = reverse('%s:%s_add' % (app, name))
+        context['list_url'] = reverse('%s:%s_list' % (app, name))
         return context
 
 

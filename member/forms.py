@@ -1,9 +1,9 @@
-from bootstrap_modal_forms.forms import BSModalModelForm
+from django.forms import ModelForm
 
 from member.models import Member
 
 
-class BSMemberForm(BSModalModelForm):
+class MemberForm(ModelForm):
     class Meta:
         model = Member
         fields = ['firstname', 'lastname', 'phonenumber', 'email']

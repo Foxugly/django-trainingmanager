@@ -1,7 +1,8 @@
-from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.translation import gettext as _
 
+from exercise.forms import ExerciseForm
 from exercise.models import Stroke, EnergySystem, EnergySegment, Exercise
+from tools.crud_views import FullPageCreateView, FullPageDeleteView, FullPageUpdateView
 from tools.generic_views import *
 
 
@@ -65,39 +66,29 @@ class EnergySegmentDeleteView(GenericDeleteView):
     model = EnergySegment
 
 
-class ExerciseCreateView(LoginRequiredMixin, BSModalCreateView):
+class ExerciseCreateView(FullPageCreateView):
     model = Exercise
-
-    def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+    form_class = ExerciseForm
+    success_url = reverse_lazy('exercise:exercise_list')
+    success_message = _('exercise created.')
 
 
 class ExerciseListView(GenericListView):
     model = Exercise
 
 
-class ExerciseUpdateView(LoginRequiredMixin, BSModalUpdateView):
+class ExerciseUpdateView(FullPageUpdateView):
     model = Exercise
-
-    def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+    form_class = ExerciseForm
+    success_url = reverse_lazy('exercise:exercise_list')
+    success_message = _('exercise updated.')
 
 
 class ExerciseDetailView(GenericDetailView):
     model = Exercise
 
 
-class ExerciseDeleteView(LoginRequiredMixin, BSModalDeleteView):
+class ExerciseDeleteView(FullPageDeleteView):
     model = Exercise
-
-    def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+    success_url = reverse_lazy('exercise:exercise_list')
+    success_message = _('exercise deleted.')

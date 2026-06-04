@@ -1,5 +1,4 @@
-from bootstrap_modal_forms.forms import BSModalModelForm
-from django.forms import ModelForm, DateInput
+from django.forms import DateInput, ModelForm
 
 from agenda.models import Agenda
 
@@ -7,38 +6,12 @@ from agenda.models import Agenda
 class AgendaForm(ModelForm):
     class Meta:
         model = Agenda
-        exclude = []
-        widgets = {
-            'date_start': DateInput(
-                format=('%d/%m/%Y'),
-                attrs={'class': 'form-control',
-                       'placeholder': 'Select a date',
-                       'type': 'date'
-                       }),
-            'date_end': DateInput(
-                format=('%d/%m/%Y'),
-                attrs={'class': 'form-control',
-                       'placeholder': 'Select a date',
-                       'type': 'date'
-                       }),
-        }
-
-
-class BSAgendaCreateForm(BSModalModelForm):
-    class Meta:
-        model = Agenda
+        # events/members are managed elsewhere (calendar, attendance), not on the
+        # create/edit form.
         exclude = ['events', 'members']
         widgets = {
-            'date_start': DateInput(
-                format=('%d/%m/%Y'),
-                attrs={'class': 'form-control',
-                       'placeholder': 'Select a date',
-                       'type': 'date'
-                       }),
-            'date_end': DateInput(
-                format=('%d/%m/%Y'),
-                attrs={'class': 'form-control',
-                       'placeholder': 'Select a date',
-                       'type': 'date'
-                       }),
+            'date_start': DateInput(format='%Y-%m-%d',
+                                    attrs={'class': 'form-control', 'type': 'date'}),
+            'date_end': DateInput(format='%Y-%m-%d',
+                                  attrs={'class': 'form-control', 'type': 'date'}),
         }

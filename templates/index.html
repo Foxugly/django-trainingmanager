@@ -2,7 +2,6 @@
 {% load static i18n common_tags %}
 {% block content %}
 
-{% include "_modal.html" %}
 <div class="container mt-3">
     <div class="card">
         {% for key, list in apps.items %}
@@ -27,29 +26,11 @@
 
 {% block extrascripts %}
 <script type="text/javascript">
-      $(function () {
-	   $("#create-event").modalForm({
-            formURL: "{% url 'event:event_add' %}",
-          });
-
-
-          // Read and Delete book buttons open modal with id="modal"
-          // The formURL is retrieved from the data of the element
-          $(".bs-modal").each(function () {
-              $(this).modalForm({formURL: $(this).data("form-url")});
-          });
-
-          // Hide message
-          $(".alert").fadeTo(2000, 500).slideUp(500, function () {
-              $(".alert").slideUp(500);
-          });
-      });
-
-
-
-
-
-
-
+    $(function () {
+        // Auto-dismiss flash messages.
+        $(".alert").fadeTo(2000, 500).slideUp(500, function () {
+            $(".alert").slideUp(500);
+        });
+    });
 </script>
 {% endblock extrascripts %}

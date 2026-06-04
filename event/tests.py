@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.urls import reverse
 
 from agenda.models import Agenda
 from event.models import Event
 from exercise.models import Exercise
 from member.models import Member
+from round.forms import RoundExerciseFormSet
 from round.models import Round
 
 User = get_user_model()
@@ -73,3 +75,67 @@ class EventModelTests(TestCase):
         # round total = count(2) * (200 + 50) = 500 ; event total = sum(rounds) = 500
         self.assertEqual(r.get_total(), 500)
         self.assertEqual(self.event.get_total(), 500)
+
+
+class CrudTests(TestCase):
+    """Full-page CRUD replaced the old (Django-6-broken) Bootstrap modals.
+
+    These guard the create/update/delete POST → redirect → DB-effect path so the
+    plumbing can't silently rot again.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="u", email="u@example.com", password="pw")
+        self.client.login(username="u", password="pw")
+
+    def test_member_create(self):
+        r = self.client.post(reverse("member:member_add"),
+                             {"firstname": "John", "lastname": "Doe", "phonenumber": "", "email": ""},
+                             secure=True)
+        self.assertEqual(r.status_code, 302)
+        self.assertTrue(Member.objects.filter(firstname="John", lastname="Doe").exists())
+
+    def test_member_create_enrols_in_event_agenda(self):
+        agenda = Agenda.objects.create(name="A")
+        event = Event.objects.create(name="E", refer_agenda=agenda)
+        url = "%s?next=/&event_id=%d" % (reverse("member:member_add"), event.id)
+        r = self.client.post(url, {"firstname": "Jane", "lastname": "Roe", "phonenumber": "", "email": ""},
+                             secure=True)
+        self.assertEqual(r.status_code, 302)
+        m = Member.objects.get(firstname="Jane")
+        self.assertIn(m, agenda.members.all())
+
+    def test_member_update(self):
+        m = Member.objects.create(firstname="Old", lastname="Name")
+        r = self.client.post(reverse("member:member_change", kwargs={"pk": m.pk}),
+                             {"firstname": "New", "lastname": "Name", "phonenumber": "", "email": ""},
+                             secure=True)
+        self.assertEqual(r.status_code, 302)
+        m.refresh_from_db()
+        self.assertEqual(m.firstname, "New")
+
+    def test_member_delete(self):
+        m = Member.objects.create(firstname="Gone", lastname="Soon")
+        r = self.client.post(reverse("member:member_delete", kwargs={"pk": m.pk}), secure=True)
+        self.assertEqual(r.status_code, 302)
+        self.assertFalse(Member.objects.filter(pk=m.pk).exists())
+
+    def test_event_create(self):
+        r = self.client.post(reverse("event:event_add"),
+                             {"name": "Friday", "goal": "", "color": "", "date": "", "hour_start": "", "hour_end": ""},
+                             secure=True)
+        self.assertEqual(r.status_code, 302)
+        self.assertTrue(Event.objects.filter(name="Friday").exists())
+
+    def test_round_create_with_empty_formset(self):
+        agenda = Agenda.objects.create(name="A")
+        event = Event.objects.create(name="E", refer_agenda=agenda)
+        prefix = RoundExerciseFormSet().prefix
+        data = {
+            "order": 1, "count": 1, "t_start": "", "t_break": "", "refer_event": event.pk,
+            "%s-TOTAL_FORMS" % prefix: 0, "%s-INITIAL_FORMS" % prefix: 0,
+            "%s-MIN_NUM_FORMS" % prefix: 0, "%s-MAX_NUM_FORMS" % prefix: 1000,
+        }
+        r = self.client.post("%s?next=/" % reverse("round:round_add"), data, secure=True)
+        self.assertEqual(r.status_code, 302)
+        self.assertTrue(Round.objects.filter(refer_event=event).exists())

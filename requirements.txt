@@ -8,7 +8,6 @@ Django==6.0.5
 gunicorn==26.0.0
 
 # UI / app
-django-bootstrap-modal-forms==2.0.0
 django-bootstrap4==26.1
 django-widget-tweaks==1.4.2
 django-hijack==3.7.8
