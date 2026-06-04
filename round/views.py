@@ -1,4 +1,5 @@
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
@@ -9,7 +10,7 @@ from round.models import Round
 from tools.generic_views import *
 
 
-class RoundCreateView(BSModalCreateView):
+class RoundCreateView(LoginRequiredMixin, BSModalCreateView):
     model = Round
     fields = None
     form_class = BSRoundForm
@@ -64,7 +65,7 @@ class RoundListView(GenericListView):
     model = Round
 
 
-class RoundUpdateView(BSModalUpdateView):
+class RoundUpdateView(LoginRequiredMixin, BSModalUpdateView):
     model = Round
     fields = None
     form_class = BSRoundForm

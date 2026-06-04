@@ -1,4 +1,5 @@
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from exercise.models import Stroke, EnergySystem, EnergySegment, Exercise
 from tools.generic_views import *
@@ -64,7 +65,7 @@ class EnergySegmentDeleteView(GenericDeleteView):
     model = EnergySegment
 
 
-class ExerciseCreateView(BSModalCreateView):
+class ExerciseCreateView(LoginRequiredMixin, BSModalCreateView):
     model = Exercise
 
     def get_success_url(self):
@@ -78,7 +79,7 @@ class ExerciseListView(GenericListView):
     model = Exercise
 
 
-class ExerciseUpdateView(BSModalUpdateView):
+class ExerciseUpdateView(LoginRequiredMixin, BSModalUpdateView):
     model = Exercise
 
     def get_success_url(self):
@@ -92,7 +93,7 @@ class ExerciseDetailView(GenericDetailView):
     model = Exercise
 
 
-class ExerciseDeleteView(BSModalDeleteView):
+class ExerciseDeleteView(LoginRequiredMixin, BSModalDeleteView):
     model = Exercise
 
     def get_success_url(self):

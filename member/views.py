@@ -1,4 +1,6 @@
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 
 from event.models import Event
@@ -7,7 +9,7 @@ from member.models import Member
 from tools.generic_views import *
 
 
-class MemberCreateView(BSModalCreateView):
+class MemberCreateView(LoginRequiredMixin, BSModalCreateView):
     model = Member
     fields = None
     form_class = BSMemberForm
@@ -26,7 +28,7 @@ class MemberCreateView(BSModalCreateView):
             if "event_id" in self.request.GET:
                 f = form.save(commit=False)
                 f.save()
-                e = Event.objects.get(id=self.request.GET['event_id'])
+                e = get_object_or_404(Event, id=self.request.GET['event_id'])
                 e.refer_agenda.members.add(f)
         return super(MemberCreateView, self).form_valid(form)
 
@@ -35,7 +37,7 @@ class MemberListView(GenericListView):
     model = Member
 
 
-class MemberUpdateView(BSModalUpdateView):
+class MemberUpdateView(LoginRequiredMixin, BSModalUpdateView):
     model = Member
     fields = None
     form_class = BSMemberForm
@@ -54,7 +56,7 @@ class MemberDetailView(GenericDetailView):
     model = Member
 
 
-class MemberDeleteView(BSModalDeleteView):
+class MemberDeleteView(LoginRequiredMixin, BSModalDeleteView):
     model = Member
 
     def get_success_url(self):

@@ -147,7 +147,9 @@ HIJACK_LOGIN_REDIRECT_URL = '/'
 HIJACK_LOGOUT_REDIRECT_URL = '/'
 HIJACK_DISPLAY_WARNINGS = True
 HIJACK_USE_BOOTSTRAP = True
-HIJACK_ALLOW_GET_REQUESTS = True
+# HIJACK_ALLOW_GET_REQUESTS left at the secure default (False): account switching
+# is POST-only (CSRF-protected). The admin hijack button uses POST; no template
+# uses a GET hijack link.
 
 # if AUTH_USER_MODEL then HIJACK_REGISTER_ADMIN = False
 HIJACK_REGISTER_ADMIN = False

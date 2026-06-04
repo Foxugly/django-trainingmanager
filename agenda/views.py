@@ -2,8 +2,10 @@ import json
 from datetime import datetime, timedelta
 
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 
 from agenda.forms import BSAgendaCreateForm
@@ -12,7 +14,7 @@ from event.models import Event
 from tools.generic_views import *
 
 
-class AgendaCreateView(BSModalCreateView):
+class AgendaCreateView(LoginRequiredMixin, BSModalCreateView):
     model = Agenda
     fields = None
     form_class = BSAgendaCreateForm
@@ -27,11 +29,11 @@ class AgendaCreateView(BSModalCreateView):
             return self.success_url
 
 
-class AgendaListView(LoginRequiredMixin, GenericListView):
+class AgendaListView(GenericListView):
     model = Agenda
 
 
-class AgendaUpdateView(BSModalUpdateView):
+class AgendaUpdateView(LoginRequiredMixin, BSModalUpdateView):
     model = Agenda
     fields = None
     form_class = BSAgendaCreateForm
@@ -46,12 +48,12 @@ class AgendaUpdateView(BSModalUpdateView):
             return self.success_url
 
 
-class AgendaDetailView(LoginRequiredMixin, GenericDetailView):
+class AgendaDetailView(GenericDetailView):
     model = Agenda
     template_name = 'agenda.html'
 
 
-class AgendaDeleteView(LoginRequiredMixin, GenericDeleteView):
+class AgendaDeleteView(GenericDeleteView):
     model = Agenda
 
     def get_success_url(self):
@@ -65,6 +67,7 @@ def qdict_to_dict(qdict):
     return {k: v[0] if len(v) == 1 else v for k, v in qdict.lists()}
 
 
+@login_required
 def create_events(request, agenda_id):
     results = {}
     if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == "GET":
@@ -81,13 +84,13 @@ def create_events(request, agenda_id):
         if date_start == date_end:
             e = Event(name=name, date=date_start, hour_start=hour_start, hour_end=hour_end)
             e.save()
-            a = Agenda.objects.get(id=agenda_id)
+            a = get_object_or_404(Agenda, id=agenda_id)
             e.refer_agenda = a
             e.save()
             a.events.add(e)
             results['events'] = [e.as_json() for e in a.get_events()]
         elif date_start <= date_end:
-            a = Agenda.objects.get(id=agenda_id)
+            a = get_object_or_404(Agenda, id=agenda_id)
             delta = timedelta(days=1)
             while date_start <= date_end:
                 if str(date_start.weekday()) in list(days):
@@ -101,6 +104,7 @@ def create_events(request, agenda_id):
     return HttpResponse(json.dumps(results))
 
 
+@login_required
 def get_events_json(request, agenda_id):
-    a = Agenda.objects.get(id=agenda_id)
+    a = get_object_or_404(Agenda, id=agenda_id)
     return HttpResponse(json.dumps([e.as_json() for e in a.get_events()]))

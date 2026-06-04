@@ -3,7 +3,10 @@ import os
 
 from bootstrap_modal_forms.generic import BSModalCreateView, BSModalUpdateView, BSModalDeleteView
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from wkhtmltopdf.views import PDFTemplateResponse
 
@@ -13,7 +16,7 @@ from member.models import Member
 from tools.generic_views import *
 
 
-class EventCreateView(BSModalCreateView):
+class EventCreateView(LoginRequiredMixin, BSModalCreateView):
     model = Event
     fields = None
     form_class = BSEventForm
@@ -32,7 +35,7 @@ class EventListView(GenericListView):
     model = Event
 
 
-class EventUpdateView(BSModalUpdateView):
+class EventUpdateView(LoginRequiredMixin, BSModalUpdateView):
     model = Event
     fields = None
     form_class = BSEventForm
@@ -57,7 +60,7 @@ class EventRawView(GenericDetailView):
     template_name = 'event_raw.html'
 
 
-class EventDeleteView(BSModalDeleteView):
+class EventDeleteView(LoginRequiredMixin, BSModalDeleteView):
     model = Event
 
     def get_success_url(self):
@@ -67,9 +70,10 @@ class EventDeleteView(BSModalDeleteView):
             return self.success_url
 
 
+@login_required
 def attendance_member(request, event_id, member_id):
-    e = Event.objects.get(id=event_id)
-    m = Member.objects.get(id=member_id)
+    e = get_object_or_404(Event, id=event_id)
+    m = get_object_or_404(Member, id=member_id)
     a = request.GET.get("attendance")
     if a == "true":
         if m not in e.members.all():

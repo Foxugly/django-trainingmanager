@@ -2,6 +2,7 @@ from django.apps import apps
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import path, include, reverse
@@ -13,6 +14,7 @@ from customuser.views import CustomUserUpdateView
 from .health import health
 
 
+@login_required
 def home(request):
     c = {}
     available_apps = {}

@@ -27,6 +27,13 @@ class SmokeTests(TestCase):
         self.client.login(username="u", password="pw")
         self.assertEqual(self.client.get("/", secure=True).status_code, 200)
 
+    def test_protected_views_require_login(self):
+        # home + the app views are login-only; anonymous is redirected to login.
+        for url in ("/", "/event/event/", "/agenda/agenda/"):
+            r = self.client.get(url, secure=True)
+            self.assertEqual(r.status_code, 302, url)
+            self.assertIn("/accounts/login/", r.url, url)
+
     def test_set_lang_redirects(self):
         # Regression: set_lang() called check_for_language() without importing it
         # (NameError on every /lang/ hit) — see config/urls.py.
