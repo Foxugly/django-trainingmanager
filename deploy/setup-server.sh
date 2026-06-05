@@ -16,7 +16,7 @@
 #      FRESH SECRET_KEY (the old one is leaked), DEBUG=False, STATE=PROD,
 #      ALLOWED_HOSTS=wp.foxugly.com, CSRF_TRUSTED_ORIGINS=https://wp.foxugly.com,
 #      WEBSITE=wp.foxugly.com.
-#   3. EC2 instance role (quizonline-ec2) allowed ssm:GetParametersByPath on BOTH
+#   3. EC2 instance role (foxugly-fleet-ec2) allowed ssm:GetParametersByPath on BOTH
 #      …:parameter/trainingmanager/prod and …/trainingmanager/prod/* (+ kms:Decrypt).
 #
 # §3.10-safe: every root-owned file is installed from the COMMITTED git blob
