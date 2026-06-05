@@ -1,18 +1,18 @@
 # IAM for trainingmanager (wp.foxugly.com) — reference
 
 Account `362629935151`, region `eu-west-1`, instance `i-0fe664678563bae5f`,
-instance role `quizonline-ec2`. Apply from CloudShell (admin) or the console.
+instance role `foxugly-fleet-ec2`. Apply from CloudShell (admin) or the console.
 These JSONs are the source of truth; the GitHub repo secrets
 (`AWS_DEPLOY_ROLE_ARN`, `EC2_INSTANCE_ID`) are already set.
 
 ## 1. Let the instance role read this app's SSM (required for the cutover)
 
 ```bash
-aws iam put-role-policy --role-name quizonline-ec2 \
+aws iam put-role-policy --role-name foxugly-fleet-ec2 \
   --policy-name trainingmanager-ssm-read \
   --policy-document file://instance-role-trainingmanager-ssm-read.json
 ```
-Console: IAM → Roles → `quizonline-ec2` → Permissions → Add permissions →
+Console: IAM → Roles → `foxugly-fleet-ec2` → Permissions → Add permissions →
 Create inline policy → JSON → paste `instance-role-trainingmanager-ssm-read.json`
 → name `trainingmanager-ssm-read`. (Both ARNs — the `/prod` node AND `/prod/*` —
 matter; the missing node ARN is what broke ical's first bring-up.)
