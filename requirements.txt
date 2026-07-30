@@ -18,7 +18,7 @@ django-qr-code==4.2.0
 django-wkhtmltopdf==3.4.0
 
 # dev only (wired into INSTALLED_APPS/MIDDLEWARE/urls solely when DEBUG)
-django-debug-toolbar==6.3.0
+django-debug-toolbar==7.0.0
 
 # --- ops / deployment ---
 django-environ==0.13.0      # env-driven settings (SECRET_KEY, DB_*, ...)
