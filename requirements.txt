@@ -4,13 +4,13 @@
 # runs or the code imports). Transitives (asgiref, sqlparse, pydantic, segno,
 # six, …) are resolved by pip from these direct deps.
 
-Django==6.0.6
+Django==6.0.7
 gunicorn==26.0.0
 
 # UI / app
 django-bootstrap-modal-forms==2.0.0
 django-bootstrap4==26.1
-django-widget-tweaks==1.4.2
+django-widget-tweaks==1.5.1
 django-hijack==3.7.8
 django-hijack-admin==2.1.10
 django-compat==1.0.15
@@ -21,6 +21,6 @@ django-wkhtmltopdf==3.4.0
 django-debug-toolbar==6.3.0
 
 # --- ops / deployment ---
-django-environ==0.13.0      # env-driven settings (SECRET_KEY, DB_*, ...)
+django-environ==0.14.0      # env-driven settings (SECRET_KEY, DB_*, ...)
 psycopg[binary]>=3.2,<4     # PostgreSQL driver (prod; sqlite needs nothing)
-sentry-sdk==2.20.0          # opt-in error tracking (enabled when SENTRY_DSN set)
+sentry-sdk==2.66.1          # opt-in error tracking (enabled when SENTRY_DSN set)
