@@ -102,7 +102,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -132,3 +131,11 @@ dmypy.json
 .idea/
 .claude/
 db.sqlite3.*
+
+# Secrets : `.env` seul ne couvre que le nom exact. Un `.env.e2e-backup`
+# porteur de SECRET_KEY / DB_PASSWORD a ete trouve non ignore sur
+# trainingmanager_server le 2026-07-31 — un `git add -A` l'aurait commite.
+.env
+.env.*
+# ... sauf le gabarit, versionne a dessein.
+!.env.example
