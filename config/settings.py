@@ -252,9 +252,23 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("HSTS_INCLUDE_SUBDOMAINS", default=False)
     SECURE_HSTS_PRELOAD = env.bool("HSTS_PRELOAD", default=False)
 
-# --- Sentry — optional. Set SENTRY_DSN to enable. ----------------------------
+# --- Sentry — actif uniquement en production. --------------------------------
+#
+# La garde etait `if SENTRY_DSN:` seul : n'importe quel `manage.py` lance avec un
+# DSN dans l'environnement — un poste de developpement, par exemple — envoyait
+# dans le projet Sentry DE PRODUCTION. Constate sur pushit le 2026-07-31.
+#
+# On exige donc que l'environnement resolu soit lui-meme un marqueur de
+# production, ce qui rend impossible l'emission d'un evenement etiquete
+# autrement. Production inchangee : STATE=PROD est pose dans
+# /run/trainingmanager/.env.
+#
+# STATE vaut INT / ACC / PROD ici : seul PROD reporte. Si un environnement ACC
+# est un jour reellement deploye, ajouter "ACC" a l'ensemble ci-dessous.
 SENTRY_DSN = env("SENTRY_DSN", default="")
-if SENTRY_DSN:
+SENTRY_ENVIRONMENT = env("SENTRY_ENVIRONMENT", default="") or STATE
+_SENTRY_ENV_IS_PROD = SENTRY_ENVIRONMENT.strip().upper() in {"PROD", "PRODUCTION"}
+if SENTRY_DSN and _SENTRY_ENV_IS_PROD:
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
     from django.core.exceptions import DisallowedHost
@@ -271,7 +285,7 @@ if SENTRY_DSN:
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         integrations=[DjangoIntegration()],
-        environment=STATE,
+        environment=SENTRY_ENVIRONMENT,
         traces_sample_rate=0.1,
         send_default_pii=False,
         before_send=_drop_benign_noise,
