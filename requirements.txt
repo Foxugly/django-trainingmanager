@@ -4,7 +4,7 @@
 # runs or the code imports). Transitives (asgiref, sqlparse, pydantic, segno,
 # six, …) are resolved by pip from these direct deps.
 
-Django==6.0.7
+Django==6.1
 gunicorn==26.0.0
 
 # UI / app
