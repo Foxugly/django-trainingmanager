@@ -58,6 +58,9 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # 3.8+ exige Python >=3.14 ; la box (venv legacy) est en 3.12 (2026-10-20).
+      - dependency-name: "django-hijack"
+        versions: [">=3.8"]
 
   # Les actions de workflow n'etaient mises a jour par personne : sans ce
   # bloc, aucune version update ne les touche.
