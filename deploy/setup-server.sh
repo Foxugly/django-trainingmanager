@@ -8,7 +8,10 @@
 #
 # Run as 'ubuntu' (needs sudo), ON THE BOX:
 #   sudo -v
-#   bash /var/www/django_websites/old/django_trainingmanager/deploy/setup-server.sh
+# ⚠️ §3.10: run THIS script from a checkout django cannot write — never from
+#    the django-owned app tree (the script runs with ubuntu's sudo). E.g.:
+#      D=$(mktemp -d) && git clone --depth=1 https://github.com/Foxugly/django-trainingmanager.git "$D" \
+#        && bash "$D/deploy/setup-server.sh"
 #
 # PREREQUISITES (do these FIRST — see OPERATIONS.md §3.12 + the handoff):
 #   1. main pushed with the reconstructed config-package tree (this repo).
@@ -19,8 +22,9 @@
 #   3. EC2 instance role (quizonline-ec2) allowed ssm:GetParametersByPath on BOTH
 #      …:parameter/trainingmanager/prod and …/trainingmanager/prod/* (+ kms:Decrypt).
 #
-# §3.10-safe: every root-owned file is installed from the COMMITTED git blob
-# (`git show origin/main:<path>`), never cp'd from the mutable working tree.
+# §3.10-safe: every root-owned file is installed from the COMMITTED git blob read
+# in ROOT'S OWN bare mirror (/var/lib/fleet-deploy/django-trainingmanager.git) —
+# never from the working tree nor from its .git, both owned (rewritable) by django.
 # =============================================================================
 set -euo pipefail
 umask 027
@@ -48,13 +52,23 @@ sudo -u "$APP_USER" "$APP_DIR/.venv/bin/pip" install --quiet --upgrade pip
 sudo -u "$APP_USER" "$APP_DIR/.venv/bin/pip" install --quiet -r "$APP_DIR/requirements.txt"
 
 echo "=== 3/8 Install the env-fetch script to /usr/local/sbin (root, from git blob) ==="
-sudo -u "$APP_USER" git -C "$APP_DIR" show "origin/$BRANCH:deploy/fetch-env-from-ssm.sh" \
-    | sudo install -m 0755 -o root -g root /dev/stdin /usr/local/sbin/trainingmanager-env-fetch.sh
+# §3.10 / §3.11: every file root installs is read from ROOT'S OWN bare mirror
+# (/var/lib/fleet-deploy/django-trainingmanager.git, root:root 700) fetched from GitHub —
+# never from $APP_DIR or its .git, which django owns and could rewrite before
+# root copies them (django -> root escalation).
+MIRROR=/var/lib/fleet-deploy/django-trainingmanager.git
+sudo install -d -m 700 -o root -g root /var/lib/fleet-deploy
+sudo test -d "$MIRROR" || sudo git init --quiet --bare "$MIRROR"
+sudo git --git-dir="$MIRROR" fetch --quiet --depth=1 "https://github.com/Foxugly/django-trainingmanager.git" "$BRANCH"
+SHA=$(sudo git --git-dir="$MIRROR" rev-parse FETCH_HEAD)
+root_install() {  # <mode> <path in repo> <destination>
+    sudo git --git-dir="$MIRROR" show "$SHA:$2" | sudo install -o root -g root -m "$1" /dev/stdin "$3"
+}
+root_install 0755 deploy/fetch-env-from-ssm.sh /usr/local/sbin/trainingmanager-env-fetch.sh
 
 echo "=== 4/8 Install systemd units (root, from git blob) ==="
 for unit in trainingmanager-env-fetch.service trainingmanager-gunicorn.service; do
-    sudo -u "$APP_USER" git -C "$APP_DIR" show "origin/$BRANCH:deploy/systemd/$unit" \
-        | sudo install -m 0644 -o root -g root /dev/stdin "/etc/systemd/system/$unit"
+    root_install 0644 "deploy/systemd/$unit" "/etc/systemd/system/$unit"
 done
 sudo systemctl daemon-reload
 
@@ -92,12 +106,12 @@ while IFS='=' read -r k v || [ -n \"\$k\" ]; do case \"\$k\" in ''|\#*) continue
 set +a
 '$APP_DIR/.venv/bin/python' '$APP_DIR/manage.py' migrate --noinput && \
 '$APP_DIR/.venv/bin/python' '$APP_DIR/manage.py' collectstatic --noinput"
-sudo chown -R "$APP_USER":"$APP_GROUP" "$APP_DIR"
-sudo chmod -R g-w,o-rwx "$APP_DIR"
+# chown -h: never follow a symlink django may have planted; chmod as django.
+sudo chown -R -h "$APP_USER":"$APP_GROUP" "$APP_DIR"
+sudo -u "$APP_USER" chmod -R g-w,o-rwx "$APP_DIR"
 
 echo "=== 8/8 nginx vhost (from git blob) + restart gunicorn ==="
-sudo -u "$APP_USER" git -C "$APP_DIR" show "origin/$BRANCH:deploy/nginx/wp.foxugly.com.conf" \
-    | sudo install -m 0644 -o root -g root /dev/stdin /etc/nginx/sites-available/wp.foxugly.com
+root_install 0644 deploy/nginx/wp.foxugly.com.conf /etc/nginx/sites-available/wp.foxugly.com
 sudo ln -sf ../sites-available/wp.foxugly.com /etc/nginx/sites-enabled/wp.foxugly.com
 sudo nginx -t
 sudo systemctl reload nginx
