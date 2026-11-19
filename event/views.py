@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 
@@ -25,10 +26,7 @@ class EventCreateView(LoginRequiredMixin, BSModalCreateView):
     success_message = _('event created.')
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)
 
 
 class EventListView(GenericListView):
@@ -44,10 +42,7 @@ class EventUpdateView(LoginRequiredMixin, BSModalUpdateView):
     success_message = _('event created.')
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)
 
 
 class EventDetailView(GenericDetailView):
@@ -64,10 +59,7 @@ class EventDeleteView(LoginRequiredMixin, BSModalDeleteView):
     model = Event
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)
 
 
 @login_required
@@ -85,26 +77,47 @@ def attendance_member(request, event_id, member_id):
     return HttpResponse(json.dumps(results))
 
 
-class PDFEventView(DetailView):
+# wkhtmltopdf options for the event export. The HTML is ours, but it carries
+# user-entered text: no JavaScript, and no access to local files (an injected
+# <iframe src="file:///run/<app>/.env"> used to land in the PDF). The logo is
+# inlined as a data: URI, so nothing has to be read from disk by wkhtmltopdf.
+PDF_CMD_OPTIONS = {
+    'margin-top': 50,
+    'disable-javascript': True,
+    'disable-local-file-access': True,
+}
+
+
+def _logo_data_uri():
+    path = os.path.join(settings.STATIC_ROOT, 'img', 'rbp.jpeg')
+    try:
+        with open(path, 'rb') as fh:
+            return 'data:image/jpeg;base64,' + base64.b64encode(fh.read()).decode('ascii')
+    except OSError:
+        return ''
+
+
+class PDFEventView(GenericDetailView):
+    # Same access rule as EventDetailView (login required). It used to be a bare
+    # DetailView: anyone could enumerate /event/event/<id>/pdf/ and spawn a
+    # wkhtmltopdf process per request.
     model = Event
     template_name = 'event_raw.html'
     filename = 'event.pdf'
 
-    def get(self, request, pk):
+    def get(self, request, *args, **kwargs):
         # Build the context LOCALLY (not a shared class attribute — that dict was
         # mutated per request and could serve the wrong event PDF under concurrency).
-        # wkhtmltopdf (enable-local-file-access) can't fetch a relative /static URL,
-        # so the logo is an absolute file:// path built from STATIC_ROOT.
         context = {
             'title': 'Training Manager',
             'object': self.get_object(),
             'pdf': True,
-            'logo_uri': 'file://' + os.path.join(settings.STATIC_ROOT, 'img', 'rbp.jpeg'),
+            'logo_uri': _logo_data_uri(),
         }
         return PDFTemplateResponse(request=request,
                                    template=self.template_name,
                                    filename=self.filename,
                                    context=context,
                                    show_content_in_browser=True,
-                                   cmd_options={'margin-top': 50, 'enable-local-file-access': True},
+                                   cmd_options=PDF_CMD_OPTIONS,
                                    )

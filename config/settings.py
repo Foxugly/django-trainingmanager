@@ -2,6 +2,8 @@ import os
 import sys
 
 import environ
+from django.core.exceptions import ImproperlyConfigured
+from django.utils.csp import CSP
 from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -11,11 +13,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
-# No real default for SECRET_KEY in prod: the old hard-coded key was leaked in
-# git history and MUST be rotated — a fresh value lives only in SSM.
-SECRET_KEY = env("SECRET_KEY", default="dev-insecure-change-me-in-production")
-
 DEBUG = env.bool("DEBUG", default=False)
+
+# No default for SECRET_KEY outside DEBUG: the old hard-coded key was leaked in
+# git history, and a public fallback would let anyone forge sessions if the SSM
+# env-fetch ever failed. Refuse to start instead.
+SECRET_KEY = env("SECRET_KEY", default="")
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured("SECRET_KEY must be set (SSM /trainingmanager/prod) when DEBUG is off.")
+    SECRET_KEY = "dev-insecure-change-me"
 STATE = env("STATE", default="INT")  # INT / ACC / PROD — also the Sentry env
 WEBSITE = env("WEBSITE", default="www.example.com")
 
@@ -51,9 +58,22 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Every view requires a login unless marked @login_not_required (health,
+    # set_lang; Django's own login / password-reset / admin-login views already
+    # are). A view that forgets LoginRequiredMixin is no longer public.
+    'django.contrib.auth.middleware.LoginRequiredMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.csp.ContentSecurityPolicyMiddleware',
 ]
+
+# Minimal CSP: the templates rely on inline scripts and several CDNs, so no
+# script-src yet — but no plugins, no <base> hijack, no framing.
+SECURE_CSP = {
+    "object-src": [CSP.NONE],
+    "base-uri": [CSP.SELF],
+    "frame-ancestors": [CSP.NONE],
+}
 
 # django-debug-toolbar: only wired in when DEBUG (never in prod). It refuses to
 # run with DEBUG=False anyway, but keeping it out of INSTALLED_APPS/MIDDLEWARE/urls
@@ -137,8 +157,12 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 WKHTMLTOPDF_CMD = '/usr/bin/wkhtmltopdf'
+# Never enable local file access: the rendered HTML carries user input, and
+# wkhtmltopdf runs as the django user (it could read /run/*/.env). See
+# event.views.PDF_CMD_OPTIONS.
 WKHTMLTOPDF_CMD_OPTIONS = {
-    'enable-local-file-access': True,
+    'disable-javascript': True,
+    'disable-local-file-access': True,
     'load-error-handling': 'ignore',
     'load-media-error-handling': 'ignore',
 }
@@ -248,7 +272,7 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_HSTS_SECONDS = env.int("HSTS_SECONDS", default=0)
+    SECURE_HSTS_SECONDS = env.int("HSTS_SECONDS", default=31536000)
     SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("HSTS_INCLUDE_SUBDOMAINS", default=False)
     SECURE_HSTS_PRELOAD = env.bool("HSTS_PRELOAD", default=False)
 

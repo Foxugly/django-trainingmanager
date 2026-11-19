@@ -13,12 +13,12 @@
             {% endif %}
         </div>
         <div class="col-8">
-            {{object.get_title_raw |safe}}
+            {{ object.get_title_raw }}
         </div>
         <div class="col-2 p-0 text-center">{% qr_from_text object.get_full_url size="S" %}</div>
     </div>
     <div class="row mt-3">
-        {{object.get_table_raw |safe}}
+        {{ object.get_table_raw }}
     </div>
 </div>
 {% endblock content %}

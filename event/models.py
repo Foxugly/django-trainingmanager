@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from member.models import Member
@@ -54,29 +56,33 @@ class Event(GenericClass):
         # the DB (big win when rendering the event PDF).
         return self.rounds.all().order_by("order").prefetch_related("exercises")
 
+    # The three builders below return SafeStrings made with format_html: rows
+    # come from Round.get_row (escaped there) and every other value is escaped
+    # here. Templates render them without |safe.
     def get_table(self):
-        out = "<table class='card-table table mb-0 table-bordered'>"
-        out += "<thead><tr><th>#</th><th>Dist.</th><th>Round</th><th>Ex.</th><th></th></tr></head><tbody>"
-        for r in self.get_rounds():
-            out += r.get_row(True)
-        out += "</tbody></table>"
-        return out
+        return format_html(
+            "<table class='card-table table mb-0 table-bordered'>"
+            "<thead><tr><th>#</th><th>Dist.</th><th>Round</th><th>Ex.</th><th></th></tr></thead><tbody>"
+            "{}</tbody></table>",
+            mark_safe("".join(r.get_row(True) for r in self.get_rounds())),
+        )
 
     def get_table_raw(self):
-        out = "<table class='table mb-0'>"
-        out += "<thead><tr><th>#</th><th>Dist.</th><th>Round</th><th>Exercices</th></tr></thead><tbody>"
-        for r in self.get_rounds():
-            out += r.get_row(False)
-        out += "</tbody></table>"
-        return out
+        return format_html(
+            "<table class='table mb-0'>"
+            "<thead><tr><th>#</th><th>Dist.</th><th>Round</th><th>Exercices</th></tr></thead><tbody>"
+            "{}</tbody></table>",
+            mark_safe("".join(r.get_row(False) for r in self.get_rounds())),
+        )
 
     def get_title_raw(self):
-        out = "<table class='table'>"
-        out += "<thead><tr><th class='text-center' colspan=2>%s</th></tr></thead>" % self.refer_agenda
-        out += "<tbody><tr><td class='text-center'>Date : %s</td><td class='text-center'>Heure : %s </td></tr>" \
-               "<tr><td class='text-center' colspan=2>Distance : %s m</td></tr></tbody></table>" % (
-                   self.date.strftime('%d/%m/%Y'), self.hour_start.strftime('%H:%M'), self.get_total())
-        return out
+        return format_html(
+            "<table class='table'>"
+            "<thead><tr><th class='text-center' colspan=2>{}</th></tr></thead>"
+            "<tbody><tr><td class='text-center'>Date : {}</td><td class='text-center'>Heure : {} </td></tr>"
+            "<tr><td class='text-center' colspan=2>Distance : {} m</td></tr></tbody></table>",
+            self.refer_agenda, self.date.strftime('%d/%m/%Y'), self.hour_start.strftime('%H:%M'), self.get_total(),
+        )
 
     def get_attendance_members(self):
         # Resolve membership with one query (a set of present pks) instead of

@@ -111,6 +111,7 @@ sudo chown -R -h "$APP_USER":"$APP_GROUP" "$APP_DIR"
 sudo -u "$APP_USER" chmod -R g-w,o-rwx "$APP_DIR"
 
 echo "=== 8/8 nginx vhost (from git blob) + restart gunicorn ==="
+root_install 0644 deploy/nginx/wp-limits.conf /etc/nginx/conf.d/wp-limits.conf
 root_install 0644 deploy/nginx/wp.foxugly.com.conf /etc/nginx/sites-available/wp.foxugly.com
 sudo ln -sf ../sites-available/wp.foxugly.com /etc/nginx/sites-enabled/wp.foxugly.com
 sudo nginx -t

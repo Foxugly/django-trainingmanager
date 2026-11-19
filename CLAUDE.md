@@ -43,10 +43,18 @@ Activate the venv first (Windows bash): `source .venv/Scripts/activate`
 - `config/health.py` — `/health/` endpoint: `{"status","db"}` 200/503 with a `SELECT 1` DB check.
 - Apps: `agenda`, `event`, `round`, `exercise`, `member`, `customuser`. Each owns its models +
   templates. `common_tags.py` sits at the **repo root** and is registered as a template library.
-- **PDF generation:** `event.views.PDFEventView` renders `templates/event_raw.html` via
-  wkhtmltopdf (`WKHTMLTOPDF_CMD = /usr/bin/wkhtmltopdf`, `enable-local-file-access`). That
-  template is shared with the browser `EventRawView` and **branches on the `pdf` context flag**:
-  PDF → `file://` built from `STATIC_ROOT` (passed as `logo_uri`); HTML → `{% static %}`.
+- **PDF generation:** `event.views.PDFEventView` (login required) renders `templates/event_raw.html`
+  via wkhtmltopdf (`WKHTMLTOPDF_CMD = /usr/bin/wkhtmltopdf`) with `--disable-javascript` and
+  `--disable-local-file-access`. **Never re-enable local file access**: the HTML carries user text
+  and wkhtmltopdf runs as `django`, which can read every `/run/<app>/.env`. That template is shared
+  with the browser `EventRawView` and **branches on the `pdf` context flag**: PDF → logo inlined as
+  a `data:` URI (`logo_uri`); HTML → `{% static %}`.
+- **HTML builders** (`Event.get_table*`, `get_title_raw`, `Round.get_row`) return SafeStrings built
+  with `format_html` — every value escaped; templates render them **without `|safe`**.
+  `Exercise.get_row` is plain text.
+- **Auth is global:** `LoginRequiredMiddleware` — every view needs a login unless decorated
+  `@login_not_required` (`/health/`, `/lang/`; Django's login/password-reset/admin-login already
+  are). `next` redirects go through `tools.generic_views.safe_next_url` (same-host only).
 
 ## Things to know before changing code
 
@@ -63,9 +71,9 @@ Activate the venv first (Windows bash): `source .venv/Scripts/activate`
 
 Env-driven via `django-environ` (bare names; see `.env.example`). Prod values come from SSM
 → `/run/trainingmanager/.env` (systemd EnvironmentFile). Key vars:
-- `SECRET_KEY` (required in prod — the old hard-coded key was rotated out), `DEBUG`,
+- `SECRET_KEY` (required unless `DEBUG` — startup fails without it), `DEBUG`,
   `STATE` (INT/ACC/PROD), `WEBSITE`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`
-- `SECURE_SSL_REDIRECT`, `HSTS_SECONDS`, `HSTS_INCLUDE_SUBDOMAINS`, `HSTS_PRELOAD` (only outside DEBUG)
+- `SECURE_SSL_REDIRECT`, `HSTS_SECONDS` (default 31536000), `HSTS_INCLUDE_SUBDOMAINS`, `HSTS_PRELOAD` (only outside DEBUG)
 - `SENTRY_DSN` (optional; opt-in — drops `DisallowedHost` scanner noise in `before_send`)
 - `DB_*` 6-var convention (`DB_ENGINE`/`DB_NAME`/`DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT`) —
   prod = box-local **PostgreSQL** (`db`/role `trainingmanager`), OPERATIONS.md §3.13.
@@ -78,7 +86,9 @@ gunicorn on `127.0.0.1:8003`. The authoritative ops reference is **`OPERATIONS.m
 
 - `deploy/deploy.sh` (runs as `django`): git reset → pip → load `/run` env (literal parse) →
   **pg_dump backup** (`db-backups/`) → migrate → collectstatic → perms → restart
-  `trainingmanager-gunicorn`.
+  `trainingmanager-gunicorn`. Then the SSM step (root) installs `deploy/nginx/wp-limits.conf`
+  (`wp_login` zone, 10r/m on `/accounts/login/` + `/admin/login/`) and the vhost from root's own
+  mirror `/var/lib/fleet-deploy/django-trainingmanager.git` at the pushed SHA, then `nginx -t && reload`.
 - `deploy/setup-server.sh`: one-time cutover (root, out-of-band) — installs the env-fetch script
   to `/usr/local/sbin`, the systemd units (`trainingmanager-env-fetch` + `-gunicorn`), the sudoers
   drop-in, and the nginx vhost **from the committed git blob** (§3.10-safe). Fails safe if SSM is unreachable.

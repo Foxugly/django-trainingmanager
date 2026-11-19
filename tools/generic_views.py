@@ -1,9 +1,25 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView, DetailView
+
+
+def safe_next_url(request, default=None):
+    """Return the `next` query parameter only if it points back to this site.
+
+    `next` used to be followed blindly (open redirect: ?next=https://evil/).
+    Anything off-host, or http while the request came in over https, falls back
+    to `default` (or the home page).
+    """
+    candidate = request.GET.get("next")
+    if candidate and url_has_allowed_host_and_scheme(
+        candidate, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return candidate
+    return default if default is not None else reverse("index")
 
 
 class GenericCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
