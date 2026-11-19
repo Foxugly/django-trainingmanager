@@ -4,10 +4,15 @@
 #
 # Called by GitHub Actions via OIDC -> SSM (AWS-RunShellScript runs as root,
 # which invokes this as the django user), or manually:
-#   sudo -u django bash /var/www/django_websites/old/django_trainingmanager/deploy/deploy.sh
+#   sudo -u django bash /var/www/django_websites/old/django_trainingmanager/deploy/deploy.sh [SHA]
 #
-# Root-side install of units / nginx / the env-fetch script is a ONE-TIME job
-# done out-of-band by deploy/setup-server.sh (§3.10) — not repeated here.
+# With a SHA (the CI passes the one root verified is on main), the tree is
+# reset to exactly that commit, so code and nginx config come from the same
+# verified commit. Without one (manual run), it follows origin/main.
+#
+# Units / sudoers / env-fetch script are installed out-of-band by
+# deploy/setup-server.sh (§3.10); the nginx files are installed by the CI's
+# root step from root's own git mirror — never by this script.
 # =============================================================================
 set -euo pipefail
 umask 027   # new dirs 750 / files 640 from git/pip/collectstatic (OPERATIONS.md §3.1/§3.2)
@@ -18,8 +23,10 @@ VENV="$APP_DIR/.venv"
 cd "$APP_DIR"
 
 echo ">>> Pulling latest code..."
+TARGET="${1:-origin/main}"
 git fetch origin main
-git reset --hard origin/main
+git cat-file -e "$TARGET^{commit}"
+git reset --hard "$TARGET"
 
 echo ">>> Installing dependencies..."
 "$VENV/bin/pip" install --quiet -r requirements.txt
