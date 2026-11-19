@@ -136,7 +136,10 @@ jobs:
       # COMMITTED GIT BLOB, read out of ITS OWN bare mirror
       # (/var/lib/fleet-deploy, root:root 700) at the exact pushed SHA — never
       # from the django-owned checkout, whose .git django could rewrite
-      # (OPERATIONS.md §3.10 / §3.11).
+      # (OPERATIONS.md §3.10 / §3.11). Before anything is installed, root
+      # refuses a SHA that is not an ancestor of refs/heads/main (the mirror is
+      # unshallowed once so merge-base has the history), and the app tree is
+      # reset to that same SHA: one verified commit for code and nginx config.
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
         with:
@@ -160,10 +163,13 @@ jobs:
             "M=/var/lib/fleet-deploy/django-trainingmanager.git",
             "install -d -m 700 -o root -g root /var/lib/fleet-deploy",
             "[ -d $M ] || git init --quiet --bare $M",
-            "git --git-dir=$M fetch --quiet --depth=1 https://github.com/Foxugly/django-trainingmanager.git $SHA",
+            "git --git-dir=$M rev-parse --is-shallow-repository | grep -qx false || git --git-dir=$M fetch --quiet --unshallow https://github.com/Foxugly/django-trainingmanager.git refs/heads/main",
+            "git --git-dir=$M fetch --quiet https://github.com/Foxugly/django-trainingmanager.git $SHA",
             "git --git-dir=$M cat-file -e $SHA^{commit}",
-            "sudo -u django bash -c 'umask 027; cd '$APP' && git fetch --quiet origin main && git reset --hard --quiet origin/main'",
-            "sudo -u django bash $APP/deploy/deploy.sh",
+            "git --git-dir=$M fetch --quiet https://github.com/Foxugly/django-trainingmanager.git refs/heads/main",
+            "git --git-dir=$M merge-base --is-ancestor $SHA FETCH_HEAD || { echo \"REFUS : $SHA n est pas sur main\" >&2; exit 1; }",
+            "sudo -u django bash -c 'umask 027; cd '$APP' && git fetch --quiet origin main && git reset --hard --quiet '$SHA",
+            "sudo -u django bash $APP/deploy/deploy.sh $SHA",
             "git --git-dir=$M show $SHA:deploy/nginx/wp-limits.conf > /etc/nginx/conf.d/wp-limits.conf",
             "git --git-dir=$M show $SHA:deploy/nginx/wp.foxugly.com.conf > /etc/nginx/sites-available/wp.foxugly.com",
             "chown root:root /etc/nginx/conf.d/wp-limits.conf /etc/nginx/sites-available/wp.foxugly.com",
