@@ -29,7 +29,7 @@ Activate the venv first (Windows bash): `source .venv/Scripts/activate`
 - Apply migrations: `python manage.py migrate`
 - Make migrations after model changes: `python manage.py makemigrations`
 - Check for model/migration drift (CI gate): `python manage.py makemigrations --check --dry-run`
-- Run tests: `python manage.py test` (no pytest; smoke + model tests in `event/tests.py`, `round/tests.py` — the CI test job gate)
+- Run tests: `python manage.py test` (no pytest; smoke + model tests in `event/tests.py`, `round/tests.py`, security in `event/test_security.py`, admin 2FA in `admin_2fa/tests/` + `event/test_admin_2fa_site.py` — the CI test job gate)
 - Create admin user: `python manage.py createsuperuser`
 
 ## Architecture
@@ -55,6 +55,41 @@ Activate the venv first (Windows bash): `source .venv/Scripts/activate`
 - **Auth is global:** `LoginRequiredMiddleware` — every view needs a login unless decorated
   `@login_not_required` (`/health/`, `/lang/`; Django's login/password-reset/admin-login already
   are). `next` redirects go through `tools.generic_views.safe_next_url` (same-host only).
+
+## Admin 2FA
+
+`/admin/` requires a TOTP second factor for **every** staff account (django-otp 1.7.5 + qrcode 8.2,
+app `admin_2fa/`, ported from the fleet reference in `Poker_server`). The site itself
+(`/accounts/login/` + the app pages) still needs a password only.
+
+- **Wiring**: `'admin_2fa.apps.OTPAdminConfig'` *replaces* `'django.contrib.admin'` (it makes
+  `admin.site` an `Admin2FASite`, whose `has_permission` also needs `user.is_verified()`); plus
+  `django_otp`, `otp_totp`, `otp_static`, `admin_2fa` in INSTALLED_APPS and
+  `django_otp.middleware.OTPMiddleware` right after `AuthenticationMiddleware`. `OTP_TOTP_ISSUER` is
+  the label in the authenticator app. A missing piece fails `manage.py check` (`admin_2fa.E001-E004`).
+- **LoginRequiredMiddleware**: `Admin2FASite.login` and the `/admin/2fa/` views are
+  `@login_not_required` (an overridden `login` loses Django's marker — without it `/admin/login/`
+  bounced to `/accounts/login/`). The 2FA views gate on active staff themselves. Covered by
+  `event/test_admin_2fa_site.py` and `admin_2fa/tests/`.
+- **Flow**: password on `/admin/login/` → `/admin/2fa/setup/` (first time: QR code + key, confirm one
+  code, 10 single-use backup codes shown **once**) or `/admin/2fa/verify/` (TOTP code or a backup
+  code). Server-rendered admin templates, CSRF, `never_cache`, no inline script/style.
+- **Brute force**: django-otp throttles each device (1 s, 2 s, 4 s… after each wrong code) and nginx
+  puts `/admin/2fa/` in the same `wp_login` zone as the logins (10 r/min per IP).
+- **Lost phone / locked out** (on the box, as the unit runs it; `<username>` is case-insensitive):
+
+  ```bash
+  sudo systemd-run --wait --pipe --quiet --uid=django --gid=www-data \
+    -p EnvironmentFile=/run/trainingmanager/.env \
+    -p WorkingDirectory=/var/www/django_websites/old/django_trainingmanager \
+    /var/www/django_websites/old/django_trainingmanager/.venv/bin/python manage.py admin_2fa_reset <username>
+  ```
+
+  deletes the user's devices (re-enrolment at the next admin login); `--unlock` only clears the delay.
+- **Tests on admin pages**: use `admin_2fa.testing.force_admin_login(self.client, user)`, not
+  `client.force_login` (the admin would redirect to the second factor).
+- **Secrets**: never log or send to Sentry the TOTP key, the QR code or a backup code — the views keep
+  them in `Redacted` wrappers and the form field is named `token` (scrubbed by Sentry).
 
 ## Things to know before changing code
 
@@ -87,7 +122,7 @@ gunicorn on `127.0.0.1:8003`. The authoritative ops reference is **`OPERATIONS.m
 - `deploy/deploy.sh` (runs as `django`): git reset → pip → load `/run` env (literal parse) →
   **pg_dump backup** (`db-backups/`) → migrate → collectstatic → perms → restart
   `trainingmanager-gunicorn`. Then the SSM step (root) installs `deploy/nginx/wp-limits.conf`
-  (`wp_login` zone, 10r/m on `/accounts/login/` + `/admin/login/`) and the vhost from root's own
+  (`wp_login` zone, 10r/m on `/accounts/login/`, `/admin/login/` + `/admin/2fa/`) and the vhost from root's own
   mirror `/var/lib/fleet-deploy/django-trainingmanager.git` at the pushed SHA, then `nginx -t && reload`.
 - `deploy/setup-server.sh`: one-time cutover (root, out-of-band) — installs the env-fetch script
   to `/usr/local/sbin`, the systemd units (`trainingmanager-env-fetch` + `-gunicorn`), the sudoers

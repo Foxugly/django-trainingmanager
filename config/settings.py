@@ -30,7 +30,9 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    # Replaces 'django.contrib.admin' (same "admin" label): admin.site becomes
+    # an Admin2FASite, so /admin/ needs a TOTP second factor (admin_2fa/).
+    'admin_2fa.apps.OTPAdminConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -49,6 +51,10 @@ INSTALLED_APPS = [
     'exercise',
     'member',
     'customuser',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+    'django_otp.plugins.otp_static',
+    'admin_2fa',
 ]
 
 MIDDLEWARE = [
@@ -58,6 +64,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Binds the verified OTP device to request.user (admin 2FA, admin_2fa/).
+    'django_otp.middleware.OTPMiddleware',
     # Every view requires a login unless marked @login_not_required (health,
     # set_lang; Django's own login / password-reset / admin-login views already
     # are). A view that forgets LoginRequiredMixin is no longer public.
@@ -66,6 +74,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.csp.ContentSecurityPolicyMiddleware',
 ]
+
+# Admin 2FA (admin_2fa/): label shown in the authenticator app; throttling
+# kept explicit (0 would disable django-otp's brute-force delay, check E004).
+OTP_TOTP_ISSUER = "TrainingManager admin (wp.foxugly.com)"
+OTP_TOTP_THROTTLE_FACTOR = 1
+OTP_STATIC_THROTTLE_FACTOR = 1
 
 # Minimal CSP: the templates rely on inline scripts and several CDNs, so no
 # script-src yet — but no plugins, no <base> hijack, no framing.
