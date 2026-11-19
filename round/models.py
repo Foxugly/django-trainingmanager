@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from exercise.models import Exercise
@@ -22,30 +24,43 @@ class Round(GenericClass):
             self.refer_event.rounds.add(self)
 
     def get_row(self, buttons):
-        out = ""
-        nb = len(self.exercises.all())
-        for i, e in enumerate(self.exercises.all().order_by('order')):
+        # Built with format_html: every value (t_break, t_start, the exercise
+        # text with its free-form notes, stroke and segment names) is escaped.
+        # It used to be %-interpolated raw and rendered with |safe — stored XSS
+        # on the event page and HTML injection into the wkhtmltopdf export.
+        exercises = sorted(self.exercises.all(), key=lambda ex: ex.order)
+        nb = len(exercises)
+        rows = []
+        for i, e in enumerate(exercises):
             if i == 0:
-                out += '<tr>' \
-                       '<th class="text-center align-middle" rowspan="%d">#%d</th>' \
-                       '<td class="align-middle text-center" rowspan="%d">%d</td>' \
-                       '<td class="align-middle text-center" rowspan="%d">%d X %s %s</td>' \
-                       '<td>%s</td>' % (nb, self.order, nb, self.get_total(), nb, self.count, "<BR>break : %s" % self.t_break if self.t_break else " ", "<BR>start : %s" % self.t_start if self.t_start else " ", e.get_row())
+                row = format_html(
+                    '<tr>'
+                    '<th class="text-center align-middle" rowspan="{}">#{}</th>'
+                    '<td class="align-middle text-center" rowspan="{}">{}</td>'
+                    '<td class="align-middle text-center" rowspan="{}">{} X {} {}</td>'
+                    '<td>{}</td>',
+                    nb, self.order, nb, self.get_total(), nb, self.count,
+                    format_html("<BR>break : {}", self.t_break) if self.t_break else " ",
+                    format_html("<BR>start : {}", self.t_start) if self.t_start else " ",
+                    e.get_row(),
+                )
                 if buttons:
-                    out += '<td style="width:95px" class="align-middle text-center" rowspan="%d">' \
-                           '<button class="bs-modal btn btn-sm btn-info" type="button" data-form-url="%s" data-next="%s">' \
-                           '<span class="fa fa-edit"></span>' \
-                           '</button> ' \
-                           '<button class="bs-modal btn btn-sm btn-danger" type="button" data-form-url="%s" data-next="%s">' \
-                           '<span class="fa fa-trash"></span>' \
-                           '</button>' \
-                           '</td>' % (
-                               nb, self.get_change_url(), self.refer_event.get_absolute_url(), self.get_delete_url(),
-                               self.refer_event.get_absolute_url())
-                out += '</tr>'
+                    row += format_html(
+                        '<td style="width:95px" class="align-middle text-center" rowspan="{}">'
+                        '<button class="bs-modal btn btn-sm btn-info" type="button" data-form-url="{}" data-next="{}">'
+                        '<span class="fa fa-edit"></span>'
+                        '</button> '
+                        '<button class="bs-modal btn btn-sm btn-danger" type="button" data-form-url="{}" data-next="{}">'
+                        '<span class="fa fa-trash"></span>'
+                        '</button>'
+                        '</td>',
+                        nb, self.get_change_url(), self.refer_event.get_absolute_url(), self.get_delete_url(),
+                        self.refer_event.get_absolute_url(),
+                    )
+                rows.append(row + mark_safe('</tr>'))
             else:
-                out += "<tr><td>%s</td></tr>" % (e.get_row())
-        return out
+                rows.append(format_html("<tr><td>{}</td></tr>", e.get_row()))
+        return mark_safe("".join(rows))
 
     def get_total(self):
         distance = 0

@@ -18,10 +18,7 @@ class MemberCreateView(LoginRequiredMixin, BSModalCreateView):
     success_message = _('event created.')
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)
 
     def form_valid(self, form):
         if self.request.headers.get('x-requested-with') != 'XMLHttpRequest':
@@ -46,10 +43,7 @@ class MemberUpdateView(LoginRequiredMixin, BSModalUpdateView):
     success_message = _('event created.')
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)
 
 
 class MemberDetailView(GenericDetailView):
@@ -60,7 +54,4 @@ class MemberDeleteView(LoginRequiredMixin, BSModalDeleteView):
     model = Member
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)

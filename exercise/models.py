@@ -44,6 +44,7 @@ class Exercise(GenericClass):
         return self.repetition * self.distance
 
     def get_row(self):
+        # Plain text, NOT HTML: Round.get_row escapes it (notes is free-form).
         
         out = "[%s]" % self.energysegment if self.energysegment else ""
         if self.repetition > 1:

@@ -69,10 +69,7 @@ class ExerciseCreateView(LoginRequiredMixin, BSModalCreateView):
     model = Exercise
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)
 
 
 class ExerciseListView(GenericListView):
@@ -83,10 +80,7 @@ class ExerciseUpdateView(LoginRequiredMixin, BSModalUpdateView):
     model = Exercise
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)
 
 
 class ExerciseDetailView(GenericDetailView):
@@ -97,7 +91,4 @@ class ExerciseDeleteView(LoginRequiredMixin, BSModalDeleteView):
     model = Exercise
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)

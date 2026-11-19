@@ -9,6 +9,10 @@ on:
   # Seul `test` tourne ici ; `deploy` reste garde par son `if`.
   pull_request:
 
+# Least privilege for every job; `deploy` adds only id-token: write.
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-production
   cancel-in-progress: false
@@ -124,10 +128,15 @@ jobs:
 
     steps:
       # OIDC -> SSM (no long-lived SSH key). AWS-RunShellScript runs as root and
-      # invokes deploy.sh as django (git reset, pip, sqlite backup, migrate,
+      # invokes deploy.sh as django (git reset, pip, pg backup, migrate,
       # collectstatic, perms, restart via the trainingmanager-deploy sudoers
       # grant). Secrets stay in SSM (/trainingmanager/prod/*), fetched to
       # /run/trainingmanager/.env at boot by trainingmanager-env-fetch.
+      # Root then installs the nginx files (rate-limit zone + vhost) from the
+      # COMMITTED GIT BLOB, read out of ITS OWN bare mirror
+      # (/var/lib/fleet-deploy, root:root 700) at the exact pushed SHA — never
+      # from the django-owned checkout, whose .git django could rewrite
+      # (OPERATIONS.md §3.10 / §3.11).
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
         with:
@@ -144,8 +153,22 @@ jobs:
           # run it — otherwise a deploy.sh that resets itself needs two deploys.
           cat > /tmp/ssm-params.json <<'EOF'
           { "commands": [
-            "sudo -u django bash -c 'umask 027; cd /var/www/django_websites/old/django_trainingmanager && git fetch --quiet origin main && git reset --hard --quiet origin/main'",
-            "sudo -u django bash /var/www/django_websites/old/django_trainingmanager/deploy/deploy.sh"
+            "set -eu",
+            "export HOME=/root",
+            "APP=/var/www/django_websites/old/django_trainingmanager",
+            "SHA=${{ github.sha }}",
+            "M=/var/lib/fleet-deploy/django-trainingmanager.git",
+            "install -d -m 700 -o root -g root /var/lib/fleet-deploy",
+            "[ -d $M ] || git init --quiet --bare $M",
+            "git --git-dir=$M fetch --quiet --depth=1 https://github.com/Foxugly/django-trainingmanager.git $SHA",
+            "git --git-dir=$M cat-file -e $SHA^{commit}",
+            "sudo -u django bash -c 'umask 027; cd '$APP' && git fetch --quiet origin main && git reset --hard --quiet origin/main'",
+            "sudo -u django bash $APP/deploy/deploy.sh",
+            "git --git-dir=$M show $SHA:deploy/nginx/wp-limits.conf > /etc/nginx/conf.d/wp-limits.conf",
+            "git --git-dir=$M show $SHA:deploy/nginx/wp.foxugly.com.conf > /etc/nginx/sites-available/wp.foxugly.com",
+            "chown root:root /etc/nginx/conf.d/wp-limits.conf /etc/nginx/sites-available/wp.foxugly.com",
+            "chmod 0644 /etc/nginx/conf.d/wp-limits.conf /etc/nginx/sites-available/wp.foxugly.com",
+            "nginx -t && systemctl reload nginx"
           ], "executionTimeout": ["900"] }
           EOF
           CMD_ID=$(aws ssm send-command \

@@ -3,11 +3,13 @@
 Returns 200 + {"status": "ok", "db": "ok"} when the DB is reachable, else 503.
 Proxied by nginx to gunicorn so it exercises the whole chain. See OPERATIONS.md §3.9.
 """
+from django.contrib.auth.decorators import login_not_required
 from django.db import connections
 from django.db.utils import Error as DBError
 from django.http import JsonResponse
 
 
+@login_not_required
 def health(request):
     db_ok = True
     try:

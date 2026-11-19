@@ -9,18 +9,12 @@ from customuser.models import CustomUser
 
 
 class CustomUserForm(ModelForm):
-    def __init__(self, *args, **kwargs):
-        super(CustomUserForm, self).__init__(*args, **kwargs)
-        instance = getattr(self, 'instance', None)
-        if instance and instance.pk:
-            self.fields['is_foo_admin'].widget.attrs['readonly'] = True
-            self.fields['is_foo_admin'].widget.attrs['disabled'] = 'disabled'
-            self.fields['is_superuser'].widget.attrs['readonly'] = True
-            self.fields['is_superuser'].widget.attrs['disabled'] = 'disabled'
-
+    # Self-service profile form: only harmless fields. is_superuser and
+    # is_foo_admin used to be listed here with an HTML-only "disabled" attribute,
+    # so a crafted POST could grant them. Privileges are edited in the admin.
     class Meta:
         model = CustomUser
-        fields = ['username', 'first_name', 'last_name', 'email', 'language', 'is_foo_admin', 'is_superuser', ]
+        fields = ['username', 'first_name', 'last_name', 'email', 'language']
 
 
 class CustomUserUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):

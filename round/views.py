@@ -55,10 +55,7 @@ class RoundCreateView(LoginRequiredMixin, BSModalCreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)
 
 
 class RoundListView(GenericListView):
@@ -74,10 +71,7 @@ class RoundUpdateView(LoginRequiredMixin, BSModalUpdateView):
     success_url = reverse_lazy('round:round_list')
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -104,25 +98,16 @@ class RoundUpdateView(LoginRequiredMixin, BSModalUpdateView):
             exercises.save()
         return super(RoundUpdateView, self).form_valid(form)
 
-    def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
-
 
 class RoundDetailView(GenericDetailView):
     model = Round
 
 
-class RoundDeleteView(BSModalDeleteView):
+class RoundDeleteView(LoginRequiredMixin, BSModalDeleteView):
     model = Round
     template_name = 'delete.html'
     success_message = 'Success: removed.'
     success_url = reverse_lazy('round:round_list')
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)

@@ -23,10 +23,7 @@ class AgendaCreateView(LoginRequiredMixin, BSModalCreateView):
     success_message = _('agenda created.')
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)
 
 
 class AgendaListView(GenericListView):
@@ -42,10 +39,7 @@ class AgendaUpdateView(LoginRequiredMixin, BSModalUpdateView):
     success_message = _('agenda created.')
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)
 
 
 class AgendaDetailView(GenericDetailView):
@@ -57,10 +51,7 @@ class AgendaDeleteView(GenericDeleteView):
     model = Agenda
 
     def get_success_url(self):
-        if "next" in self.request.GET:
-            return self.request.GET["next"]
-        else:
-            return self.success_url
+        return safe_next_url(self.request, self.success_url)
 
 
 def qdict_to_dict(qdict):

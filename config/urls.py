@@ -2,7 +2,7 @@ from django.apps import apps
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_not_required, login_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import path, include, reverse
@@ -10,6 +10,7 @@ from django.utils import translation
 from django.utils.translation import check_for_language
 
 from customuser.views import CustomUserUpdateView
+from tools.generic_views import safe_next_url
 
 from .health import health
 
@@ -29,15 +30,15 @@ def home(request):
     return render(request, "index.html", c)
 
 
+@login_not_required
 def set_lang(request):
-    response = None
-    if 'lang' in request.GET and check_for_language(request.GET.get('lang')):
-        user_language = request.GET.get('lang')
+    # Public (used from the login page). `next` must stay on this site: it used
+    # to be followed blindly (open redirect). A missing/invalid `lang` returned
+    # None (HTTP 500); now it just redirects.
+    response = HttpResponseRedirect(safe_next_url(request, reverse('index')))
+    user_language = request.GET.get('lang')
+    if user_language and check_for_language(user_language):
         translation.activate(user_language)
-        if 'next' in request.GET:
-            response = HttpResponseRedirect(request.GET.get('next'))
-        else:
-            response = HttpResponseRedirect(reverse('home'))
         response.set_cookie(
             settings.LANGUAGE_COOKIE_NAME,
             user_language,
