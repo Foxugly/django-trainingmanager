@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 from unittest import mock
 
 from django.conf import settings
@@ -177,7 +178,7 @@ class OpenRedirectTests(TestCase):
         r = self.client.post("/member/member/add/?next=https://example.org/",
                              {"firstname": "A", "lastname": "B"}, secure=True)
         self.assertEqual(r.status_code, 302)
-        self.assertFalse(r.url.startswith("https://example.org"))
+        self.assertEqual(urlsplit(r.url).netloc, "")  # stays on this site (relative URL)
 
 
 class SettingsHardeningTests(TestCase):
