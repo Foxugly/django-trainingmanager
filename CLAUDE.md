@@ -24,7 +24,9 @@ Stack: Python 3.12, **Django 6.0.5**, gunicorn, `django-bootstrap4`, `django-hij
 
 Activate the venv first (Windows bash): `source .venv/Scripts/activate`
 
-- Install deps: `pip install -r requirements.txt`
+- Install deps: `pip install --require-hashes -r requirements.txt` (hash-pinned Linux lock; on Windows
+  use `pip install --require-hashes --no-deps -r requirements.txt` then `pip install -r requirements.in`
+  to fill Windows-only deps such as `colorama`)
 - Run dev server: `python manage.py runserver` (DB_* unset → SQLite at `db.sqlite3`)
 - Apply migrations: `python manage.py migrate`
 - Make migrations after model changes: `python manage.py makemigrations`
@@ -99,8 +101,11 @@ app `admin_2fa/`, ported from the fleet reference in `Poker_server`). The site i
   are committed; keep `makemigrations --check` clean (CI fails otherwise).
 - `static/` (collectstatic output) is currently tracked in git — faithful to the box; the deploy
   re-runs collectstatic anyway.
-- `requirements.txt` is **pinned to the stack actually running on the box** (Django 6.0.5, etc.) —
-  the pre-reconstruction list was stale fiction (claimed selenium 3.14 / pytz 2018, unused).
+- Direct deps live in **`requirements.in`** (pinned to the stack running on the box); `requirements.txt`
+  is the **hash-pinned lock** generated from it — never edit it by hand, regenerate with the `uv pip compile`
+  command in its header. `deploy.sh` installs it with `--require-hashes --no-deps` + `pip check`; CI's
+  "Lock is complete" step does the same in a clean venv. The pre-reconstruction list was stale fiction
+  (claimed selenium 3.14 / pytz 2018, unused — still present in the box venv, never imported).
 
 ## Environment
 
