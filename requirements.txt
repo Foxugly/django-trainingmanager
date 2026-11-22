@@ -66,9 +66,9 @@ django-qr-code==5.0.0 \
     --hash=sha256:3f4bc581eb4a668f706e257592df020fdd109217b6392cce70ac6d48585f7184 \
     --hash=sha256:dcc5abc5aaab10496c56c86f70333190d252c32380d2d20a8ead3f9c87a347e0
     # via -r requirements.in
-django-widget-tweaks==1.5.1 \
-    --hash=sha256:084acc9eeb5a3208f2670522de6284287973e54d54488ce6d402f4b99bc5f452 \
-    --hash=sha256:3f5080f8365740fc1c14607498c975cbfed896dd0c40e1b563095716ee31e3b5
+django-widget-tweaks==1.6.0 \
+    --hash=sha256:499d0f48958b14f0bfbd862467c71681e4dfc815de97069a5b6e8002fabca074 \
+    --hash=sha256:4c53824ae0b44f89c0a0011eada8d656647384c0dd34ba96663e47b4bd6dadbd
     # via -r requirements.in
 django-wkhtmltopdf==3.4.0 \
     --hash=sha256:b12222a6c588c645d62d971a2a34e3802ac76023cf94c557068f39f478b2b984 \
