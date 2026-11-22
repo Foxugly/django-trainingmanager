@@ -8,7 +8,7 @@ Template-based Django web app for managing sports training: **agendas, events, r
 exercises, members**, with PDF export of events, QR codes, and admin user impersonation.
 Server-rendered (Bootstrap 4), **not** an API. Deployed at **wp.foxugly.com**.
 
-Stack: Python 3.12, **Django 6.0.5**, gunicorn, `django-bootstrap4`, `django-hijack`
+Stack: Python 3.12, **Django 6.1** (exact pins in `requirements.in`), gunicorn, `django-bootstrap4`, `django-hijack`
 (impersonation), `django-qr-code`, `django-wkhtmltopdf` (PDF), `django-debug-toolbar`
 (DEBUG only), `django-environ`, `psycopg[binary]`, `sentry-sdk`. Custom user model
 `customuser.CustomUser`. Languages: `en` / `fr` / `nl`. PostgreSQL (prod) / SQLite (dev).
@@ -31,7 +31,7 @@ Activate the venv first (Windows bash): `source .venv/Scripts/activate`
 - Apply migrations: `python manage.py migrate`
 - Make migrations after model changes: `python manage.py makemigrations`
 - Check for model/migration drift (CI gate): `python manage.py makemigrations --check --dry-run`
-- Run tests: `python manage.py test` (no pytest; smoke + model tests in `event/tests.py`, `round/tests.py`, security in `event/test_security.py`, admin 2FA in `admin_2fa/tests/` + `event/test_admin_2fa_site.py` — the CI test job gate)
+- Run tests: `python manage.py test` (no pytest; smoke + model tests in `*/tests.py`, security in `event/test_security.py`, admin 2FA in `admin_2fa/tests/` + `event/test_admin_2fa_site.py`, unit hardening in `agenda/test_systemd_hardening.py` — the CI test job gate). CI (`.github/workflows/deploy.yml`) runs `test`, `pip-audit` and CodeQL; there is no lint job.
 - Create admin user: `python manage.py createsuperuser`
 
 ## Architecture
@@ -122,7 +122,7 @@ Env-driven via `django-environ` (bare names; see `.env.example`). Prod values co
 
 Default branch **`main`**; push → **auto-deploy via GitHub Actions (OIDC → SSM, git-on-box)**.
 No manual `git pull`/restart on the box. Server path `/var/www/django_websites/old/django_trainingmanager`,
-gunicorn on `127.0.0.1:8003`. The authoritative ops reference is **`OPERATIONS.md`** on the EC2 box.
+gunicorn on `127.0.0.1:8003`. The authoritative ops reference is **`OPERATIONS.md`** (source of truth: private repo `Foxugly/foxugly-ops`; the copy on the box is a mirror).
 
 - `deploy/deploy.sh` (runs as `django`): git reset → pip → load `/run` env (literal parse) →
   **pg_dump backup** (`db-backups/`) → migrate → collectstatic → perms → restart

@@ -1,5 +1,12 @@
 # wp.foxugly.com — ops modernization handoff (option A: keep the UI)
 
+> **Historical document (status 2026-11-22).** The cutover described below is **done**: wp.foxugly.com
+> runs `main` from `/var/www/django_websites/old/django_trainingmanager` (gunicorn `127.0.0.1:8003`),
+> every push to `main` auto-deploys (test → OIDC → SSM), the DB is box-local **PostgreSQL** (deploy
+> backup = `pg_dump`, not sqlite), deps come from the hash-pinned `requirements.txt` lock (Django 6.1),
+> and `/admin/` requires TOTP 2FA. The "YOUR steps" / "cutover" sections below are kept as a record
+> only — do not re-run them. Current reference: `CLAUDE.md` + `OPERATIONS.md` (repo `Foxugly/foxugly-ops`).
+
 **Goal:** bring wp.foxugly.com (trainingmanager) up to the fleet ops standard
 (OPERATIONS.md §3.11/§3.12) — SSM secrets, Sentry, `/health/`, OIDC→SSM CI/CD,
 env-fetch in `/usr/local/sbin`, least-priv sudoers, bare env — **while keeping
