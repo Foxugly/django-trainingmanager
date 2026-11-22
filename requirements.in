@@ -1,5 +1,5 @@
 # Pinned to the stack actually running on wp.foxugly.com (box `pip freeze`,
-# Django 6 / Python 3.12) — the previous unpinned list was stale fiction
+# Django 6 / Python 3.14) — the previous unpinned list was stale fiction
 # (claimed Django>=4.2.1, selenium 3.14, pytz 2018.5; none of which the box
 # runs or the code imports). Transitives (asgiref, sqlparse, pydantic, segno,
 # six, …) are pinned with hashes in requirements.txt, the lock generated from
@@ -12,7 +12,7 @@ gunicorn==27.0.1
 django-bootstrap-modal-forms==3.0.5
 django-bootstrap4==26.3
 django-widget-tweaks==1.6.0
-django-hijack==3.7.9
+django-hijack==3.8.1
 django-hijack-admin==2.1.10
 django-compat==1.0.15
 django-qr-code==5.0.0

@@ -8,7 +8,7 @@ Template-based Django web app for managing sports training: **agendas, events, r
 exercises, members**, with PDF export of events, QR codes, and admin user impersonation.
 Server-rendered (Bootstrap 4), **not** an API. Deployed at **wp.foxugly.com**.
 
-Stack: Python 3.12, **Django 6.1** (exact pins in `requirements.in`), gunicorn, `django-bootstrap4`, `django-hijack`
+Stack: Python 3.14 (deadsnakes on the box), **Django 6.1** (exact pins in `requirements.in`), gunicorn, `django-bootstrap4`, `django-hijack`
 (impersonation), `django-qr-code`, `django-wkhtmltopdf` (PDF), `django-debug-toolbar`
 (DEBUG only), `django-environ`, `psycopg[binary]`, `sentry-sdk`. Custom user model
 `customuser.CustomUser`. Languages: `en` / `fr` / `nl`. PostgreSQL (prod) / SQLite (dev).
@@ -124,7 +124,7 @@ Default branch **`main`**; push → **auto-deploy via GitHub Actions (OIDC → S
 No manual `git pull`/restart on the box. Server path `/var/www/django_websites/old/django_trainingmanager`,
 gunicorn on `127.0.0.1:8003`. The authoritative ops reference is **`OPERATIONS.md`** (source of truth: private repo `Foxugly/foxugly-ops`; the copy on the box is a mirror).
 
-- `deploy/deploy.sh` (runs as `django`): git reset → pip → load `/run` env (literal parse) →
+- `deploy/deploy.sh` (runs as `django`): git reset → **venv rebuilt in place if not on `/usr/bin/python3.14`** (old kept as `.venv.prev`, restored on failure) → pip → load `/run` env (literal parse) →
   **pg_dump backup** (`db-backups/`) → migrate → collectstatic → perms → restart
   `trainingmanager-gunicorn`. Then the SSM step (root) installs `deploy/nginx/wp-limits.conf`
   (`wp_login` zone, 10r/m on `/accounts/login/`, `/admin/login/` + `/admin/2fa/`) and the vhost from root's own
