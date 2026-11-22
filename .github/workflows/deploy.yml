@@ -98,7 +98,7 @@ jobs:
 
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.12"   # matches the box venv
+          python-version: "3.14"   # matches the box venv (deadsnakes python3.14)
 
       # The hash-pinned lock: tests run on the exact versions production gets.
       - name: Install dependencies
@@ -237,7 +237,7 @@ jobs:
 
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           cache: pip
           cache-dependency-path: |
             requirements.in
