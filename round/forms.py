@@ -15,7 +15,7 @@ class RoundForm(ModelForm):
 class BSRoundForm(BSModalModelForm):
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user')
+        kwargs.pop('user')  # consumed here; BSModalModelForm doesn't take it
         super(BSRoundForm, self).__init__(*args, **kwargs)
 
     class Meta:
