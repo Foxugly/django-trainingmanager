@@ -308,30 +308,14 @@ SENTRY_ENVIRONMENT = env("SENTRY_ENVIRONMENT", default="") or STATE
 _SENTRY_ENV_IS_PROD = SENTRY_ENVIRONMENT.strip().upper() in {"PROD", "PRODUCTION"}
 if SENTRY_DSN and _SENTRY_ENV_IS_PROD:
     import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
-    from django.core.exceptions import DisallowedHost
 
-    # Underscored: module-level upper-case names would become Django settings.
-    from config.sentry import DATA_COLLECTION as _SENTRY_DATA_COLLECTION
-    from config.sentry import scrub_event as _sentry_scrub_event
-
-    def _drop_benign_noise(event, hint):
-        _sentry_scrub_event(event, hint)
-        # Drop DisallowedHost (raw-IP scanners hitting the box) — the rejection
-        # is correct behaviour, not an error worth paging on. Do NOT add the IP
-        # to ALLOWED_HOSTS.
-        exc = hint.get("exc_info")
-        if exc and isinstance(exc[1], DisallowedHost):
-            return None
-        return event
+    # Integrations, data_collection and the scrubbing callbacks (no PII, cookies
+    # or request bodies; DisallowedHost noise dropped): see config/sentry.py.
+    from config.sentry import sentry_options as _sentry_options
 
     sentry_sdk.init(
         dsn=SENTRY_DSN,
-        integrations=[DjangoIntegration()],
         environment=SENTRY_ENVIRONMENT,
         traces_sample_rate=0.1,
-        # No PII, cookies or request bodies: see config/sentry.py.
-        data_collection=_SENTRY_DATA_COLLECTION,
-        before_send=_drop_benign_noise,
-        before_send_transaction=_sentry_scrub_event,
+        **_sentry_options(),
     )
