@@ -311,7 +311,10 @@ if SENTRY_DSN and _SENTRY_ENV_IS_PROD:
     from sentry_sdk.integrations.django import DjangoIntegration
     from django.core.exceptions import DisallowedHost
 
+    from config.sentry import DATA_COLLECTION, scrub_event
+
     def _drop_benign_noise(event, hint):
+        scrub_event(event, hint)
         # Drop DisallowedHost (raw-IP scanners hitting the box) — the rejection
         # is correct behaviour, not an error worth paging on. Do NOT add the IP
         # to ALLOWED_HOSTS.
@@ -325,6 +328,8 @@ if SENTRY_DSN and _SENTRY_ENV_IS_PROD:
         integrations=[DjangoIntegration()],
         environment=SENTRY_ENVIRONMENT,
         traces_sample_rate=0.1,
-        send_default_pii=False,
+        # No PII, cookies or request bodies: see config/sentry.py.
+        data_collection=DATA_COLLECTION,
         before_send=_drop_benign_noise,
+        before_send_transaction=scrub_event,
     )
